@@ -1,0 +1,114 @@
+@import url('https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;500;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 12 28 62; /* #0c1c3e */
+    --foreground: 255 255 255; /* #ffffff */
+
+    --card: 255 255 255;
+    --card-foreground: 12 28 62;
+ 
+    --popover: 12 28 62;
+    --popover-foreground: 255 255 255;
+ 
+    --primary: 240 99 64; /* #f06340 */
+    --primary-foreground: 255 255 255;
+ 
+    --secondary: 240 99 64;
+    --secondary-foreground: 255 255 255;
+ 
+    --muted: 217 33% 17%;
+    --muted-foreground: 255 255 255 / 0.7;
+ 
+    --accent: 217 33% 17%;
+    --accent-foreground: 255 255 255;
+ 
+    --destructive: 0 63% 31%;
+    --destructive-foreground: 255 255 255;
+
+    --border: 240 99 64;
+    --input: 12 28 62;
+    --ring: 240 99 64;
+ 
+    --radius: 0.75rem;
+  }
+}
+
+@layer base {
+  body {
+    @apply bg-vita-background text-vita-foreground;
+    font-family: 'Segoe UI', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+  }
+  img, svg {
+    pointer-events: none;
+  }
+  .bg-vita-blue {
+    background-color: #0c1c3e;
+  }
+  .text-vita-blue {
+    color: #0c1c3e;
+  }
+  .bg-vita-orange {
+    background-color: #f06340;
+  }
+  .text-vita-orange {
+    color: #f06340;
+  }
+  .border-vita-orange {
+    border-color: #f06340;
+  }
+  .bg-vita-light {
+    background-color: #f5e6ff;
+  }
+}
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.text-gradient {
+  background: linear-gradient(90deg, #FF5A3C, #f15b31);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+.bg-deep-blue-gradient {
+  background: linear-gradient(180deg, #0d203f 0%, #0F1E33 100%);
+}
+
+.bg-soft-gradient {
+  background: linear-gradient(180deg, #1a2c51 0%, #0c1c3e 100%);
+}
+
+@keyframes bmiScan {
+  0%   { transform: translateY(-100%); }
+  100% { transform: translateY(120%); }
+}
+@keyframes bmiSpin {
+  0%   { transform: rotateY(0deg); }
+  100% { transform: rotateY(360deg); }
+}
+.animate-bmi-scan { animation: bmiScan 2.8s linear infinite; }
+.animate-bmi-spin { animation: bmiSpin 16s linear infinite; transform-style: preserve-3d; }
