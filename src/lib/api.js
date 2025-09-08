@@ -64,3 +64,8 @@ export const downloadPdf = async (filePath) => {
   }
   return data; // Esto será un Blob
 };
+
+// Pagos deshabilitados. Stub temporal para Mercado Pago.
+export const createPaymentIntent = async () => {
+  return { clientSecret: null, message: 'Pasarela de pago en migración. Mercado Pago próximamente.' };
+};

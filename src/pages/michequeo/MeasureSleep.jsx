@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useLocalStorage } from '@/hooks/useLocalStorage';
-import { useToast } from '@/components/ui/use-toast';
-import MeasureLayout from '@/components/michequeo/MeasureLayout';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { useLocalStorage } from '../../hooks/useLocalStorage';
+import { useToast } from '../../components/ui/use-toast';
+import MeasureLayout from '../../components/michequeo/MeasureLayout';
+import { Button } from '../../components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
+import { Alert, AlertDescription } from '../../components/ui/alert';
 import { Play, StopCircle, Mic, AlertCircle, Save, FileDown, Trash2 } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 import { motion } from 'framer-motion';

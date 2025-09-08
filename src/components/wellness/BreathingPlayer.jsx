@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
+import { Button } from '../ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const BreathingPlayer = ({ pattern }) => {

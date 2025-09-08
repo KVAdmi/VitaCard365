@@ -1,18 +1,18 @@
 
 import React, { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet';
-import Layout from '@/components/Layout';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import Layout from '../components/Layout';
+import { Button } from '../components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '../components/ui/dialog';
 import { Plus, Pill, Stethoscope, Edit, Trash2, Download, Info } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { v4 as uuidv4 } from 'uuid';
-import { useToast } from '@/components/ui/use-toast';
-import { useLocalStorage } from '@/hooks/useLocalStorage';
-import MedicineForm from '@/components/agenda/MedicineForm';
-import AppointmentForm from '@/components/agenda/AppointmentForm';
+import { useToast } from '../components/ui/use-toast';
+import { useLocalStorage } from '../hooks/useLocalStorage';
+import MedicineForm from '../components/agenda/MedicineForm';
+import AppointmentForm from '../components/agenda/AppointmentForm';
 
 const Agenda = () => {
   const { toast } = useToast();

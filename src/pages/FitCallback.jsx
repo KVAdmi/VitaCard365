@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { saveFitToken } from '@/hooks/useGoogleFitAuth';
+import { saveFitToken } from '../hooks/useGoogleFitAuth';
 import { useNavigate } from 'react-router-dom';
 
 export default function FitCallback() {

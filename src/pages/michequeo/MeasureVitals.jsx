@@ -1,18 +1,18 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { v4 as uuidv4 } from 'uuid';
-import MeasureLayout from '@/components/michequeo/MeasureLayout';
-import TriageResult from '@/components/michequeo/TriageResult';
-import { Button } from '@/components/ui/button';
-import { useToast } from '@/components/ui/use-toast';
-import { runTriage } from '@/lib/triageRules';
-import { useLocalStorage } from '@/hooks/useLocalStorage';
+import MeasureLayout from '../../components/michequeo/MeasureLayout';
+import TriageResult from '../../components/michequeo/TriageResult';
+import { Button } from '../../components/ui/button';
+import { useToast } from '../../components/ui/use-toast';
+import { runTriage } from '../../lib/triageRules';
+import { useLocalStorage } from '../../hooks/useLocalStorage';
 import { Bluetooth, Save, Camera, Edit2, AlertTriangle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs';
+import { Input } from '../../components/ui/input';
+import { Label } from '../../components/ui/label';
+import { Alert, AlertDescription, AlertTitle } from '../../components/ui/alert';
 
 const ManualEntryTab = ({ onAnalysis }) => {
   const [systolic, setSystolic] = useState('');

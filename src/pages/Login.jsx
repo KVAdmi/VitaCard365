@@ -2,14 +2,14 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Helmet } from 'react-helmet';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { useAuth } from '@/contexts/AuthContext';
-import { useToast } from '@/components/ui/use-toast';
+import { Button } from '../components/ui/button';
+import { Input } from '../components/ui/input';
+import { Label } from '../components/ui/label';
+import { useAuth } from '../contexts/AuthContext';
+import { useToast } from '../components/ui/use-toast';
 import { Eye, EyeOff, Mail, Lock, ArrowLeft } from 'lucide-react';
-import VitaCard365Logo from '@/components/Vita365Logo';
-import GoogleLoginButton from '@/components/ui/GoogleLoginButton';
+import VitaCard365Logo from '../components/Vita365Logo';
+import GoogleLoginButton from '../components/ui/GoogleLoginButton';
 
 const Login = () => {
   const navigate = useNavigate();
@@ -134,16 +134,12 @@ const Login = () => {
                 </div>
                 
                 <div className="flex justify-end items-center text-sm">
-                    <Button
-                        variant="link"
-                        className="text-vita-orange hover:text-vita-orange/80 p-0 h-auto"
-                        onClick={() => toast({
-                        title: '🚧 This feature isn\'t implemented yet—but don\'t worry! You can request it in your next prompt! 🚀',
-                        description: 'Puedes solicitar esta función en tu próximo prompt.',
-                        })}
+                    <Link
+                        to="/reset-password"
+                        className="font-semibold text-vita-orange hover:text-vita-orange/80"
                     >
                         ¿Olvidaste tu contraseña?
-                    </Button>
+                    </Link>
                 </div>
 
                 <Button

@@ -1,11 +1,11 @@
 import React from 'react';
 import { Helmet } from 'react-helmet';
-import Layout from '@/components/Layout';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
+import Layout from '../components/Layout';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../components/ui/card';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Brain, Wind, Waves, Dumbbell, Moon, Salad, Star, ArrowRight } from 'lucide-react';
-import { wellnessData } from '@/data/wellness-data.js';
+import { wellnessData } from '../data/wellness-data.js';
 
 const wellnessCategories = [
   {

@@ -2,10 +2,10 @@ import React, { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Helmet } from 'react-helmet';
-import Layout from '@/components/Layout';
-import { Card, CardContent, CardTitle, CardHeader } from '@/components/ui/card';
-import { useAuth } from '@/contexts/AuthContext';
-import VitaCard365Logo from '@/components/Vita365Logo';
+import Layout from '../components/Layout';
+import { Card, CardContent, CardTitle, CardHeader } from '../components/ui/card';
+import { useAuth } from '../contexts/AuthContext';
+import VitaCard365Logo from '../components/Vita365Logo';
 import { 
   Shield, 
   Heart, 

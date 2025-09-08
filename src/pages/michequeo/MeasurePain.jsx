@@ -1,6 +1,6 @@
 import React from 'react';
-import { useToast } from '@/components/ui/use-toast';
-import MeasureLayout from '@/components/michequeo/MeasureLayout';
+import { useToast } from '../../components/ui/use-toast';
+import MeasureLayout from '../../components/michequeo/MeasureLayout';
 
 const MeasurePain = () => {
     const { toast } = useToast();

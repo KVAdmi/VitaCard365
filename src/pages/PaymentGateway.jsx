@@ -2,19 +2,16 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { Helmet } from 'react-helmet';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Elements } from '@stripe/react-stripe-js';
-import { loadStripe } from '@stripe/stripe-js';
-import Layout from '@/components/Layout';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useAuth } from '@/contexts/AuthContext';
-import { usePayment } from '@/hooks/usePayment';
+// Stripe removido. Banner temporal de pagos.
+import Layout from '../components/Layout';
+import { Button } from '../components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/card';
+import { Tabs, TabsList, TabsTrigger } from '../components/ui/tabs';
+import { useAuth } from '../contexts/AuthContext';
+import { usePayment } from '../hooks/usePayment';
 import { Users, User, ArrowRight, Loader2, Minus, Plus, Calendar, Percent, Tag, ShieldCheck, Lock } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
-import CheckoutForm from '@/components/payments/CheckoutForm';
-
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
+import CheckoutForm from '../components/payments/CheckoutForm';
 
 const PaymentGateway = () => {
   const { user } = useAuth();
@@ -29,67 +26,11 @@ const PaymentGateway = () => {
     paymentFrequencies,
   } = usePayment();
 
-  const [selectedGateway, setSelectedGateway] = useState('stripe');
-  const [clientSecret, setClientSecret] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const priceId = 'price_1S3kOtGr10a3liepEMoWFNkL'; // tu priceId
+  // Stripe removido. Estados de pago deshabilitados.
 
-  useEffect(() => {
-    // Pago único: obtener email y monto
-    const email = user?.email || 'test@example.com';
-    setLoading(true);
-    // Validar y convertir el monto a centavos (entero)
-    let amountInCents = 0;
-    if (totalAmount && !isNaN(totalAmount)) {
-      amountInCents = Math.round(Number(totalAmount) * 100);
-    }
-    if (amountInCents <= 0) {
-      console.error('Monto inválido para Stripe:', totalAmount);
-      setLoading(false);
-      return;
-    }
-    fetch('/api/payments/create-intent', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, amount: amountInCents })
-    })
-      .then(res => res.json())
-      .then(({ clientSecret }) => {
-        setClientSecret(clientSecret);
-        setLoading(false);
-      })
-      .catch(err => {
-        console.error('create-intent error', err);
-        setLoading(false);
-      });
-  }, [totalAmount, user]);
+  // useEffect removido. Stripe deshabilitado.
 
-  const appearance = useMemo(() => ({
-    theme: 'night',
-    variables: {
-      colorText: '#ffffff',
-      colorTextSecondary: '#cbd5e1',
-      colorBackground: '#0b1530',
-      colorDanger: '#ef4444',
-      borderRadius: '12px',
-      fontFamily: 'Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial',
-    }
-  }), []);
-
-  const options = useMemo(() => {
-    if (!clientSecret) {
-      return undefined;
-    }
-    return { clientSecret, appearance, locale: 'es' };
-  }, [clientSecret, appearance]);
-
-// Depuración: Verifica valores antes de renderizar
-  useEffect(() => {
-    if (clientSecret) {
-      console.log('clientSecret listo:', clientSecret);
-      console.log('options:', options);
-    }
-  }, [clientSecret, options]);
+  // Apariencia y opciones Stripe removidas.
 
   return (
     <>
@@ -156,26 +97,13 @@ const PaymentGateway = () => {
             </CardContent>
           </Card>
           
-              <Tabs value={selectedGateway} onValueChange={setSelectedGateway} className="w-full">
-                <TabsList className="grid w-full grid-cols-3">
-                  <TabsTrigger value="stripe">Stripe</TabsTrigger>
-                  <TabsTrigger value="paypal" disabled>PayPal</TabsTrigger>
-                  <TabsTrigger value="googlepay" disabled>Google Pay</TabsTrigger>
-                </TabsList>
-              </Tabs>
-
-          {selectedGateway === 'stripe' && (
-            !clientSecret ? (
               <div className="flex items-center justify-center p-8">
-                <Loader2 className="mr-2 h-6 w-6 animate-spin" />
-                <p>Cargando pasarela de pago...</p>
+                <div className="text-yellow-400 text-center text-lg font-bold mb-4">Pasarela de pago en migración</div>
+                <div className="text-white/80 text-center mb-4">Pronto activaremos Mercado Pago. Por ahora, los pagos están deshabilitados.</div>
+                <button className="w-full bg-gray-400 text-white py-3 rounded-lg font-bold text-lg shadow-md opacity-50 cursor-not-allowed" disabled>
+                  Pago deshabilitado
+                </button>
               </div>
-            ) : (
-              <Elements stripe={stripePromise} options={{ clientSecret, appearance: { theme: 'flat' }, locale: 'es' }} key={clientSecret}>
-                <CheckoutForm />
-              </Elements>
-            )
-          )}
 
           <p className="text-center text-xs text-white/50 mt-4">
             Al confirmar el pago, aceptas los <a href="/terminos-y-condiciones" target="_blank" rel="noopener noreferrer" className="underline">Términos de Servicio</a> y la <a href="/politicas-de-privacidad" target="_blank" rel="noopener noreferrer" className="underline">Política de Privacidad</a> de VitaCard 365.

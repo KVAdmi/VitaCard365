@@ -1,11 +1,11 @@
 import React from 'react';
 import { Helmet } from 'react-helmet';
 import { Link, useLocation } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
+import { Button } from '../components/ui/button';
 import { ArrowLeft } from 'lucide-react';
-import Vita365Logo from '@/components/Vita365Logo';
-import Policy from '@/pages/Policy';
-import Terms from '@/pages/Terms';
+import Vita365Logo from '../components/Vita365Logo';
+import Policy from './Policy';
+import Terms from './Terms';
 
 const Legal = () => {
     const location = useLocation();

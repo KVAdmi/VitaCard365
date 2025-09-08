@@ -2,16 +2,16 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { v4 as uuidv4 } from 'uuid';
-import MeasureLayout from '@/components/michequeo/MeasureLayout';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { triageTests, evaluateTest, getLevelCopy, levelCopy } from '@/lib/triageEngine';
-import { useLocalStorage } from '@/hooks/useLocalStorage';
-import { useAuth } from '@/contexts/AuthContext';
+import MeasureLayout from '../../components/michequeo/MeasureLayout';
+import { Button } from '../../components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../components/ui/card';
+import { Input } from '../../components/ui/input';
+import { Label } from '../../components/ui/label';
+import { triageTests, evaluateTest, getLevelCopy, levelCopy } from '../../lib/triageEngine';
+import { useLocalStorage } from '../../hooks/useLocalStorage';
+import { useAuth } from '../../contexts/AuthContext';
 import { Siren, Building, Stethoscope, Sparkles, AlertTriangle, ChevronDown, Play, Save } from 'lucide-react';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '../../components/ui/use-toast';
 
 const LegalDisclaimerCard = () => (
     <Card className="mb-4 bg-yellow-500/10 border-yellow-500/30">

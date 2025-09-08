@@ -1,14 +1,14 @@
 import React from 'react';
 import { useParams } from 'react-router-dom';
 import { Helmet } from 'react-helmet';
-import Layout from '@/components/Layout';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { useLocalStorage } from '@/hooks/useLocalStorage';
-import { wellnessData } from '@/data/wellness-data';
+import Layout from '../../components/Layout';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../components/ui/card';
+import { Button } from '../../components/ui/button';
+import { useLocalStorage } from '../../hooks/useLocalStorage';
+import { wellnessData } from '../../data/wellness-data';
 import { Star, CheckCircle } from 'lucide-react';
-import AudioPlayer from '@/components/wellness/AudioPlayer';
-import BreathingPlayer from '@/components/wellness/BreathingPlayer';
+import AudioPlayer from '../../components/wellness/AudioPlayer';
+import BreathingPlayer from '../../components/wellness/BreathingPlayer';
 
 const WellnessDetailPage = () => {
   const { category, slug } = useParams();

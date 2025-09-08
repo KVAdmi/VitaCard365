@@ -10,9 +10,9 @@ import {
   ArrowLeft,
   Bell
 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { useAuth } from '@/contexts/AuthContext';
-import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Button } from './ui/button';
+import { useAuth } from '../contexts/AuthContext';
+import { Card, CardHeader, CardTitle, CardDescription } from './ui/card';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,7 +20,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from "./ui/dropdown-menu";
 
 const notifications = [
     { title: "Recordatorio de Cita", description: "Consulta con Dr. A. López mañana a las 10:00 AM.", time: "hace 5m" },

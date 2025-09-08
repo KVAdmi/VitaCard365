@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import Layout from '@/components/Layout';
-import { Card, CardContent } from '@/components/ui/card';
+import Layout from '../../components/Layout';
+import { Card, CardContent } from '../../components/ui/card';
 import { motion } from 'framer-motion';
 import { HeartPulse, AlertTriangle, Weight, Moon, ArrowRight } from 'lucide-react';
 

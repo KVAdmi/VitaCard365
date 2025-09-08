@@ -1,7 +1,9 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '../lib/supabase';
 import { v4 as uuidv4 } from 'uuid';
+import { makeVitaId } from '../utils/generateVitaId';
+import { ENT, SRC } from '../services/entitlements';
 
 const AuthContext = createContext();
 
@@ -13,17 +15,14 @@ export const useAuth = () => {
   return context;
 };
 
-const generateId = (prefix) => `${prefix}-${uuidv4().split('-')[0].toUpperCase()}`;
+// El generador unificado ya está en makeVitaId
 
+// Simulación de validación de KV y ZIS
 const checkActivationCode = async (code) => {
-  if (!supabase || !code) return { valid: false };
-  const upperCaseCode = code.toUpperCase();
-  if (upperCaseCode.startsWith('EMP-')) {
-    return { valid: true, type: 'ENTERPRISE', message: 'Código empresarial válido.' };
-  }
-  if (upperCaseCode.startsWith('FAM-')) {
-    return { valid: true, type: 'FAMILY', message: 'Código familiar válido.' };
-  }
+  if (!code) return { valid: false };
+  const upper = code.toUpperCase();
+  if (upper.startsWith('KV')) return { valid: true, type: 'KV', message: 'KV válido' };
+  if (upper.startsWith('AZISTED') || upper.startsWith('ZIS')) return { valid: true, type: 'ZIS', message: 'ZIS válido' };
   return { valid: false, message: 'El código ingresado no es válido o ha expirado.' };
 };
 
@@ -85,7 +84,23 @@ export const AuthProvider = ({ children }) => {
   };
 
   const register = async (userData) => {
-    const { email, password, name, activationCode } = userData;
+    const { email, password, name, activationCode, partnerCode } = userData;
+    let entitlements = [ENT.NONE];
+    let source = SRC.NORMAL;
+    let vita_id = null;
+    let codeCheck = { valid: false };
+    if (activationCode) {
+      codeCheck = await checkActivationCode(activationCode);
+      if (codeCheck.valid && codeCheck.type === 'KV') {
+        entitlements = [ENT.PAID];
+        source = SRC.KV;
+        vita_id = makeVitaId('KV');
+      } else if (codeCheck.valid && codeCheck.type === 'ZIS') {
+        entitlements = [ENT.PAID];
+        source = SRC.PARTNER;
+        vita_id = makeVitaId('ZIS');
+      }
+    }
     if (isSupabaseConnected) {
       const { data, error } = await supabase.auth.signUp({
         email,
@@ -95,27 +110,40 @@ export const AuthProvider = ({ children }) => {
             name: name,
             alias: name.split(' ')[0],
             activation_code: activationCode,
-            vita_card_id: generateId('VITA'),
+            vita_card_id: vita_id || makeVitaId('IND'),
+            entitlements,
+            source,
           },
         },
       });
       if (error) throw error;
-      const codeCheck = await checkActivationCode(activationCode);
       return { user: data.user, codeCheck };
     } else {
       // Mock registration for demo purposes
       const mockUser = {
         id: uuidv4(),
         email: email,
-        user_metadata: { name: name, alias: name.split(' ')[0], vita_card_id: generateId('VITA') },
+        user_metadata: {
+          name: name,
+          alias: name.split(' ')[0],
+          vita_card_id: vita_id || makeVitaId('IND'),
+          entitlements,
+          source,
+        },
         app_metadata: { provider: 'email' },
         aud: 'authenticated',
         created_at: new Date().toISOString(),
       };
       localStorage.setItem('vita-user', JSON.stringify(mockUser));
       setUser(mockUser);
-      return { user: mockUser, codeCheck: { valid: true, message: 'Registro de demostración exitoso.' } };
+      return { user: mockUser, codeCheck };
     }
+  };
+  // Gating: requirePaid
+  const requirePaid = () => {
+    if (!user) return false;
+    const ent = user.entitlements || user.user_metadata?.entitlements;
+    return Array.isArray(ent) && ent.includes(ENT.PAID);
   };
 
   const logout = async () => {
@@ -198,7 +226,7 @@ export const AuthProvider = ({ children }) => {
     loading,
     isAuthenticated: !!user,
     checkActivationCode,
-    generateId,
+    requirePaid,
     isSupabaseConnected,
   };
 

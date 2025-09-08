@@ -1,13 +1,13 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import Layout from '@/components/Layout';
-import { Button } from '@/components/ui/button';
-import { useLocalStorage } from '@/hooks/useLocalStorage';
+import Layout from '../components/Layout';
+import { Button } from '../components/ui/button';
+import { useLocalStorage } from '../hooks/useLocalStorage';
 import { motion } from 'framer-motion';
 import { Plus, Download, FileText, Info } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent } from '../components/ui/card';
 import { HeartPulse, Wind, Thermometer, Activity, Weight, Moon, AlertTriangle } from 'lucide-react';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '../components/ui/use-toast';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -19,7 +19,7 @@ import {
   Legend,
 } from 'chart.js';
 import { Line } from 'react-chartjs-2';
-import { triageTests, levelCopy } from '@/lib/triageEngine';
+import { triageTests, levelCopy } from '../lib/triageEngine';
 
 ChartJS.register(
   CategoryScale,

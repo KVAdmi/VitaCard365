@@ -1,40 +1,39 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Helmet, HelmetProvider } from 'react-helmet-async';
-import { Toaster } from '@/components/ui/toaster';
-import { AuthProvider } from '@/contexts/AuthContext';
-import { UserProvider } from '@/contexts/UserContext';
-import Landing from '@/pages/Landing';
-import Login from '@/pages/Login';
-import Register from '@/pages/Register';
-import Dashboard from '@/pages/Dashboard';
-import Coberturas from '@/pages/Coberturas';
-import MiChequeo from '@/pages/MiChequeo';
-import Agenda from '@/pages/Agenda';
-import Bienestar from '@/pages/Bienestar';
-import Pagos from '@/pages/Pagos';
-import Perfil from '@/pages/Perfil';
-import ProtectedRoute from '@/components/ProtectedRoute';
-import Legal from '@/pages/Legal';
-import WellnessCategoryPage from '@/pages/wellness/WellnessCategoryPage';
-import WellnessDetailPage from '@/pages/wellness/WellnessDetailPage';
-import NutritionDetailPage from '@/pages/wellness/NutritionDetailPage';
-import { Elements } from '@stripe/react-stripe-js';
-import { loadStripe } from '@stripe/stripe-js';
-import NewMeasurement from '@/pages/michequeo/NewMeasurement';
-import TestAlerts from '@/pages/michequeo/TestAlerts';
-import MeasureWeight from '@/pages/michequeo/MeasureWeight';
-import MeasureSleep from '@/pages/michequeo/MeasureSleep';
-import MeasureVitals from '@/pages/michequeo/MeasureVitals';
-import Policy from '@/pages/Policy';
-import Terms from '@/pages/Terms';
+import { Toaster } from './components/ui/toaster';
+import { AuthProvider } from './contexts/AuthContext';
+import { UserProvider } from './contexts/UserContext';
+import Landing from './pages/Landing';
+import Login from './pages/Login';
+import Register from './pages/Register';
+import Dashboard from './pages/Dashboard';
+import Coberturas from './pages/Coberturas';
+import MiChequeo from './pages/MiChequeo';
+import Agenda from './pages/Agenda';
+import Bienestar from './pages/Bienestar';
+import Pagos from './pages/Pagos';
+import Perfil from './pages/Perfil';
+import ProtectedRoute from './components/ProtectedRoute';
+import Legal from './pages/Legal';
+import WellnessCategoryPage from './pages/wellness/WellnessCategoryPage';
+import WellnessDetailPage from './pages/wellness/WellnessDetailPage';
+import NutritionDetailPage from './pages/wellness/NutritionDetailPage';
+import NewMeasurement from './pages/michequeo/NewMeasurement';
+import TestAlerts from './pages/michequeo/TestAlerts';
+import MeasureWeight from './pages/michequeo/MeasureWeight';
+import MeasureSleep from './pages/michequeo/MeasureSleep';
+import MeasureVitals from './pages/michequeo/MeasureVitals';
+import Policy from './pages/Policy';
+import Terms from './pages/Terms';
 
-import Receipt from '@/pages/Receipt';
-import PaymentGateway from '@/pages/PaymentGateway';
-import FitCallback from '@/pages/FitCallback';
+import Receipt from './pages/Receipt';
+import PaymentGateway from './pages/PaymentGateway';
+import FitCallback from './pages/FitCallback';
+import ResetPassword from './pages/ResetPassword';
 
 
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
+
 
 
 function App() {
@@ -51,16 +50,16 @@ function App() {
         
         <AuthProvider>
           <UserProvider>
-            <Elements stripe={stripePromise}>
-              <Router>
-                <div className="min-h-screen bg-vita-background">
-                  <Routes>
+            <Router>
+              <div className="min-h-screen bg-vita-background">
+                <Routes>
                     <Route path="/" element={<Landing />} />
                     <Route path="/login" element={<Login />} />
                     <Route path="/register" element={<Register />} />
                     <Route path="/legal" element={<Legal />} />
                     <Route path="/politicas-de-privacidad" element={<Policy />} />
                     <Route path="/terminos-y-condiciones" element={<Terms />} />
+                    <Route path="/reset-password" element={<ResetPassword />} />
                     
                     <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
                     <Route path="/coberturas" element={<ProtectedRoute><Coberturas /></ProtectedRoute>} />
@@ -87,7 +86,6 @@ function App() {
                   </Routes>
                 </div>
               </Router>
-            </Elements>
             <Toaster />
           </UserProvider>
         </AuthProvider>

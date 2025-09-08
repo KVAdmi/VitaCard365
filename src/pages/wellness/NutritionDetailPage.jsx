@@ -3,13 +3,13 @@ import { useParams, Navigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet';
 import { motion } from 'framer-motion';
 import { Lightbulb, Star, Leaf, CupSoda, Moon, HeartPulse } from 'lucide-react';
-import Layout from '@/components/Layout';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { useToast } from '@/components/ui/use-toast';
-import { wellnessData } from '@/data/wellness-data';
-import { useUser } from '@/contexts/UserContext';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import Layout from '../../components/Layout';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../components/ui/card';
+import { Button } from '../../components/ui/button';
+import { useToast } from '../../components/ui/use-toast';
+import { wellnessData } from '../../data/wellness-data';
+import { useUser } from '../../contexts/UserContext';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs';
 import {
   Dialog,
   DialogContent,
@@ -17,7 +17,7 @@ import {
   DialogTitle,
   DialogDescription,
   DialogTrigger,
-} from "@/components/ui/dialog";
+} from "../../components/ui/dialog";
 
 const iconMap = {
   'herbal-jamaica': { icon: HeartPulse },

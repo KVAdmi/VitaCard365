@@ -2,8 +2,8 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Helmet } from 'react-helmet';
-import { Button } from '@/components/ui/button';
-import Vita365Logo from '@/components/Vita365Logo';
+import { Button } from '../components/ui/button';
+import Vita365Logo from '../components/Vita365Logo';
 import { ArrowRight } from 'lucide-react';
 
 const Welcome = () => {

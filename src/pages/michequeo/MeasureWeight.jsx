@@ -13,16 +13,16 @@ import {
   Filler,
 } from 'chart.js';
 import { v4 as uuidv4 } from 'uuid';
-import { useLocalStorage } from '@/hooks/useLocalStorage';
-import { useToast } from '@/components/ui/use-toast';
-import MeasureLayout from '@/components/michequeo/MeasureLayout';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useLocalStorage } from '../../hooks/useLocalStorage';
+import { useToast } from '../../components/ui/use-toast';
+import MeasureLayout from '../../components/michequeo/MeasureLayout';
+import { Button } from '../../components/ui/button';
+import { Input } from '../../components/ui/input';
+import { Label } from '../../components/ui/label';
+import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Save, TrendingUp } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import BMIStageAvatar from '@/components/michequeo/BMIStageAvatar';
+import BMIStageAvatar from '../../components/michequeo/BMIStageAvatar';
 
 ChartJS.register(
   CategoryScale,

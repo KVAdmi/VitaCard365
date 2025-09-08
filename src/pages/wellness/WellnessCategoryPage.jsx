@@ -2,9 +2,9 @@
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet';
-import Layout from '@/components/Layout';
-import { Card, CardContent } from '@/components/ui/card';
-import { wellnessData } from '@/data/wellness-data.js';
+import Layout from '../../components/Layout';
+import { Card, CardContent } from '../../components/ui/card';
+import { wellnessData } from '../../data/wellness-data.js';
 import { motion } from 'framer-motion';
 import { ArrowRight } from 'lucide-react';
 

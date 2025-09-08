@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Helmet } from 'react-helmet';
-import Layout from '@/components/Layout';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { useUser } from '@/contexts/UserContext';
-import { useToast } from '@/components/ui/use-toast';
+import Layout from '../components/Layout';
+import { Card, CardContent } from '../components/ui/card';
+import { Button } from '../components/ui/button';
+import { useUser } from '../contexts/UserContext';
+import { useToast } from '../components/ui/use-toast';
 import {
   Dialog,
   DialogContent,
@@ -13,7 +13,7 @@ import {
   DialogTitle,
   DialogDescription,
   DialogFooter
-} from '@/components/ui/dialog';
+} from '../components/ui/dialog';
 import { 
   Stethoscope, 
   Car, 
