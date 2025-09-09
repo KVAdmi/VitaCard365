@@ -92,7 +92,7 @@ const PaymentGateway = () => {
           </Card>
 
           <div className="flex items-center justify-center p-8">
-            <MPWallet
+            <CheckoutForm 
               plan={planType || 'Individual'}
               frequency={frequency || 'Mensual'}
               amount={totalAmount || 199}
