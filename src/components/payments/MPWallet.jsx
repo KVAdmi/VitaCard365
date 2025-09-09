@@ -9,11 +9,15 @@ export default function MPWallet({ plan='Individual', frequency='Mensual', amoun
     (async () => {
       try {
         // Acepta 1/true/yes (evita que la flag mal formateada te apague el brick)
-        const enabled = /^(1|true|yes)$/i.test(String(import.meta.env.VITE_ENABLE_MP || '').trim());
-        if (!enabled) throw new Error(`flag_off:${import.meta.env.VITE_ENABLE_MP}`);
+        const rawFlag = import.meta.env.VITE_ENABLE_MP;
+        const enabled = rawFlag === undefined ? true : /^(1|true|yes)$/i.test(String(rawFlag || '').trim());
+        
+        console.log('MP flag check:', { rawFlag, enabled });
+        
+        if (!enabled) throw new Error(`flag_off:${rawFlag}`);
 
-        const api = String(import.meta.env.VITE_API_BASE_URL || '').trim();
-        if (!api) throw new Error('no_api_env');
+  const api = String(import.meta.env.VITE_API_BASE_URL || `http://localhost:${window.location.port || 3000}`).trim();
+  if (!api) throw new Error('no_api_env');
 
         // 1) preference
         const res = await fetch(`${api}/api/mercadopago/preference`, {

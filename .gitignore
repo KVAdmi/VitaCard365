@@ -1,5 +1,11 @@
 node_modules/
+dist/
+build/
+supabase/.temp/
+
 .env
+.env.local
+.env.*.local
 dist/
 build/
 supabase/.temp/
