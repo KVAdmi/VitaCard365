@@ -2,7 +2,6 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { Helmet } from 'react-helmet';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-// Stripe removido. Banner temporal de pagos.
 import Layout from '../components/Layout';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/card';
@@ -12,6 +11,7 @@ import { usePayment } from '../hooks/usePayment';
 import { Users, User, ArrowRight, Loader2, Minus, Plus, Calendar, Percent, Tag, ShieldCheck, Lock } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 import CheckoutForm from '../components/payments/CheckoutForm';
+import MPWallet from '../components/payments/MPWallet';
 
 const PaymentGateway = () => {
   const { user } = useAuth();
@@ -25,12 +25,6 @@ const PaymentGateway = () => {
     frequencyDiscount,
     paymentFrequencies,
   } = usePayment();
-
-  // Stripe removido. Estados de pago deshabilitados.
-
-  // useEffect removido. Stripe deshabilitado.
-
-  // Apariencia y opciones Stripe removidas.
 
   return (
     <>
@@ -96,14 +90,14 @@ const PaymentGateway = () => {
               </div>
             </CardContent>
           </Card>
-          
-              <div className="flex items-center justify-center p-8">
-                <div className="text-yellow-400 text-center text-lg font-bold mb-4">Pasarela de pago en migración</div>
-                <div className="text-white/80 text-center mb-4">Pronto activaremos Mercado Pago. Por ahora, los pagos están deshabilitados.</div>
-                <button className="w-full bg-gray-400 text-white py-3 rounded-lg font-bold text-lg shadow-md opacity-50 cursor-not-allowed" disabled>
-                  Pago deshabilitado
-                </button>
-              </div>
+
+          <div className="flex items-center justify-center p-8">
+            <MPWallet
+              plan={planType || 'Individual'}
+              frequency={frequency || 'Mensual'}
+              amount={totalAmount || 199}
+            />
+          </div>
 
           <p className="text-center text-xs text-white/50 mt-4">
             Al confirmar el pago, aceptas los <a href="/terminos-y-condiciones" target="_blank" rel="noopener noreferrer" className="underline">Términos de Servicio</a> y la <a href="/politicas-de-privacidad" target="_blank" rel="noopener noreferrer" className="underline">Política de Privacidad</a> de VitaCard 365.

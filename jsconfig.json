@@ -1,9 +1,7 @@
 {
   "compilerOptions": {
     "baseUrl": ".",
-    "paths": {
-      "@/*": ["src/*"]
-    }
+  // "paths" eliminado para volver a imports relativos
   },
   "include": ["src"]
 }

@@ -1,12 +1,13 @@
-import { nanoid } from 'nanoid';
-import { computeEntitlements } from '../../src/lib/entitlements';
-import { generateVitaId, getBinForSource } from '../../src/lib/vitaId';
-import { validateEnv } from '../../src/lib/env';
-import jwt from 'jsonwebtoken';
-import { supabase } from '../../src/lib/supabaseClient';
+const path = require('node:path');
+const entitlements = require('../billing/entitlements');
+const { nanoid } = require('nanoid');
+const { generateVitaId, getBinForSource } = require('../billing/vitaId');
+const { validateEnv } = require('../billing/env');
+const jwt = require('jsonwebtoken');
+const { supabase } = require('../../src/lib/supabaseClient');
 
 // POST /auth/register
-export default async function handler(req, res) {
+async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
@@ -80,3 +81,5 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: 'Internal server error', details: err.message });
   }
 }
+
+module.exports = handler;

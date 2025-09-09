@@ -1,12 +1,9 @@
-﻿import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
-import { fileURLToPath, URL } from 'node:url'
+﻿import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import { resolve } from 'path';
 
+// https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
-  base: './',
-  resolve: {
-    alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) },
-    extensions: ['.mjs','.js','.ts','.jsx','.tsx','.json'],
-  },
-})
+  // No alias, solo rutas relativas
+});

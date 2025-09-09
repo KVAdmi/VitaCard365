@@ -1,33 +1,14 @@
+
 import React from 'react';
 import { Button } from '../ui/button';
+import { supabase } from '../../lib/supabaseClient';
 
-const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
-const GOOGLE_REDIRECT_URI = window.location.origin + '/';
-
-function getGoogleOAuthUrl() {
-  const scope = 'openid email profile';
-  return `https://accounts.google.com/o/oauth2/v2/auth?response_type=token&client_id=${GOOGLE_CLIENT_ID}&redirect_uri=${encodeURIComponent(GOOGLE_REDIRECT_URI)}&scope=${encodeURIComponent(scope)}&include_granted_scopes=true`;
-}
-
-const GoogleLoginButton = ({ onSuccess }) => {
-  React.useEffect(() => {
-    const hash = window.location.hash;
-    if (hash.includes('access_token')) {
-      const params = new URLSearchParams(hash.replace('#', '?'));
-      const accessToken = params.get('access_token');
-      fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
-        headers: { Authorization: `Bearer ${accessToken}` }
-      })
-        .then(res => res.json())
-        .then(user => {
-          if (onSuccess) onSuccess({ ...user, accessToken });
-        });
-      window.location.hash = '';
-    }
-  }, [onSuccess]);
-
-  const handleGoogleLogin = () => {
-    window.location.href = getGoogleOAuthUrl();
+const GoogleLoginButton = () => {
+  const handleGoogleLogin = async () => {
+    await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: `${window.location.origin}/auth/callback` }
+    });
   };
 
   return (
