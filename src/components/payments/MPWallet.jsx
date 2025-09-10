@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 
 export default function MPWallet({ plan='Individual', frequency='Mensual', amount=199 }) {
   const [reason, setReason] = useState(''); // si hay razón => fallback visible
+  const [debugInfo, setDebugInfo] = useState({});
 
   useEffect(() => {
     let cancelled = false;
@@ -16,8 +17,13 @@ export default function MPWallet({ plan='Individual', frequency='Mensual', amoun
         
         if (!enabled) throw new Error(`flag_off:${rawFlag}`);
 
-  const api = String(import.meta.env.VITE_API_BASE_URL || `http://localhost:${window.location.port || 3000}`).trim();
-  if (!api) throw new Error('no_api_env');
+        // Usar siempre la URL de la API desde las variables de entorno o la IP de AWS
+        const api = String(import.meta.env.VITE_API_BASE_URL || 'http://3.149.144.140').trim();
+        console.log('MP API URL:', api);
+        if (!api) throw new Error('no_api_env');
+        
+        // Guardar información de depuración
+        setDebugInfo(prev => ({ ...prev, api, rawFlag, enabled }));
 
         // 1) preference
         const res = await fetch(`${api}/api/mercadopago/preference`, {
@@ -65,6 +71,18 @@ export default function MPWallet({ plan='Individual', frequency='Mensual', amoun
       <div className="w-full">
         <button disabled className="w-full opacity-60 cursor-not-allowed">Pago deshabilitado</button>
         <p className="text-xs mt-1 opacity-70">Motivo: {reason}</p>
+        {/* Información de diagnóstico para desarrolladores */}
+        <details className="text-xs mt-1 text-gray-600">
+          <summary>Información de diagnóstico</summary>
+          <pre className="bg-gray-100 p-2 rounded mt-1 overflow-auto max-h-40">
+            {JSON.stringify({
+              api: debugInfo.api,
+              enabled: debugInfo.enabled,
+              mpPublicKey: import.meta.env.VITE_MP_PUBLIC_KEY ? 'Presente' : 'Falta',
+              error: reason
+            }, null, 2)}
+          </pre>
+        </details>
       </div>
     );
   }

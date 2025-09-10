@@ -12,15 +12,9 @@ const __dirname = path.dirname(__filename);
 dotenv.config({ path: path.join(__dirname, '.env') });
 
 const app = express();
-app.use(cors({ 
-    origin: [
-        'http://localhost:5173',
-        'http://localhost:3000',
-        'https://vitacard365.netlify.app',
-        'https://main--vitacard365.netlify.app'
-    ], 
-    methods: ['GET','POST'], 
-    allowedHeaders: ['Content-Type'] 
+app.use(cors({
+  origin: true,
+  credentials: true
 }));
 app.use(express.json());
 
@@ -91,8 +85,9 @@ app.post('/api/mercadopago/preference', async (req, res) => {
 
 app.post('/api/mercadopago/webhook', (_req,res)=>res.sendStatus(200));
 
-app.listen(3000, () => {
-  console.log('API on :3000 | MP token present:', !!MP_TOKEN);
+const PORT = process.env.PORT || 3001;
+app.listen(PORT, () => {
+  console.log(`API on :${PORT} | MP token present:`, !!MP_TOKEN);
   console.log('MP token source:', process.env.MP_ACCESS_TOKEN ? 'ENV' : 'HARDCODED');
 });
 

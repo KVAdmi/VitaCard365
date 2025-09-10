@@ -10,7 +10,7 @@ app.use(express.json());
 
 // CORS: pon aquí tu dominio del frontend en prod
 const allowedOrigin = process.env.ALLOWED_ORIGIN || "*";
-app.use(cors({ origin: allowedOrigin }));
+app.use(cors({ origin: process.env.FRONTEND_BASE_URL || 'http://localhost:5173', credentials: true }));
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: "2024-06-20" });
 

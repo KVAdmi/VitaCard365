@@ -1,6 +1,6 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { supabase } from '../lib/supabase';
+import { supabase } from '../lib/supabaseClient';
 import { v4 as uuidv4 } from 'uuid';
 import { makeVitaId } from '../utils/generateVitaId';
 import { ENT, SRC } from '../services/entitlements';
@@ -62,8 +62,21 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     if (isSupabaseConnected) {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) throw error;
+      try {
+        const { data, error } = await supabase.auth.signInWithPassword({ 
+          email, 
+          password 
+        });
+        if (error) return { error };
+        return { data };
+      } catch (error) {
+        console.error('Error de autenticación:', error);
+        return { error };
+      } finally {
+        if (typeof setAuthLoading === 'function') {
+          setAuthLoading(false);
+        }
+      }
     } else {
       // Mock login for demo purposes
       if (email && password) {

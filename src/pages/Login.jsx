@@ -34,9 +34,18 @@ const Login = () => {
       });
       navigate('/dashboard');
     } catch (error) {
+      console.error('Error de login:', error);
+      let errorMessage = 'Credenciales incorrectas. Inténtalo de nuevo.';
+      
+      if (error.message?.includes('Invalid login credentials')) {
+        errorMessage = 'Email o contraseña incorrectos';
+      } else if (error.message?.includes('Email not confirmed')) {
+        errorMessage = 'Por favor, confirma tu email antes de iniciar sesión';
+      }
+      
       toast({
         title: 'Error de inicio de sesión',
-        description: error.message || 'Credenciales incorrectas. Inténtalo de nuevo.',
+        description: errorMessage,
         variant: 'destructive',
       });
     } finally {

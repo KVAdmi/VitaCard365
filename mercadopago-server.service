@@ -1,0 +1,18 @@
+[Unit]
+Description=Mercado Pago Server for VitaCard365
+After=network.target
+
+[Service]
+Type=simple
+User=ubuntu
+WorkingDirectory=/home/ubuntu/VitaCard365
+ExecStart=/usr/bin/node deploy-aws.js
+Restart=always
+Environment=NODE_ENV=production
+
+# Logs
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
