@@ -6,6 +6,7 @@ supabase/.temp/
 .env
 .env.local
 .env.*.local
+.env.aws
 dist/
 build/
 supabase/.temp/

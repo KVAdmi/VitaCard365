@@ -1,5 +1,4 @@
 import express from "express";
-import Stripe from "stripe";
 import cors from "cors";
 import dotenv from "dotenv";
 
@@ -12,28 +11,15 @@ app.use(express.json());
 const allowedOrigin = process.env.ALLOWED_ORIGIN || "*";
 app.use(cors({ origin: process.env.FRONTEND_BASE_URL || 'http://localhost:5173', credentials: true }));
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: "2024-06-20" });
 
 // Healthcheck
 app.get("/health", (_req, res) => res.json({ ok: true }));
 
-app.post("/api/payments/create-intent", async (req, res) => {
-  try {
-    const { amount, currency = "mxn" } = req.body;
-    if (!amount) return res.status(400).json({ error: "amount requerido" });
-
-    const pi = await stripe.paymentIntents.create({
-      amount,
-      currency,
-      automatic_payment_methods: { enabled: true },
-    });
-
-    res.json({ clientSecret: pi.client_secret });
-  } catch (err) {
-    console.error("Stripe error:", err);
-    res.status(500).json({ error: err.message });
-  }
-});
+// Healthcheck
+app.get("/health", (_req, res) => res.json({ 
+  ok: true, 
+  mp: !!process.env.MP_ACCESS_TOKEN
+}));
 
 const PORT = process.env.PORT || 4242;
 app.listen(PORT, () => console.log(`API escuchando en :${PORT}`));

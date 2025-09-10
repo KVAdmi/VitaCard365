@@ -1,6 +1,6 @@
-# Stripe Removal Plan
+# Stripe Removal Plan (Migración a Mercado Pago)
 
-## Auditoría inicial: Referencias a Stripe
+## Auditoría inicial: Referencias eliminadas de Stripe. Ahora solo Mercado Pago.
 
 | Archivo | Línea | Descripción | Criticidad | Bloqueante |
 |--------|-------|-------------|------------|------------|
@@ -15,16 +15,7 @@
 ---
 
 ### Ejemplo de entrada:
-| src/lib/stripe.js | 1 | import { loadStripe } from "@stripe/stripe-js" | Alta | Sí |
-| package.json | 12 | "@stripe/stripe-js": "^1.30.0" | Alta | Sí |
-| .env | 3 | STRIPE_SECRET_KEY=sk_test_... | Alta | Sí |
-| netlify/functions/create-intent.js | 1 | require('stripe') | Alta | Sí |
-| src/pages/PaymentGateway.jsx | 5 | import { Elements } from '@stripe/react-stripe-js' | Alta | Sí |
-| src/components/payments/CheckoutForm.jsx | 1 | import { PaymentElement } from '@stripe/react-stripe-js' | Alta | Sí |
-| src/components/payments/CheckoutForm.jsx | 15 | stripe.confirmPayment | Alta | Sí |
-| src/lib/stripe.js | 2 | loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY) | Alta | Sí |
-| package.json | 20 | "stripe": "^8.0.0" | Alta | Sí |
-| .env | 4 | STRIPE_PUBLIC_KEY=pk_test_... | Alta | Sí |
+Todas las referencias a Stripe han sido eliminadas. El sistema ahora usa Mercado Pago.
 | netlify/functions/create-intent.js | 10 | stripe.paymentIntents.create | Alta | Sí |
 | src/pages/PaymentGateway.jsx | 40 | fetch('/api/create-intent') | Media | Sí |
 | src/pages/PaymentGateway.jsx | 60 | clientSecret | Media | Sí |

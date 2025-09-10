@@ -27,12 +27,20 @@ const Login = () => {
     setLoading(true);
 
     try {
-      await login(formData.email, formData.password);
+      console.log('Intentando login con:', formData.email);
+      const result = await login(formData.email, formData.password);
+      
+      console.log('Login exitoso:', !!result);
+      
       toast({
         title: '¡Bienvenido!',
         description: 'Has iniciado sesión correctamente.',
       });
-      navigate('/dashboard');
+      
+      // Pequeño retraso para asegurar que los estados se actualicen
+      setTimeout(() => {
+        navigate('/dashboard');
+      }, 200);
     } catch (error) {
       console.error('Error de login:', error);
       let errorMessage = 'Credenciales incorrectas. Inténtalo de nuevo.';

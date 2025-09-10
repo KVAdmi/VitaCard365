@@ -1,5 +1,4 @@
 import express from "express";
-import Stripe from "stripe";
 import cors from "cors";
 import dotenv from "dotenv";
 import { Router } from "express";
@@ -18,8 +17,6 @@ app.use(cors({
   credentials: true 
 }));
 
-// Inicializar Stripe
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: "2024-06-20" });
 
 // Inicializar Mercado Pago
 console.log('MP TOKEN PREFIX:', (process.env.MP_ACCESS_TOKEN||'').slice(0,8));
@@ -30,27 +27,11 @@ const mpPreference = new Preference(mpClient);
 app.get("/health", (_req, res) => res.json({ 
   ok: true, 
   mp: !!process.env.MP_ACCESS_TOKEN,
-  stripe: !!process.env.STRIPE_SECRET_KEY
 }));
 
-// Endpoint de Stripe
-app.post("/api/payments/create-intent", async (req, res) => {
-  try {
-    const { amount, currency = "mxn" } = req.body;
-    if (!amount) return res.status(400).json({ error: "amount requerido" });
+//
 
-    const pi = await stripe.paymentIntents.create({
-      amount,
-      currency,
-      automatic_payment_methods: { enabled: true },
-    });
 
-    res.json({ clientSecret: pi.client_secret });
-  } catch (err) {
-    console.error("Stripe error:", err);
-    res.status(500).json({ error: err.message });
-  }
-});
 
 // Endpoint de Mercado Pago
 app.post("/api/mercadopago/preference", async (req, res) => {
@@ -113,6 +94,5 @@ const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
   console.log(`API escuchando en puerto :${PORT}`);
   console.log(`MP Token presente: ${!!process.env.MP_ACCESS_TOKEN}`);
-  console.log(`Stripe Key presente: ${!!process.env.STRIPE_SECRET_KEY}`);
   console.log(`URL frontend: ${process.env.FRONTEND_BASE_URL || 'http://localhost:5173'}`);
 });

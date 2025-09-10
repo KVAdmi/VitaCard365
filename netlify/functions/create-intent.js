@@ -1,8 +1,8 @@
 
-// Stripe removido. Stub temporal para pagos.
+// Solo Mercado Pago
 exports.handler = async (event) => {
   return {
     statusCode: 200,
-    body: JSON.stringify({ clientSecret: null, message: 'Pasarela de pago en migración. Mercado Pago próximamente.' }),
+    body: JSON.stringify({ message: 'Pasarela de pago en migración. Mercado Pago próximamente.' }),
   };
 };

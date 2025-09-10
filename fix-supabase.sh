@@ -25,8 +25,8 @@ fi
 echo -e "${YELLOW}Creando archivo .env con la configuración correcta para Supabase...${NC}"
 cat > .env << EOF
 # Supabase (autenticación) - URL correcta con formato completo
-VITE_SUPABASE_URL=https://vymwgkeomyevsckljdw.supabase.co
-VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ5bXdna2VvbXlldnNja2xqZHciLCJyb2xlIjoiYW5vbiIsImlhdCI6MTY5MTU5MzAwOCwiZXhwIjoyMDA3MTY5MDA4fQ.2aNYfX9gsKQvM3BO3lOecDok-saM85rx9L_XQJVbnP0
+VITE_SUPABASE_URL=https://ymwhgkeomyuevsckljdw.supabase.co
+VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inltd2hna2VvbXl1ZXZzY2tsamR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTY4NTg1NTEsImV4cCI6MjA3MjQzNDU1MX0.MGrQkn4-XQFCWD-RrKjLnAIQQNFvr8eVO8HeOfpWW7o
 
 # Configuración para desarrollo local con Mercado Pago en AWS
 PUBLIC_URL=http://localhost:5174

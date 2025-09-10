@@ -24,7 +24,7 @@ const Policy = () => {
               <li><strong>Datos de Identificación:</strong> Nombre completo, fecha de nacimiento, CURP, fotografía.</li>
               <li><strong>Datos de Contacto:</strong> Correo electrónico, número de teléfono.</li>
               <li><strong>Datos de Salud:</strong> Información que proporcionas voluntariamente en "Mi Chequeo" y "Test de Alertas", como peso, talla, presión arterial, síntomas y respuestas a cuestionarios de salud. Estos son considerados datos personales sensibles.</li>
-              <li><strong>Datos de Pago:</strong> Información de tu tarjeta de crédito/débito y datos de facturación, procesados de forma segura a través de nuestro proveedor de pagos Stripe.</li>
+              <li><strong>Datos de Pago:</strong> Información de tu tarjeta de crédito/débito y datos de facturación, procesados de forma segura a través de nuestro proveedor de pagos Mercado Pago.</li>
               <li><strong>Datos de Uso:</strong> Información sobre cómo interactúas con nuestra aplicación.</li>
           </ul>
 
@@ -56,7 +56,7 @@ const Policy = () => {
           <p>Tienes derecho a Acceder, Rectificar, Cancelar u Oponerte (ARCO) al tratamiento de tus datos personales. Para ejercer estos derechos, por favor envía una solicitud a nuestro correo electrónico de contacto: <a href="mailto:contacto@vitacard365.com" className="text-vita-orange underline">contacto@vitacard365.com</a>.</p>
 
           <h2 className="text-2xl font-bold pt-4 text-vita-blue">6. Seguridad de los Datos</h2>
-          <p>Implementamos medidas de seguridad físicas, técnicas y administrativas para proteger tus datos. La información de pago es gestionada directamente por Stripe, cumpliendo con los más altos estándares de seguridad de la industria de pagos (PCI-DSS).</p>
+          <p>Implementamos medidas de seguridad físicas, técnicas y administrativas para proteger tus datos. La información de pago es gestionada directamente por Mercado Pago, cumpliendo con los más altos estándares de seguridad de la industria de pagos.</p>
 
            <h2 className="text-2xl font-bold pt-4 text-vita-blue">7. Cambios al Aviso de Privacidad</h2>
           <p>Nos reservamos el derecho de efectuar en cualquier momento modificaciones o actualizaciones al presente aviso de privacidad. Te notificaremos de cualquier cambio a través de la aplicación o por correo electrónico.</p>

@@ -1,24 +1,16 @@
 import { createClient } from '@supabase/supabase-js';
 
-// Asegurarse de que la URL tenga el formato correcto (https://)
-const urlRaw = import.meta.env.VITE_SUPABASE_URL;
-const url = urlRaw?.startsWith('http') ? urlRaw : `https://${urlRaw}`;
-const anon = import.meta.env.VITE_SUPABASE_ANON_KEY;
+// Usar directamente la URL completa con https:// para evitar problemas
+const url = 'https://ymwhgkeomyuevsckljdw.supabase.co';
+const anon = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inltd2hna2VvbXl1ZXZzY2tsamR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTY4NTg1NTEsImV4cCI6MjA3MjQzNDU1MX0.MGrQkn4-XQFCWD-RrKjLnAIQQNFvr8eVO8HeOfpWW7o';
 
 // Debug completo
 console.log('=== SUPABASE DEBUG ===');
-console.log('VITE_SUPABASE_URL (original):', import.meta.env.VITE_SUPABASE_URL);
-console.log('VITE_SUPABASE_URL (corregida):', url);
-console.log('VITE_SUPABASE_ANON_KEY:', import.meta.env.VITE_SUPABASE_ANON_KEY ? 'present' : 'missing');
-console.log('All VITE_ vars:', Object.keys(import.meta.env).filter(k => k.startsWith('VITE_')));
+console.log('VITE_SUPABASE_URL (hardcoded):', url);
+console.log('VITE_SUPABASE_ANON_KEY: present');
 console.log('=====================');
 
-if (!url || !anon) {
-  // Error claro y temprano (no pantalla en blanco con stack raro)
-  throw new Error(
-    `[Supabase] Variables faltantes. VITE_SUPABASE_URL=${String(url)} VITE_SUPABASE_ANON_KEY=${anon ? 'present' : 'missing'}`
-  );
-}
+// Ya no es necesario verificar si las variables están definidas porque están hardcodeadas
 
 // exporta una sola instancia
 export const supabase = createClient(url, anon, {

@@ -26,7 +26,7 @@ if not exist .env (
     echo Creando archivo .env...
     (
         echo # Supabase (autenticacion)
-        echo VITE_SUPABASE_URL=https://vymwgkeomyevsckljdw.supabase.co
+    echo VITE_SUPABASE_URL=https://ymwhgkeomyuevsckljdw.supabase.co
         echo VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ5bXdna2VvbXlldnNja2xqZHciLCJyb2xlIjoiYW5vbiIsImlhdCI6MTY5MTU5MzAwOCwiZXhwIjoyMDA3MTY5MDA4fQ.2aNYfX9gsKQvM3BO3lOecDok-saM85rx9L_XQJVbnP0
         echo.
         echo # Configuracion para desarrollo local con Mercado Pago en AWS

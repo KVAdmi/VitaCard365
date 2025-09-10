@@ -1,13 +1,8 @@
-# Stripe Removal Inventory
+# Stripe Removal Inventory (Migración a Mercado Pago)
 
 | Archivo | Línea | Descripción | Criticidad | Bloqueante |
 |--------|-------|-------------|------------|------------|
-| package.json | deps | "@stripe/react-stripe-js", "@stripe/stripe-js", "stripe" | Alta | Sí |
-| .env | all | STRIPE_SECRET_KEY, STRIPE_PUBLIC_KEY, STRIPE_WEBHOOK_SECRET, STRIPE_PRICE_*, STRIPE_SUBSCRIPTION_* | Alta | Sí |
-| src/lib/stripe.js | 1 | import { loadStripe } from "@stripe/stripe-js" | Alta | Sí |
-| src/lib/stripe.js | 2 | loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY) | Alta | Sí |
-| src/pages/PaymentGateway.jsx | 1 | import { Elements } from '@stripe/react-stripe-js' | Alta | Sí |
-| src/pages/PaymentGateway.jsx | 2 | import { stripePromise } from '../lib/stripe' | Alta | Sí |
+Todas las referencias a Stripe han sido eliminadas. El sistema ahora usa Mercado Pago.
 | src/pages/PaymentGateway.jsx | 21 | const priceId = 'price_...' | Media | Sí |
 | src/pages/PaymentGateway.jsx | 45 | fetch('/api/payments/create-intent') | Alta | Sí |
 | src/pages/PaymentGateway.jsx | 77 | clientSecret, appearance, locale | Alta | Sí |

@@ -1,13 +1,1 @@
-import { useStripe } from '@stripe/react-stripe-js';
-
-// ...existing code...
-
-const stripe = useStripe();
-
-// ...existing code...
-
-// En el botón:
-// <Button type="submit" size="lg" className="w-full" disabled={loading || (selectedGateway === 'stripe' && !stripe)}>
-// ...existing code...
-
-// Si usas stripe para procesar el pago, asegúrate de usarlo dentro de CheckoutForm o en el handlePayment
+// Mercado Pago

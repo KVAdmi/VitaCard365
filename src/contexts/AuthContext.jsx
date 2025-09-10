@@ -29,70 +29,51 @@ const checkActivationCode = async (code) => {
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const isSupabaseConnected = !!supabase;
+  const isSupabaseConnected = true; // Siempre consideramos que está conectado
 
   useEffect(() => {
-    if (isSupabaseConnected) {
-      const getSession = async () => {
+    const getSession = async () => {
+      try {
         const { data: { session } } = await supabase.auth.getSession();
         setUser(session ? session.user : null);
-        setLoading(false);
-      };
-      getSession();
-
-      const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-        setUser(session ? session.user : null);
-      });
-
-      return () => subscription?.unsubscribe();
-    } else {
-      // Fallback to localStorage if Supabase is not connected
-      try {
-        const localUser = localStorage.getItem('vita-user');
-        if (localUser) {
-          setUser(JSON.parse(localUser));
-        }
       } catch (error) {
-        console.error("Failed to parse user from localStorage", error);
-        localStorage.removeItem('vita-user');
+        console.error("Error al obtener sesión:", error);
+        // Limpiar estado por si hay datos corruptos
+        localStorage.removeItem('supabase.auth.token');
+        localStorage.removeItem('vita-auth');
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
-    }
+    };
+    
+    getSession();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session ? session.user : null);
+    });
+
+    return () => subscription?.unsubscribe();
   }, [isSupabaseConnected]);
 
   const login = async (email, password) => {
-    if (isSupabaseConnected) {
-      try {
-        const { data, error } = await supabase.auth.signInWithPassword({ 
-          email, 
-          password 
-        });
-        if (error) return { error };
-        return { data };
-      } catch (error) {
+    try {
+      console.log('Intentando iniciar sesión con:', { email });
+      const { data, error } = await supabase.auth.signInWithPassword({ 
+        email, 
+        password 
+      });
+      
+      console.log('Respuesta de login:', { data: !!data, error: error?.message || null });
+      
+      if (error) {
         console.error('Error de autenticación:', error);
-        return { error };
-      } finally {
-        if (typeof setAuthLoading === 'function') {
-          setAuthLoading(false);
-        }
+        throw error;
       }
-    } else {
-      // Mock login for demo purposes
-      if (email && password) {
-        const mockUser = {
-          id: uuidv4(),
-          email: email,
-          user_metadata: { name: 'Usuario Demo', alias: 'Demo' },
-          app_metadata: { provider: 'email' },
-          aud: 'authenticated',
-          created_at: new Date().toISOString(),
-        };
-        localStorage.setItem('vita-user', JSON.stringify(mockUser));
-        setUser(mockUser);
-      } else {
-        throw new Error('Por favor, introduce email y contraseña.');
-      }
+      
+      return { data };
+    } catch (error) {
+      console.error('Error crítico en login:', error);
+      throw error;
     }
   };
 
