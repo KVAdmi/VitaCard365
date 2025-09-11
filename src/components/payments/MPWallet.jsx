@@ -17,8 +17,8 @@ export default function MPWallet({ plan='Individual', frequency='Mensual', amoun
         
         if (!enabled) throw new Error(`flag_off:${rawFlag}`);
 
-        // Usar siempre la URL de la API desde las variables de entorno o la IP de AWS
-        const api = String(import.meta.env.VITE_API_BASE_URL || 'http://3.149.144.140').trim();
+        // Usar la URL de la API configurada para producción
+        const api = String(import.meta.env.VITE_API_BASE_URL || 'http://54.175.250.15:3000').trim();
         console.log('MP API URL:', api);
         if (!api) throw new Error('no_api_env');
         
