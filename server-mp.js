@@ -8,11 +8,33 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// CORS simple
+// CORS configurado correctamente para credenciales
+const allowedOrigins = [
+  'https://vitacard365.com',
+  'https://www.vitacard365.com',
+  'http://localhost:5174',
+  'http://localhost:3000',
+  process.env.FRONTEND_BASE_URL
+].filter(Boolean);
+
 app.use(cors({
-  origin: '*',
+  origin: function (origin, callback) {
+    // Permitir solicitudes sin origin (como Postman) en desarrollo
+    if (!origin && process.env.NODE_ENV !== 'production') {
+      return callback(null, true);
+    }
+    
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      console.log('CORS blocked origin:', origin);
+      callback(new Error('No permitido por CORS'));
+    }
+  },
+  credentials: true,
   methods: ['GET', 'POST', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  optionsSuccessStatus: 200
 }));
 
 app.use(express.json());
@@ -44,8 +66,8 @@ app.get("/health", (req, res) => {
   });
 });
 
-// Crear preferencia
-app.post("/api/mercadopago/preference", async (req, res) => {
+// Crear preferencia - ruta que coincide con el frontend
+app.post("/payments/preference", async (req, res) => {
   try {
     if (!mpPreference) {
       throw new Error('Mercado Pago no configurado');
