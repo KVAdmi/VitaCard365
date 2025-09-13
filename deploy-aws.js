@@ -25,7 +25,7 @@ app.use(cors({
       callback(null, true);
     } else {
       console.log('Origen bloqueado por CORS:', origin);
-      callback(new Error('No permitido por CORS'));
+  // callback(new Error('No permitido por CORS')); // Deshabilitado por CORS universal
     }
   },
   methods: ['GET', 'POST', 'OPTIONS'],

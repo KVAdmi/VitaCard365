@@ -13,9 +13,18 @@ dotenv.config({ path: path.join(__dirname, '.env') });
 
 const app = express();
 app.use(cors({
-  origin: true,
-  credentials: true
+  origin: [
+    'http://localhost:5174',
+    'https://vitacard365.com',
+    'https://www.vitacard365.com',
+    'https://vitacard365.netlify.app',
+    'https://app.vitacard365.com'
+  ],
+  methods: ['GET','POST','OPTIONS'],
+  allowedHeaders: ['Content-Type','Authorization'],
+  credentials: false
 }));
+app.options('*', cors()); // preflight
 app.use(express.json());
 
 // Load token from server/.env file

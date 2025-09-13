@@ -174,9 +174,9 @@ app.post("/api/mercadopago/preference", async (req, res) => {
         currency_id: 'MXN'
       }],
       back_urls: {
-        success: `${FRONTEND_BASE_URL}/payment/success`,
-        failure: `${FRONTEND_BASE_URL}/payment/failure`,
-        pending: `${FRONTEND_BASE_URL}/payment/pending`
+        success: 'https://vitacard365.com/payment/success',
+        failure: 'https://vitacard365.com/payment/failure',
+        pending: 'https://vitacard365.com/payment/pending'
       },
       auto_return: 'approved',
       payment_methods: {
@@ -184,7 +184,7 @@ app.post("/api/mercadopago/preference", async (req, res) => {
         excluded_payment_types: [],
         installments: 12
       },
-      notification_url: `${process.env.PUBLIC_URL || 'http://54.175.250.15:3000'}/api/mercadopago/webhook`,
+  notification_url: 'https://api.vitacard365.com/api/mercadopago/webhook',
       statement_descriptor: 'VITACARD365',
       external_reference: `vitacard365-${Date.now()}`
     };

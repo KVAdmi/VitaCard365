@@ -18,10 +18,11 @@ async function createMpPreference(req, res) {
         items: [{ title, quantity: 1, unit_price, currency_id }],
         auto_return: 'approved',
         back_urls: {
-          success: 'http://localhost:5173/payment-success',
-          failure: 'http://localhost:5173/payment-failure',
-          pending: 'http://localhost:5173/payment-pending'
-        }
+          success: 'https://vitacard365.com/payment/success',
+          failure: 'https://vitacard365.com/payment/failure',
+          pending: 'https://vitacard365.com/payment/pending'
+        },
+        notification_url: 'https://api.vitacard365.com/api/mercadopago/webhook'
       }
     });
 
@@ -41,7 +42,10 @@ async function createMpPreference(req, res) {
 }
 
 const app = express();
-app.use(cors());
+app.use(cors({
+  origin: ['http://localhost:5174', 'https://vitacard365.com'],
+  credentials: true
+}));
 app.use(express.json()); // <— IMPORTANTE
 
 app.post('/api/mercadopago/preference', createMpPreference);

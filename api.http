@@ -1,0 +1,19 @@
+### Health (debe devolver 200 y JSON)
+GET https://api.vitacard365.com/health
+
+### Preflight OPTIONS (debe devolver 204 y headers CORS)
+OPTIONS https://api.vitacard365.com/api/mercadopago/preference
+Origin: https://vitacard365.com
+Access-Control-Request-Method: POST
+Access-Control-Request-Headers: content-type
+
+### Crear preferencia (debe devolver 200/201 con preferenceId)
+POST https://api.vitacard365.com/api/mercadopago/preference
+Content-Type: application/json
+Origin: https://vitacard365.com
+
+{
+  "title": "Vita365 Plan",
+  "quantity": 1,
+  "unit_price": 199
+}

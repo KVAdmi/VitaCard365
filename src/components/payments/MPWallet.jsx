@@ -36,16 +36,9 @@ export default function MPWallet({ plan='Individual', frequency='Mensual', amoun
         if (!preferenceId) throw new Error('no_pref');
 
         // 2) SDK
-        if (!window.MercadoPago) {
-          await new Promise((ok, err) => {
-            const s = document.createElement('script');
-            s.src = 'https://sdk.mercadopago.com/js/v2';
-            s.async = true;
-            s.onload = ok;
-            s.onerror = () => err(new Error('sdk_fail'));
-            document.body.appendChild(s);
-          });
-        }
+          if (!window.MercadoPago) {
+            throw new Error('sdk_not_loaded');
+          }
 
         // 3) Contenedor presente
         const containerId = 'mp_wallet_container';
