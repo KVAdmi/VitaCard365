@@ -1,12 +1,15 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { Helmet } from 'react-helmet';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import Layout from '../components/Layout';
+import VitaCard365Logo from '../components/Vita365Logo';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/card';
 import { useAuth } from '../contexts/AuthContext';
 import { ShieldCheck, ArrowRight, User, Users, CalendarDays, ShieldQuestion } from 'lucide-react';
+
+const API_BASE = (import.meta.env.VITE_API_BASE ?? "https://api.vitacard365.com").replace(/\/+$/, "");
 
 const Pagos = () => {
   const navigate = useNavigate();
@@ -37,6 +40,32 @@ const Pagos = () => {
     </Card>
   );
 
+  // Referencia para el checkbox
+  const notifyRef = useRef();
+
+  // Función para registrar el subscription push y llamar al backend
+  async function handlePushNotification() {
+    if (!('serviceWorker' in navigator)) return;
+    const registration = await navigator.serviceWorker.ready;
+    let subscription = await registration.pushManager.getSubscription();
+    if (!subscription) {
+      const vapidPublicKey = window.VAPID_PUBLIC_KEY || '';
+      subscription = await registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: vapidPublicKey
+      });
+    }
+    // Llama al backend para programar la notificación
+    await fetch(`${API_BASE}/api/billing/notifications/schedule-renewal-push`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        userId: user.id,
+        nextPaymentDate: paymentDetails?.nextPaymentDate,
+        subscription
+      })
+    });
+  }
   return (
     <>
       <Helmet>
@@ -51,6 +80,10 @@ const Pagos = () => {
           transition={{ duration: 0.5 }}
           className="p-4 md:p-6 space-y-6"
         >
+          {/* Logo centrado arriba del resumen */}
+          <div className="flex justify-center items-center mb-6">
+            <VitaCard365Logo className="h-44 w-auto md:h-64" />
+          </div>
           <Card className="bg-gradient-to-br from-vita-orange/20 to-vita-blue">
             <CardHeader>
               <CardTitle>Resumen de tu Plan</CardTitle>
@@ -80,8 +113,26 @@ const Pagos = () => {
               ))}
             </div>
           </div>
+
+          {/* Notificación de vencimiento */}
+          <div className="mt-6 p-4 rounded-xl bg-white/10 border border-white/20">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input ref={notifyRef} type="checkbox" className="accent-orange-500 h-5 w-5" onChange={async e => {
+                if (e.target.checked) {
+                  if (window.solicitarPermisoPush) {
+                    window.solicitarPermisoPush();
+                  } else if ('Notification' in window) {
+                    await Notification.requestPermission();
+                  }
+                  await handlePushNotification();
+                }
+              }} />
+              <span className="text-white text-sm">Notificarme antes del vencimiento de mi plan</span>
+            </label>
+            <p className="text-xs text-white/60 mt-2">Activa esta opción para recibir un aviso antes de que expire tu plan y no perder la cobertura.</p>
+          </div>
           
-          <Button onClick={() => navigate('/payment-gateway')} size="lg" className="w-full">
+          <Button onClick={() => navigate('/payment-gateway')} size="lg" className="w-full" style={{ backgroundColor: '#f06340', color: '#fff' }}>
             <ShieldCheck className="mr-2 h-5 w-5" />
               Pagar o cambiar plan
             <ArrowRight className="ml-2 h-5 w-5" />

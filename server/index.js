@@ -1,9 +1,10 @@
 import dotenv from 'dotenv';
 import express from 'express';
 import cors from 'cors';
-import { MercadoPagoConfig, Preference } from 'mercadopago';
+import mercadopago from 'mercadopago';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import notificationsRouter from './api/billing/notifications.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -13,23 +14,16 @@ dotenv.config({ path: path.join(__dirname, '.env') });
 
 const app = express();
 app.use(cors({
-  origin: [
-    'http://localhost:5174',
-    'https://vitacard365.com',
-    'https://www.vitacard365.com',
-    'https://vitacard365.netlify.app',
-    'https://app.vitacard365.com'
-  ],
-  methods: ['GET','POST','OPTIONS'],
-  allowedHeaders: ['Content-Type','Authorization'],
-  credentials: false
+  origin: "https://vitacard365.com",
+  credentials: true,
+  methods: ["GET","POST","PUT","PATCH","DELETE","OPTIONS"],
+  allowedHeaders: ["Content-Type","Authorization","X-Requested-With"]
 }));
 app.options('*', cors()); // preflight
 app.use(express.json());
 
 // Load token from server/.env file
-const MP_TOKEN = process.env.MP_ACCESS_TOKEN;
-const mp = new MercadoPagoConfig({ accessToken: MP_TOKEN });
+mercadopago.configure({ access_token: process.env.MP_ACCESS_TOKEN });
 
 // Health (debug rápido)
 app.get('/api/mercadopago/health', (req, res) => {
@@ -44,51 +38,62 @@ app.get('/api/mercadopago/health', (req, res) => {
 });
 
 // Preference endpoint with dynamic data
-app.post('/api/mercadopago/preference', async (req, res) => {
+const FREQ_LABEL = {
+  monthly: "Mensual",
+  quarterly: "Trimestral",
+  semiannually: "Semestral",
+  annually: "Anual",
+};
+
+app.use(express.json({ limit: "1mb" }));
+
+app.post("/api/mercadopago/preference", async (req, res) => {
   try {
-    const { title, unit_price, currency_id = 'MXN' } = req.body;
-    
-    const preferenceData = {
+    const { plan, frequency, familySize, unit_price } = req.body || {};
+    // Sanitizar monto
+    const price = Number(Number(unit_price ?? 0).toFixed(2));
+    if (!price || price <= 0 || !isFinite(price)) {
+      console.error("[MP] invalid price from FE:", unit_price);
+      return res.status(400).json({ error: "invalid_price" });
+    }
+    // Título dinámico
+    const freqLabel = FREQ_LABEL[frequency] || "Mensual";
+    const title = `VitaCard365 - Plan ${plan} ${freqLabel}`;
+    // Preferencia
+    const prefBody = {
       items: [
-        { 
-          title: title || 'Vita Mensual', 
-          unit_price: Number(unit_price) || 199, 
-          quantity: 1, 
-          currency_id: currency_id 
-        }
+        {
+          title,
+          currency_id: "MXN",
+          quantity: 1,
+          unit_price: price,
+        },
       ],
       back_urls: {
-        success: 'https://vitacard365.netlify.app/success',
-        failure: 'https://vitacard365.netlify.app/failure',
-        pending: 'https://vitacard365.netlify.app/pending'
+        success: "https://vitacard365.com/payment/success",
+        failure: "https://vitacard365.com/payment/failure",
+        pending: "https://vitacard365.com/payment/pending",
       },
-      auto_return: 'approved',
-      external_reference: `vita-${Date.now()}`,
-      notification_url: 'https://vitacard365.netlify.app/webhook'
+      auto_return: "approved",
     };
-
-    const pref = await new Preference(mp).create({ body: preferenceData });
-
-    const id = pref.id || pref.body?.id;
-    if (!id) throw new Error('MP preference creation returned no id');
-
-    res.json({ 
-      preferenceId: id,
-      init_point: pref.init_point || pref.body?.init_point,
-      success: true
+    // LOG brutalista para validar lo que REALMENTE mandamos
+    console.log("[MP] creating preference with:", JSON.stringify(prefBody));
+    const pref = await mercadopago.preferences.create(prefBody);
+    // LOG de lo que MP devolvió
+    console.log(
+      "[MP] created:",
+      pref?.body?.id,
+      pref?.body?.items?.[0]?.unit_price
+    );
+    return res.json({
+      preferenceId: pref?.body?.id,
+      init_point: pref?.body?.init_point,
+      unit_price_sent: price,
+      unit_price_mp: pref?.body?.items?.[0]?.unit_price,
     });
-  } catch (e) {
-    console.error('MP 500:', {
-      msg: e.message,
-      name: e.name,
-      cause: e.cause,
-      error: e.error
-    });
-    res.status(500).json({ 
-      error: 'mp_pref_error', 
-      details: e.message, 
-      cause: e.cause || e.error 
-    });
+  } catch (err) {
+    console.error("[MP] preference error:", err);
+    return res.status(500).json({ error: "mp_error" });
   }
 });
 
@@ -100,4 +105,6 @@ app.listen(PORT, () => {
   console.log('MP token source:', process.env.MP_ACCESS_TOKEN ? 'ENV' : 'HARDCODED');
 });
 
+// Notificaciones push de vencimiento
+app.use('/api/billing/notifications', notificationsRouter);
 // TODO: Montar y proteger endpoints core y billing con requirePaid
