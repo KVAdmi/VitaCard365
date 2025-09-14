@@ -1,5 +1,5 @@
 // src/lib/api.js
-const API_BASE = (import.meta.env.VITE_API_BASE ?? "https://api.vitacard365.com").replace(/\/+$/,"{}");
+const API_BASE = (import.meta.env.VITE_API_BASE ?? "https://api.vitacard365.com").replace(/\/+$/,"");
 const PREF_PATH = "/api/mercadopago/preference"; // ← ruta real del backend
 
 export async function createPreference({ plan, frequency, unit_price, familySize }) {

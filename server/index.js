@@ -29,8 +29,8 @@ mercadopago.configure({ access_token: process.env.MP_ACCESS_TOKEN });
 app.get('/api/mercadopago/health', (req, res) => {
   res.json({
     ok: true,
-    hasToken: !!MP_TOKEN,
-    tokenSource: MP_TOKEN ? 'present' : 'missing',
+    hasToken: !!process.env.MP_ACCESS_TOKEN,
+    tokenSource: process.env.MP_ACCESS_TOKEN ? 'present' : 'missing',
     envToken: !!process.env.MP_ACCESS_TOKEN,
     publicUrl: process.env.PUBLIC_URL,
     time: new Date().toISOString(),
@@ -101,7 +101,7 @@ app.post('/api/mercadopago/webhook', (_req,res)=>res.sendStatus(200));
 
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
-  console.log(`API on :${PORT} | MP token present:`, !!MP_TOKEN);
+  console.log(`API on :${PORT} | MP token present:`, !!process.env.MP_ACCESS_TOKEN);
   console.log('MP token source:', process.env.MP_ACCESS_TOKEN ? 'ENV' : 'HARDCODED');
 });
 
