@@ -109,32 +109,36 @@ export default function PaymentGateway() {
 
             {planType === "familiar" && (
               <div className="ml-auto flex flex-col items-end">
-                <label className="mr-2 text-sm text-white/80">Familiares adicionales</label>
-                <div className="flex items-center gap-2">
-                  <div className="text-sm text-white/80 mr-2">
-                    Titular (1) +
-                  </div>
-                  <input
-                    type="text"
-                    inputMode="numeric"
-                    pattern="[0-9]*"
-                    value={familySize - 1}
-                    readOnly
-                    className="w-12 rounded-md bg-white/10 border border-white/10 px-2 py-1 text-sm focus:outline-none text-center"
-                  />
-                  <div className="flex gap-1">
-                    <button 
-                      className="w-8 h-8 rounded bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center"
-                      onClick={() => setFamilySize(prev => Math.min(10, prev + 1))}
-                    >
-                      +
-                    </button>
-                    <button 
-                      className="w-8 h-8 rounded bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center"
-                      onClick={() => setFamilySize(prev => Math.max(2, prev - 1))}
-                    >
-                      -
-                    </button>
+                <label className="text-sm text-white/80 mb-2">Familiares adicionales</label>
+                <div className="flex flex-wrap items-center gap-2 w-full">
+                  <div className="flex items-center gap-2 flex-wrap justify-center w-full">
+                    <div className="text-sm text-white/80">
+                      Titular (1) +
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        pattern="[0-9]*"
+                        value={familySize - 1}
+                        readOnly
+                        className="w-12 rounded-md bg-white/10 border border-white/10 px-2 py-1 text-sm focus:outline-none text-center"
+                      />
+                      <div className="flex gap-1">
+                        <button 
+                          className="w-8 h-8 rounded bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center"
+                          onClick={() => setFamilySize(prev => Math.min(10, prev + 1))}
+                        >
+                          +
+                        </button>
+                        <button 
+                          className="w-8 h-8 rounded bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center"
+                          onClick={() => setFamilySize(prev => Math.max(2, prev - 1))}
+                        >
+                          -
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 </div>
                 <div className="text-xs text-green-300 mt-1">

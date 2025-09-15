@@ -68,7 +68,6 @@ export default function MPWallet({ amount, onGenerate }) {
 
   return (
     <div className="flex flex-col items-center">
-      <div className="text-sm text-white/80 mb-4">Pago seguro con:</div>
       <div ref={containerRef} id="mp_wallet_container" className="w-full max-w-sm" />
     </div>
   );
