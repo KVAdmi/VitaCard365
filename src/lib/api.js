@@ -4,18 +4,18 @@ const PREF_PATH = "/api/mercadopago/preference";
 
 export async function createPreference(payload) {
   try {
-    // Validar que el monto sea un número antes de enviarlo
-    const amount = Number(payload.amount);
-    if (isNaN(amount) || amount <= 0) {
-      throw new Error('Monto inválido');
+    // Validar que el precio sea un número en pesos antes de enviarlo
+    const price = Math.round(Number(payload.unit_price) * 100) / 100;
+    if (!Number.isFinite(price) || price <= 0) {
+      throw new Error("Monto inválido");
     }
 
     // Preparar payload con los nombres correctos que espera el backend
     const validPayload = {
       plan: payload.plan || 'individual',
       frequency: payload.frequency || 'monthly', 
-      familySize: payload.familySize || 1,
-      unit_price: amount // Backend espera 'unit_price', no 'amount'
+      familySize: Number(payload.familySize || 1),
+      amount: price  // precio en pesos con decimales
     };
 
     console.log('[API] Enviando payload:', validPayload);
