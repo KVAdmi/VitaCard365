@@ -4,8 +4,9 @@ const PREF_PATH = "/api/mercadopago/preference";
 
 export async function createPreference(payload) {
   try {
+
     // Validar que el precio sea un número en pesos antes de enviarlo
-    const price = Math.round(Number(payload.unit_price) * 100) / 100;
+    const price = Math.round(Number(payload.amount) * 100) / 100;
     if (!Number.isFinite(price) || price <= 0) {
       throw new Error("Monto inválido");
     }
