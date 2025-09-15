@@ -18,65 +18,87 @@ export default function PaymentGateway() {
   } = usePayment();
 
   const [loading, setLoading] = useState(false);
-  const [err, setErr] = useState(null);
+  const [error, setError] = useState(null);
+  const [preferenceData, setPreferenceData] = useState(null);
 
-  // Cuando cambie la selección, no necesitamos mantener nada del brick
-  const last = useRef({ planType, familySize, frequency, totalAmount });
+  // Resetear errores cuando cambie la configuración
+  const lastConfig = useRef({ planType, familySize, frequency, totalAmount });
   useEffect(() => {
     const changed =
-      last.current.planType !== planType ||
-      last.current.familySize !== familySize ||
-      last.current.frequency !== frequency ||
-      last.current.totalAmount !== totalAmount;
+      lastConfig.current.planType !== planType ||
+      lastConfig.current.familySize !== familySize ||
+      lastConfig.current.frequency !== frequency ||
+      lastConfig.current.totalAmount !== totalAmount;
+    
     if (changed) {
-      last.current = { planType, familySize, frequency, totalAmount };
-      setErr(null);
+      lastConfig.current = { planType, familySize, frequency, totalAmount };
+      setError(null);
+      setPreferenceData(null); // Limpiar preferencia anterior
     }
   }, [planType, familySize, frequency, totalAmount]);
 
   const onGenerate = async () => {
     try {
-      setErr(null);
+      setError(null);
       setLoading(true);
 
       // Validar que el monto sea correcto y convertirlo a número
       const finalAmount = parseFloat(totalAmount);
       if (isNaN(finalAmount) || finalAmount <= 0) {
-        console.error("[Gateway] monto inválido:", totalAmount);
-        setErr("Error en el cálculo del monto.");
+        console.error("[Gateway] Monto inválido:", totalAmount);
+        setError("Error en el cálculo del monto. Por favor, recarga la página.");
         return;
       }
 
-      console.log("[Gateway] Enviando datos:", {
-        plan: planType,
-        frequency,
-        familySize,
-        amount: finalAmount,
-        breakdown
-      });
-
-      const res = await createPreference({
+      const requestData = {
         plan: planType,
         frequency,
         familySize,
         amount: finalAmount
-      });
+      };
 
-      console.log("[Gateway] Respuesta MP:", res);
+      console.log("[Gateway] Generando preferencia con datos:", requestData);
 
-      // Obtener la URL de redirección y asegurarnos de que existe
-      if (!res || (!res.init_point && !res.sandbox_init_point)) {
-        console.error("[Gateway] Respuesta inválida de MP:", res);
-        setErr("No se pudo generar el enlace de pago.");
+      const response = await createPreference(requestData);
+
+      console.log("[Gateway] Respuesta de preferencia:", response);
+
+      // Validar respuesta
+      if (!response || (!response.init_point && !response.sandbox_init_point)) {
+        console.error("[Gateway] Respuesta inválida:", response);
+        setError("No se pudo generar el enlace de pago. Intenta nuevamente.");
         return;
       }
 
-      // Usar la URL de sandbox en desarrollo, production en producción
-      const checkoutUrl = res.init_point || res.sandbox_init_point;
-      window.location.href = checkoutUrl;
-    } catch (e) {
-      console.error("[Gateway] preference error:", e);
-      setErr("No se pudo preparar el pago.");
+      // Guardar datos de preferencia para uso posterior si es necesario
+      setPreferenceData(response);
+
+      // Redirigir a Mercado Pago
+      const checkoutUrl = response.init_point || response.sandbox_init_point;
+      console.log("[Gateway] Redirigiendo a:", checkoutUrl);
+      
+      // Pequeño delay para mostrar feedback al usuario
+      setTimeout(() => {
+        window.location.href = checkoutUrl;
+      }, 500);
+
+    } catch (error) {
+      console.error("[Gateway] Error al generar preferencia:", error);
+      
+      // Mensajes de error más específicos
+      let errorMessage = "No se pudo procesar el pago. ";
+      
+      if (error.message.includes('Monto inválido')) {
+        errorMessage += "Hay un problema con el monto calculado.";
+      } else if (error.message.includes('Error del servidor')) {
+        errorMessage += "El servidor de pagos no está disponible.";
+      } else if (error.message.includes('network') || error.message.includes('fetch')) {
+        errorMessage += "Verifica tu conexión a internet.";
+      } else {
+        errorMessage += "Intenta nuevamente en unos momentos.";
+      }
+      
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -91,18 +113,20 @@ export default function PaymentGateway() {
           {/* Plan */}
           <div className="flex items-center gap-4 mb-4">
             <button
-              className={`px-3 py-1.5 rounded-full text-sm ${
-                planType === "individual" ? "bg-[#f06340] text-white" : "bg-white/10"
+              className={`px-3 py-1.5 rounded-full text-sm transition-colors ${
+                planType === "individual" ? "bg-[#f06340] text-white" : "bg-white/10 hover:bg-white/20"
               }`}
               onClick={() => setPlanType("individual")}
+              disabled={loading}
             >
               Individual
             </button>
             <button
-              className={`px-3 py-1.5 rounded-full text-sm ${
-                planType === "familiar" ? "bg-[#f06340] text-white" : "bg-white/10"
+              className={`px-3 py-1.5 rounded-full text-sm transition-colors ${
+                planType === "familiar" ? "bg-[#f06340] text-white" : "bg-white/10 hover:bg-white/20"
               }`}
               onClick={() => setPlanType("familiar")}
+              disabled={loading}
             >
               Familiar
             </button>
@@ -126,14 +150,16 @@ export default function PaymentGateway() {
                       />
                       <div className="flex gap-1">
                         <button 
-                          className="w-8 h-8 rounded bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center"
+                          className="w-8 h-8 rounded bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center transition-colors disabled:opacity-50"
                           onClick={() => setFamilySize(prev => Math.min(10, prev + 1))}
+                          disabled={loading}
                         >
                           +
                         </button>
                         <button 
-                          className="w-8 h-8 rounded bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center"
+                          className="w-8 h-8 rounded bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center transition-colors disabled:opacity-50"
                           onClick={() => setFamilySize(prev => Math.max(2, prev - 1))}
+                          disabled={loading}
                         >
                           -
                         </button>
@@ -144,7 +170,6 @@ export default function PaymentGateway() {
                 <div className="text-xs text-green-300 mt-1">
                   Total: {familySize} {familySize === 1 ? 'persona' : 'personas'} (Titular + {familySize - 1} familiares)
                 </div>
-
               </div>
             )}
           </div>
@@ -154,10 +179,11 @@ export default function PaymentGateway() {
             {Object.entries(paymentFrequencies).map(([key, cfg]) => (
               <button
                 key={key}
-                className={`px-3 py-1.5 rounded-full text-sm ${
-                  frequency === key ? "bg-[#f06340] text-white" : "bg-white/10"
+                className={`px-3 py-1.5 rounded-full text-sm transition-colors ${
+                  frequency === key ? "bg-[#f06340] text-white" : "bg-white/10 hover:bg-white/20"
                 }`}
                 onClick={() => setFrequency(key)}
+                disabled={loading}
               >
                 {cfg.label}
               </button>
@@ -166,7 +192,7 @@ export default function PaymentGateway() {
 
           {/* Total */}
           <div className="text-lg font-semibold mb-4">
-            Total a pagar: ${totalAmount} MXN
+            Total a pagar: <span className="text-[#f06340]">${totalAmount} MXN</span>
           </div>
 
           {/* DESGLOSE / AHORROS */}
@@ -187,23 +213,24 @@ export default function PaymentGateway() {
             </div>
             <div className="mt-2 flex justify-between font-semibold">
               <span>Ahorro total</span>
-              <span>- ${breakdown.totalSavings} MXN</span>
+              <span className="text-green-300">- ${breakdown.totalSavings} MXN</span>
             </div>
             <div className="mt-1 text-xs text-white/60">
               {breakdown.months} {breakdown.months === 1 ? "mes" : "meses"} • ${individualPrice} por persona/mes
             </div>
           </div>
 
-          {/* Acciones */}
+          {/* Botón de Mercado Pago */}
           <div className="flex flex-col items-center mt-6 gap-3">
             <MPWallet
               amount={parseFloat(totalAmount)}
               onGenerate={onGenerate} 
               loading={loading}
-              error={err}
+              error={error}
             />
           </div>
-          <p className="mt-6 text-xs text-white/60">
+          
+          <p className="mt-6 text-xs text-white/60 text-center">
             Al confirmar el pago, aceptas los Términos de Servicio y la Política de Privacidad de VitaCard 365.
           </p>
         </div>

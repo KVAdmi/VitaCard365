@@ -49,12 +49,13 @@ try {
   if (mpToken) {
     mpClient = new MercadoPagoConfig({ accessToken: mpToken });
     mpPreference = new Preference(mpClient);
-    console.log('✅ Mercado Pago configurado');
+    console.log('✅ Mercado Pago configurado correctamente');
+    console.log('🔑 Token MP prefix:', mpToken.slice(0, 8));
   } else {
-    console.log('❌ Token MP no encontrado');
+    console.log('❌ Token MP no encontrado en variables de entorno');
   }
 } catch (error) {
-  console.error('❌ Error MP:', error.message);
+  console.error('❌ Error configurando MP:', error.message);
 }
 
 // Health check
@@ -62,7 +63,8 @@ app.get("/health", (req, res) => {
   res.json({ 
     status: "OK",
     timestamp: new Date().toISOString(),
-    port: PORT
+    port: PORT,
+    mpConfigured: !!mpPreference
   });
 });
 
@@ -70,58 +72,103 @@ app.get("/health", (req, res) => {
 app.post("/api/mercadopago/preference", async (req, res) => {
   try {
     if (!mpPreference) {
-      throw new Error('Mercado Pago no configurado');
+      throw new Error('Mercado Pago no configurado correctamente');
     }
 
     const { plan, frequency, familySize, unit_price } = req.body;
     
-    // Validar el monto
+    console.log('📝 Datos recibidos:', { plan, frequency, familySize, unit_price });
+    
+    // Validar el monto - USAR EL VALOR DINÁMICO, NO HARDCODEADO
     const amount = Number(unit_price);
-    if (!amount || isNaN(amount) || amount <= 0) {
-      console.error('Monto inválido:', unit_price);
-      return res.status(400).json({ error: 'Monto inválido' });
+    if (!unit_price || isNaN(amount) || amount <= 0) {
+      console.error('❌ Monto inválido recibido:', unit_price);
+      return res.status(400).json({ 
+        error: 'Monto inválido',
+        received: unit_price,
+        message: 'El monto debe ser un número mayor a 0'
+      });
     }
     
-    console.log('Creando preferencia con datos:', { plan, frequency, familySize, amount });
+    // Preparar datos para la preferencia
+    const planName = plan || 'individual';
+    const freq = frequency || 'monthly';
+    const size = familySize || 1;
     
-    const preference = {
+    const preferenceData = {
       items: [{
-        title: `VitaCard365 - Plan ${plan} ${frequency}`,
-        description: `Plan ${plan} para ${familySize} ${familySize > 1 ? 'personas' : 'persona'}`,
+        title: `VitaCard365 - Plan ${planName} ${freq}`,
+        description: `Plan ${planName} para ${size} ${size > 1 ? 'personas' : 'persona'}`,
         quantity: 1,
-        unit_price: amount,
+        unit_price: amount, // Usar el monto dinámico del frontend
         currency_id: 'MXN'
       }],
       back_urls: {
-        success: `${process.env.FRONTEND_BASE_URL}/payment/success`,
-        failure: `${process.env.FRONTEND_BASE_URL}/payment/failure`,
-        pending: `${process.env.FRONTEND_BASE_URL}/payment/pending`
+        success: `${process.env.FRONTEND_BASE_URL || 'http://localhost:5174'}/payment/success`,
+        failure: `${process.env.FRONTEND_BASE_URL || 'http://localhost:5174'}/payment/failure`,
+        pending: `${process.env.FRONTEND_BASE_URL || 'http://localhost:5174'}/payment/pending`
       },
-      auto_return: 'approved'
+      auto_return: 'approved',
+      notification_url: `${process.env.VITE_API_BASE_URL || 'http://localhost:3000'}/api/mercadopago/webhook`,
+      metadata: {
+        plan: planName,
+        frequency: freq,
+        family_size: size,
+        amount: amount
+      }
     };
 
-    console.log('Preferencia a crear:', preference);
-    const response = await mpPreference.create({ body: preference });
-    console.log('Preferencia creada:', response.body);
+    console.log('🚀 Creando preferencia con datos:', preferenceData);
     
+    const response = await mpPreference.create({ body: preferenceData });
+    
+    console.log('✅ Preferencia creada exitosamente:', {
+      id: response.id,
+      init_point: response.init_point,
+      sandbox_init_point: response.sandbox_init_point
+    });
+    
+    // Retornar tanto el ID como las URLs de redirección
     res.json({
       preferenceId: response.id,
-      init_point: response.init_point
+      init_point: response.init_point,
+      sandbox_init_point: response.sandbox_init_point
     });
     
   } catch (error) {
-    console.error('Error:', error.message);
-    res.status(500).json({
-      error: 'Error al crear preferencia',
-      message: error.message
+    console.error('❌ Error creando preferencia:', {
+      message: error.message,
+      status: error.status,
+      cause: error.cause
+    });
+    
+    res.status(error.status || 500).json({
+      error: 'Error al crear preferencia de pago',
+      message: error.message,
+      details: error.cause || 'Error interno del servidor'
     });
   }
 });
 
+// Webhook para notificaciones de Mercado Pago
+app.post("/api/mercadopago/webhook", (req, res) => {
+  console.log('📨 Webhook recibido:', req.body);
+  res.status(200).send('OK');
+});
+
+// Middleware de manejo de errores
+app.use((error, req, res, next) => {
+  console.error('🚨 Error no manejado:', error);
+  res.status(500).json({
+    error: 'Error interno del servidor',
+    message: error.message
+  });
+});
+
 // Iniciar servidor
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`🚀 Servidor corriendo en puerto ${PORT}`);
+  console.log(`🚀 Servidor MP corriendo en puerto ${PORT}`);
+  console.log(`🌐 Health check: http://localhost:${PORT}/health`);
 });
 
 export default app;
-
