@@ -94,8 +94,8 @@ const Dashboard = () => {
                   onClick={() => navigate(action.path)}
                   className="flex flex-col items-center justify-center space-y-2 p-4 rounded-2xl glass-card cursor-pointer"
                 >
-                  <div className="w-12 h-12 bg-vita-secondary rounded-full flex items-center justify-center">
-                    <action.icon className="h-6 w-6 text-vita-orange" />
+                  <div className="w-12 h-12 flex items-center justify-center rounded-full shadow-lg" style={{ backgroundColor: '#f06340' }}>
+                    <action.icon className="h-7 w-7 text-white" />
                   </div>
                   <p className="text-xs font-semibold text-center text-vita-white">{action.title}</p>
                 </motion.div>

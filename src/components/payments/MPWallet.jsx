@@ -1,88 +1,75 @@
+import { useEffect, useRef } from "react";
 
+let mpInitialized = false;
 
-import { useEffect, useRef, useState } from "react";
-
-function waitForMPSDK(maxMs = 4000, intervalMs = 50) {
-  return new Promise((resolve, reject) => {
-    if (window.MercadoPago) return resolve(true);
-    const script = document.getElementById("mp-sdk");
-    let waited = 0;
-    const onLoad = () => resolve(true);
-    if (script) script.addEventListener("load", onLoad, { once: true });
-
-    const t = setInterval(() => {
-      if (window.MercadoPago) {
-        clearInterval(t);
-        script?.removeEventListener("load", onLoad);
-        resolve(true);
-      } else if ((waited += intervalMs) >= maxMs) {
-        clearInterval(t);
-        script?.removeEventListener("load", onLoad);
-        reject(new Error("sdk_not_loaded_timeout"));
-      }
-    }, intervalMs);
-  });
-}
-
-export default function MPWallet({ preferenceId }) {
-  const createdRef = useRef(false);
-  const controllerRef = useRef(null);
-  const [status, setStatus] = useState("init");
-  const CONTAINER_ID = "mp_wallet_container";
+export default function MPWallet({ amount, onGenerate }) {
+  const scriptRef = useRef(null);
+  const containerRef = useRef(null);
 
   useEffect(() => {
-    let cancelled = false;
+    if (mpInitialized) return;
+    mpInitialized = true;
 
-    const start = async () => {
-      try {
-        if (!preferenceId) { setStatus("missing_preference"); return; }
-        if (typeof preferenceId !== "string") { setStatus("invalid_preference"); return; }
-        if (createdRef.current) return;
+    let timeoutId;
 
-        setStatus("waiting_sdk");
-        await waitForMPSDK();
-        if (cancelled) return;
-
-        setStatus("creating");
-        const mp = new window.MercadoPago(import.meta.env.VITE_MP_PUBLIC_KEY, { locale: "es-MX" });
-        const bricks = mp.bricks();
-
-        // PASA EL ID STRING, NO EL ELEMENTO
-        controllerRef.current = await bricks.create("wallet", CONTAINER_ID, {
-          initialization: { preferenceId },
-          customization: { texts: { valueProp: "security_details" } },
-        });
-
-        if (!cancelled) { createdRef.current = true; setStatus("ready"); }
-      } catch (e) {
-        console.error("[MP wallet brick] error:", e);
-        if (!cancelled) setStatus(e?.message === "sdk_not_loaded_timeout" ? "sdk_not_loaded" : "error");
-      }
+    const createButton = () => {
+      if (!containerRef.current) return;
+      
+      timeoutId = setTimeout(() => {
+        try {
+          const mp = new window.MercadoPago(import.meta.env.VITE_MP_PUBLIC_KEY);
+          mp.bricks().create('wallet', 'mp_wallet_container', {
+            initialization: {
+              amount,
+              preferenceId: null
+            },
+            callbacks: {
+              onSubmit: onGenerate,
+              onError: (error) => {
+                console.log('MP Error:', error);
+                if (error.type === 'non_critical') {
+                  createButton();
+                }
+              }
+            },
+            customization: {
+              visual: {
+                hideMessage: true
+              }
+            }
+          });
+        } catch (err) {
+          console.error('Error creating MP button:', err);
+        }
+      }, 100);
     };
 
-    start();
+    if (!window.MercadoPago) {
+      const script = document.createElement('script');
+      scriptRef.current = script;
+      script.src = 'https://sdk.mercadopago.com/js/v2';
+      script.onload = createButton;
+      document.body.appendChild(script);
+    } else {
+      createButton();
+    }
+
     return () => {
-      cancelled = true;
-      // desmonta si el SDK alcanzó a crear algo
-      try { controllerRef.current?.unmount?.(); } catch {}
-    };
-  }, [preferenceId]);
+      if (timeoutId) clearTimeout(timeoutId);
+      if (scriptRef.current) {
+        const script = scriptRef.current;
+        if (script.parentNode) {
+          script.parentNode.removeChild(script);
+        }
+      }
+      mpInitialized = false;
+    }
+  }, []); // Solo se ejecuta una vez al montar el componente
 
   return (
-    <div className="w-full">
-      {/* el ID debe existir y ser ÚNICO */}
-      <div id={CONTAINER_ID} />
-      {status !== "ready" && (
-        <div className="mt-2 text-xs text-slate-400">
-          {status === "waiting_sdk" && "Cargando SDK…"}
-          {status === "creating" && "Inicializando pago…"}
-          {status === "sdk_not_loaded" && "SDK no disponible (revisa <script> o CSP)."}
-          {status === "missing_preference" && "Sin preferenceId."}
-          {status === "invalid_preference" && "preferenceId inválido (debe ser string)."}
-          {status === "error" && "No se pudo crear el Wallet. Revisa consola."}
-        </div>
-      )}
+    <div className="flex flex-col items-center">
+      <div className="text-sm text-white/80 mb-4">Pago seguro con:</div>
+      <div ref={containerRef} id="mp_wallet_container" className="w-full max-w-sm" />
     </div>
   );
 }
-

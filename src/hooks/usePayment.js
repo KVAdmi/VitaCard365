@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 
-const INDIVIDUAL_PRICE = 199;
+const INDIVIDUAL_PRICE = 199; // Precio base individual
 
 const PAYMENT_FREQUENCIES = {
   monthly: { months: 1, discount: 0, label: 'Mensual' }, // Individual: 199, Familiar: titular + 1, Desc 10%

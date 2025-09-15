@@ -1,8 +1,8 @@
 // src/pages/PaymentGateway.jsx
 import { useEffect, useRef, useState } from "react";
 import { usePayment } from "../hooks/usePayment";
-import MPWallet from "../components/payments/MPWallet.jsx";
 import { createPreference } from "../lib/api";
+import MPWallet from "../components/payments/MPWallet.jsx";
 
 export default function PaymentGateway() {
   const {
@@ -17,38 +17,63 @@ export default function PaymentGateway() {
     individualPrice,
   } = usePayment();
 
-  const [preferenceId, setPreferenceId] = useState(null);
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState(null);
 
-  // desmontar el brick si cambian selecciones (evita duplicados)
-  const last = useRef({ planType, familySize, frequency });
+  // Cuando cambie la selección, no necesitamos mantener nada del brick
+  const last = useRef({ planType, familySize, frequency, totalAmount });
   useEffect(() => {
     const changed =
       last.current.planType !== planType ||
       last.current.familySize !== familySize ||
-      last.current.frequency !== frequency;
-
+      last.current.frequency !== frequency ||
+      last.current.totalAmount !== totalAmount;
     if (changed) {
-      last.current = { planType, familySize, frequency };
-      if (preferenceId) setPreferenceId(null);
+      last.current = { planType, familySize, frequency, totalAmount };
+      setErr(null);
     }
-  }, [planType, familySize, frequency, preferenceId]);
+  }, [planType, familySize, frequency, totalAmount]);
 
   const onGenerate = async () => {
     try {
       setErr(null);
       setLoading(true);
-      setPreferenceId(null);
 
-      const { preferenceId: pid } = await createPreference({
+      // Validar que el monto sea correcto y convertirlo a número
+      const finalAmount = parseFloat(totalAmount);
+      if (isNaN(finalAmount) || finalAmount <= 0) {
+        console.error("[Gateway] monto inválido:", totalAmount);
+        setErr("Error en el cálculo del monto.");
+        return;
+      }
+
+      console.log("[Gateway] Enviando datos:", {
         plan: planType,
         frequency,
         familySize,
-        unit_price: Number(totalAmount.replace(/,/g, '.')), // asegura número decimal
+        amount: finalAmount,
+        breakdown
       });
 
-      setPreferenceId(typeof pid === "string" ? pid : null);
+      const res = await createPreference({
+        plan: planType,
+        frequency,
+        familySize,
+        amount: finalAmount
+      });
+
+      console.log("[Gateway] Respuesta MP:", res);
+
+      // Obtener la URL de redirección y asegurarnos de que existe
+      if (!res || (!res.init_point && !res.sandbox_init_point)) {
+        console.error("[Gateway] Respuesta inválida de MP:", res);
+        setErr("No se pudo generar el enlace de pago.");
+        return;
+      }
+
+      // Usar la URL de sandbox en desarrollo, production en producción
+      const checkoutUrl = res.init_point || res.sandbox_init_point;
+      window.location.href = checkoutUrl;
     } catch (e) {
       console.error("[Gateway] preference error:", e);
       setErr("No se pudo preparar el pago.");
@@ -69,7 +94,7 @@ export default function PaymentGateway() {
               className={`px-3 py-1.5 rounded-full text-sm ${
                 planType === "individual" ? "bg-[#f06340] text-white" : "bg-white/10"
               }`}
-              onClick={() => { setPlanType("individual"); if (preferenceId) setPreferenceId(null); }}
+              onClick={() => setPlanType("individual")}
             >
               Individual
             </button>
@@ -77,25 +102,45 @@ export default function PaymentGateway() {
               className={`px-3 py-1.5 rounded-full text-sm ${
                 planType === "familiar" ? "bg-[#f06340] text-white" : "bg-white/10"
               }`}
-              onClick={() => { setPlanType("familiar"); if (preferenceId) setPreferenceId(null); }}
+              onClick={() => setPlanType("familiar")}
             >
               Familiar
             </button>
 
             {planType === "familiar" && (
               <div className="ml-auto flex flex-col items-end">
-                <label className="mr-2 text-sm text-white/80">Integrantes</label>
-                <input
-                  type="number"
-                  min={2}
-                  value={familySize}
-                  onChange={(e) => { setFamilySize(Number(e.target.value)); if (preferenceId) setPreferenceId(null); }}
-                  className="w-20 rounded-md bg-white/10 border border-white/10 px-2 py-1 text-sm focus:outline-none"
-                />
-                <span className="mt-1 text-xs text-yellow-300 text-right max-w-xs">
-                  Ingresa el total de personas (titular + familiares). Ejemplo: 3 = tú + 2 familiares.<br/>
-                  Se generará un folio VITAFAM para tu grupo.
-                </span>
+                <label className="mr-2 text-sm text-white/80">Familiares adicionales</label>
+                <div className="flex items-center gap-2">
+                  <div className="text-sm text-white/80 mr-2">
+                    Titular (1) +
+                  </div>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    value={familySize - 1}
+                    readOnly
+                    className="w-12 rounded-md bg-white/10 border border-white/10 px-2 py-1 text-sm focus:outline-none text-center"
+                  />
+                  <div className="flex gap-1">
+                    <button 
+                      className="w-8 h-8 rounded bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center"
+                      onClick={() => setFamilySize(prev => Math.min(10, prev + 1))}
+                    >
+                      +
+                    </button>
+                    <button 
+                      className="w-8 h-8 rounded bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center"
+                      onClick={() => setFamilySize(prev => Math.max(2, prev - 1))}
+                    >
+                      -
+                    </button>
+                  </div>
+                </div>
+                <div className="text-xs text-green-300 mt-1">
+                  Total: {familySize} {familySize === 1 ? 'persona' : 'personas'} (Titular + {familySize - 1} familiares)
+                </div>
+
               </div>
             )}
           </div>
@@ -108,7 +153,7 @@ export default function PaymentGateway() {
                 className={`px-3 py-1.5 rounded-full text-sm ${
                   frequency === key ? "bg-[#f06340] text-white" : "bg-white/10"
                 }`}
-                onClick={() => { setFrequency(key); if (preferenceId) setPreferenceId(null); }}
+                onClick={() => setFrequency(key)}
               >
                 {cfg.label}
               </button>
@@ -145,26 +190,15 @@ export default function PaymentGateway() {
             </div>
           </div>
 
-          {/* Botón para crear preferencia */}
-          <div className="flex flex-col items-center mt-6 mb-2">
-            <button
-              onClick={onGenerate}
-              disabled={loading}
-              className="rounded-lg px-4 py-2 font-semibold disabled:opacity-60 w-48 text-center"
-              style={{ backgroundColor: '#f06340', color: '#fff' }}
-            >
-              {loading ? "Preparando pago…" : "Generar pago"}
-            </button>
-            {err && <span className="text-rose-400 text-sm mt-2">{err}</span>}
+          {/* Acciones */}
+          <div className="flex flex-col items-center mt-6 gap-3">
+            <MPWallet
+              amount={parseFloat(totalAmount)}
+              onGenerate={onGenerate} 
+              loading={loading}
+              error={err}
+            />
           </div>
-
-          {/* Wallet (un solo brick por preferencia) */}
-          <div className="mt-6">
-            {typeof preferenceId === "string" && (
-              <MPWallet key={preferenceId} preferenceId={preferenceId} />
-            )}
-          </div>
-
           <p className="mt-6 text-xs text-white/60">
             Al confirmar el pago, aceptas los Términos de Servicio y la Política de Privacidad de VitaCard 365.
           </p>

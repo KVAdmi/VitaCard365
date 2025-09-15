@@ -169,10 +169,10 @@ const Register = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="activationCode">Código Familiar / Empresarial (Opcional)</Label>
+                  <Label htmlFor="activationCode">Código Familiar / Empresarial / Cortesía</Label>
                   <div className="relative">
                     <Ticket className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-white/80" />
-                    <Input id="activationCode" type="text" placeholder="Ej: FAM-XXXX o EMP-XXXX" className="pl-12" value={formData.activationCode} onChange={(e) => setFormData({ ...formData, activationCode: e.target.value.toUpperCase() })} />
+                    <Input id="activationCode" type="text" placeholder="Ej: VITAFAM-XXXX" className="pl-12" value={formData.activationCode} onChange={(e) => setFormData({ ...formData, activationCode: e.target.value.toUpperCase() })} />
                   </div>
                 </div>
 

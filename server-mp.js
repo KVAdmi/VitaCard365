@@ -67,29 +67,42 @@ app.get("/health", (req, res) => {
 });
 
 // Crear preferencia - ruta que coincide con el frontend
-app.post("/payments/preference", async (req, res) => {
+app.post("/api/mercadopago/preference", async (req, res) => {
   try {
     if (!mpPreference) {
       throw new Error('Mercado Pago no configurado');
     }
 
-    const { plan = 'Individual', frequency = 'Mensual', amount = 199 } = req.body;
+    const { plan, frequency, familySize, unit_price } = req.body;
+    
+    // Validar el monto
+    const amount = Number(unit_price);
+    if (!amount || isNaN(amount) || amount <= 0) {
+      console.error('Monto inválido:', unit_price);
+      return res.status(400).json({ error: 'Monto inválido' });
+    }
+    
+    console.log('Creando preferencia con datos:', { plan, frequency, familySize, amount });
     
     const preference = {
       items: [{
         title: `VitaCard365 - Plan ${plan} ${frequency}`,
+        description: `Plan ${plan} para ${familySize} ${familySize > 1 ? 'personas' : 'persona'}`,
         quantity: 1,
-        unit_price: Number(amount),
+        unit_price: amount,
         currency_id: 'MXN'
       }],
       back_urls: {
         success: `${process.env.FRONTEND_BASE_URL}/payment/success`,
-        failure: `${process.env.FRONTEND_BASE_URL}/payment/failure`
+        failure: `${process.env.FRONTEND_BASE_URL}/payment/failure`,
+        pending: `${process.env.FRONTEND_BASE_URL}/payment/pending`
       },
       auto_return: 'approved'
     };
 
+    console.log('Preferencia a crear:', preference);
     const response = await mpPreference.create({ body: preference });
+    console.log('Preferencia creada:', response.body);
     
     res.json({
       preferenceId: response.id,
