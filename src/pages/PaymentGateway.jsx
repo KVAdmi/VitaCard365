@@ -57,7 +57,7 @@ export default function PaymentGateway() {
       // Payload para el backend: usamos amount (NO unit_price)
       const requestData = {
         plan: planType,
-        frequency,
+        frequency: paymentFrequencies[frequency].label,
         familySize: Number(familySize || 1),
         amount
       };
@@ -200,17 +200,19 @@ export default function PaymentGateway() {
         <div className="flex flex-col items-center mt-6 gap-3">
           <p className="text-white/60">Pago seguro con:</p>
 
-          <button
-            onClick={onGenerate}
-            disabled={loading}
-            className="bg-[#fff159] px-6 py-2 rounded-lg w-64 disabled:opacity-50"
-          >
-            <img
-              src="https://www.mercadopago.com/org-img/MP3/home/logomp3.svg"
-              alt="Mercado Pago"
-              className="h-8 mx-auto"
-            />
-          </button>
+        <button
+  onClick={onGenerate}
+  disabled={loading}
+  className="flex items-center justify-center gap-2 bg-[#fff159] hover:bg-[#ffe600] px-6 py-3 rounded-lg font-semibold text-gray-900 transition w-full max-w-xs disabled:opacity-50"
+>
+  <img
+    src="https://http2.mlstatic.com/frontend-assets/mp-web-navigation/ui-navigation/5.20.1/mercadopago/logo__large.png"
+    alt="Mercado Pago"
+    className="h-6"
+  />
+</button>
+
+
 
           {error && <div className="text-red-500 text-sm mt-2">{error}</div>}
 

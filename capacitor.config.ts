@@ -5,6 +5,16 @@ const config = {
   bundledWebRuntime: false,
   server: {
     androidScheme: 'https'
+  },
+  plugins: {
+    BluetoothLe: {
+      displayStrings: {
+        scanning: 'Buscando dispositivos médicos...',
+        cancel: 'Cancelar',
+        availableDevices: 'Dispositivos disponibles',
+        noDeviceFound: 'No se encontraron dispositivos'
+      }
+    }
   }
 };
 export default config;

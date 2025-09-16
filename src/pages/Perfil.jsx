@@ -8,20 +8,11 @@ import { Label } from '../components/ui/label';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../components/ui/use-toast';
 import { LogOut, Save, Copy, Info, Camera, Edit } from 'lucide-react';
-import { getFitToken, getGoogleFitAuthUrl, disconnectFit } from '../hooks/useGoogleFitAuth';
 
 const Perfil = () => {
   const { user, logout, updateUser } = useAuth();
   const { toast } = useToast();
-  const isFitConnected = !!getFitToken();
-  const connectFit = () => {
-    window.location.href = getGoogleFitAuthUrl();
-  };
-  const disconnectFitAndNotify = () => {
-    disconnectFit();
-    toast({ title: 'Google Fit', description: 'Se desconectó correctamente.' });
-    setIsEditing((v) => v); // Forzar re-render
-  };
+  
   const [isEditing, setIsEditing] = useState(false);
   const [profileData, setProfileData] = useState({
     name: '',
@@ -89,6 +80,8 @@ const Perfil = () => {
       const reader = new FileReader();
       reader.onloadend = () => {
         setProfileData(prev => ({ ...prev, avatarUrl: reader.result }));
+        // Guardar en Supabase
+        updateUser({ ...profileData, avatarUrl: reader.result });
       };
       reader.readAsDataURL(file);
     }
@@ -248,31 +241,6 @@ const Perfil = () => {
               ) : (
                 <Button onClick={() => setIsEditing(true)} variant="outline" className="w-full"><Edit className="mr-2 h-4 w-4" />Editar Perfil</Button>
               )}
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Integraciones</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-semibold">Google Fit</p>
-                  <p className={`text-sm ${isFitConnected ? 'text-green-400' : 'text-vita-muted-foreground'}`}>
-                    {isFitConnected ? 'Conectado ✓' : 'Desconectado ✗'}
-                  </p>
-                </div>
-                {isFitConnected ? (
-                  <Button variant="outline" onClick={disconnectFitAndNotify}>
-                    Desconectar
-                  </Button>
-                ) : (
-                  <Button onClick={connectFit}>
-                    Conectar
-                  </Button>
-                )}
-              </div>
             </CardContent>
           </Card>
 

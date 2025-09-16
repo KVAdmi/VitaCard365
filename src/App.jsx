@@ -24,6 +24,7 @@ import TestAlerts from './pages/michequeo/TestAlerts';
 import MeasureWeight from './pages/michequeo/MeasureWeight';
 import MeasureSleep from './pages/michequeo/MeasureSleep';
 import MeasureVitals from './pages/michequeo/MeasureVitals';
+import HistoryPage from './pages/michequeo/History';
 import Policy from './pages/Policy';
 import Terms from './pages/Terms';
 
@@ -70,6 +71,7 @@ function App() {
                     <Route path="/mi-chequeo/peso" element={<ProtectedRoute><MeasureWeight /></ProtectedRoute>} />
                     <Route path="/mi-chequeo/sueno" element={<ProtectedRoute><MeasureSleep /></ProtectedRoute>} />
                     <Route path="/mi-chequeo/vitals" element={<ProtectedRoute><MeasureVitals /></ProtectedRoute>} />
+                    <Route path="/mi-chequeo/history" element={<ProtectedRoute><HistoryPage /></ProtectedRoute>} />
                     
                     <Route path="/agenda" element={<ProtectedRoute><Agenda /></ProtectedRoute>} />
                     
