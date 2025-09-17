@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "../../lib/supabaseClient";
+import { useAuth } from '../../contexts/AuthContext';
 
 type Props = {
   sampleSeconds?: number;   // duración de la medición
@@ -8,6 +9,7 @@ type Props = {
 };
 
 export default function CameraPPG({ sampleSeconds = 30, autoTorch = true, onSaved }: Props) {
+  const { user } = useAuth();
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -57,18 +59,17 @@ export default function CameraPPG({ sampleSeconds = 30, autoTorch = true, onSave
         const rounded = Math.round(est);
         setBpm(rounded);
 
-        // 👉 Guarda en Supabase aquí mismo
-        const { data: auth } = await supabase.auth.getUser();
-        const user = auth?.user;
-        if (!user) { setMsg("No hay sesión. Inicia sesión para guardar."); return; }
-
-        const { error } = await supabase.from("mediciones").insert([{
-          usuario_id: user.id,
+        // Guarda en public.vital_signs con el esquema correcto
+        if (!user?.id) { setMsg("No hay sesión. Inicia sesión para guardar."); return; }
+        const { error } = await supabase.from("vital_signs").insert([{
+          user_uuid: user.id,
+          type: 'pulso_bpm',
+          value: rounded,
+          unit: 'bpm',
           ts: new Date().toISOString(),
-          source: "ppg",            // usa 'ppg' para respetar el CHECK si existe
-          pulso_bpm: rounded
+          source: 'camera_ppg',
+          extra: { method: 'camera', duration_sec: sampleSeconds }
         }]);
-
         if (error) {
           setMsg(`No se pudo guardar en DB: ${error.message}`);
         } else {
