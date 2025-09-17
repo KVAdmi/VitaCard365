@@ -1,34 +1,54 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.vitacard.app">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+        <!-- Health Connect en Android 14+ -->
+        <queries>
+            <package android:name="com.google.android.apps.healthdata"/>
+        </queries>
+
+        <!-- Health Connect: pide solo lo necesario -->
+        <uses-permission android:name="android.permission.health.READ_HEART_RATE"/>
+        <uses-permission android:name="android.permission.health.READ_SLEEP"/>
+        <uses-permission android:name="android.permission.health.READ_STEPS"/>
+        <!-- Opcional: SpO2 si tu población lo tiene disponible -->
+        <uses-permission android:name="android.permission.health.READ_OXYGEN_SATURATION"/>
+
 
     <!-- Permisos mínimos para app web + OAuth + pasarela -->
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
     <uses-permission android:name="android.permission.WAKE_LOCK"/>
-    
+
     <!-- Permisos Bluetooth -->
     <uses-permission android:name="android.permission.BLUETOOTH" />
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
-    <uses-permission android:name="android.permission.BLUETOOTH_SCAN" 
-        android:usesPermissionFlags="neverForLocation" />
-    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+    <uses-permission android:name="android.permission.BLUETOOTH_SCAN" android:usesPermissionFlags="neverForLocation" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
 
-    <!-- Feature requerida para BLE -->
-    <uses-feature
-        android:name="android.hardware.bluetooth_le"
-        android:required="true" />
+    <!-- Bluetooth LE (Android 12+) -->
+    <uses-feature android:name="android.hardware.bluetooth_le" android:required="false" />
+
+    <!-- Cámara y flash (rPPG) -->
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-feature android:name="android.hardware.camera.flash" android:required="false" />
+
+    <!-- Micrófono (módulo sueño) -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+
+    <!-- Archivos (guardar/compartir PDF) -->
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
 
     <application
-        android:name=".MainApplication"
         android:allowBackup="true"
-        android:label="VitaCard365"
+        android:label="VitaCard 365"
         android:icon="@mipmap/ic_launcher"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:usesCleartextTraffic="false">
+
+        <!-- WebView SafeBrowsing -->
+        <meta-data android:name="android.webkit.WebView.EnableSafeBrowsing" android:value="true"/>
 
         <!-- Activity principal de Capacitor -->
         <activity

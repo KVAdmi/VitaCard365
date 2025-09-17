@@ -12,10 +12,12 @@
     },
     "dependencies": {
         "@capacitor-community/bluetooth-le": "^7.2.0",
+        "@capacitor-community/camera-preview": "^7.0.2",
         "@capacitor/android": "^7.4.3",
-        "@capacitor/cli": "^7.4.3",
         "@capacitor/core": "^7.4.3",
+        "@capacitor/filesystem": "^7.1.4",
         "@capacitor/ios": "^7.4.3",
+        "@capacitor/share": "^7.0.2",
         "@emotion/is-prop-valid": "^1.4.0",
         "@radix-ui/react-dialog": "^1.1.15",
         "@radix-ui/react-dropdown-menu": "^2.1.16",
@@ -26,6 +28,8 @@
         "@supabase/supabase-js": "^2.57.4",
         "chart.js": "^4.5.0",
         "class-variance-authority": "^0.7.1",
+        "cordova-plugin-flashlight": "^3.2.0",
+        "cordova-plugin-health": "^3.2.4",
         "cors": "^2.8.5",
         "dotenv": "^17.2.2",
         "express": "^5.1.0",
@@ -45,6 +49,7 @@
         "uuid": "^12.0.0"
     },
     "devDependencies": {
+        "@capacitor/cli": "^7.4.3",
         "@types/react": "^19.1.13",
         "@types/react-dom": "^19.1.9",
         "@vitejs/plugin-react": "^4.2.1",

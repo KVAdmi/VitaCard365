@@ -1,4 +1,6 @@
+
 import React, { useEffect, useRef, useState } from "react";
+import { torchOn, torchOff } from '@/native/torch';
 
 /** Frecuencia cardiaca por PPG con cámara + flash (si soportado). */
 export default function PPGCameraHR({ onSave }) {
@@ -12,22 +14,30 @@ export default function PPGCameraHR({ onSave }) {
 
   useEffect(() => () => stop(), []);
 
+
   const start = async () => {
     try {
       setErr("");
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: "environment", frameRate: { ideal: 60 }, width: { ideal: 640 }, height: { ideal: 480 } },
+        video: {
+          facingMode: { ideal: "environment" },
+          frameRate: { ideal: 60 },
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
+        },
         audio: false,
       });
       videoRef.current.srcObject = stream;
       const track = stream.getVideoTracks()[0];
       trackRef.current = track;
 
-      // Intentar encender torch
-      try {
-        const caps = track.getCapabilities?.();
-        if (caps?.torch) await track.applyConstraints({ advanced: [{ torch: true }] });
-      } catch {}
+
+      // Intentar encender torch (nativo o web)
+      const ok = await torchOn(track);
+      if (!ok) {
+        console.warn('Torch no disponible (ni nativo ni constraints)');
+        // Opcional: mostrar aviso UI "Activa flash / quita funda"
+      }
 
       await videoRef.current.play();
       setRunning(true);
@@ -37,9 +47,12 @@ export default function PPGCameraHR({ onSave }) {
     }
   };
 
-  const stop = () => {
+
+  const stop = async () => {
     setRunning(false);
     try {
+      // Apagar torch si estaba encendido (nativo o web)
+      await torchOff(trackRef.current);
       trackRef.current?.stop();
       videoRef.current.srcObject = null;
     } catch {}

@@ -10,6 +10,19 @@ import {
   ArrowLeft,
   Bell
 } from 'lucide-react';
+
+// Ícono de robot elegante SVG
+const RobotIcon = (props) => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" {...props}>
+    <rect x="4" y="7" width="16" height="10" rx="5" fill="#fff" fillOpacity="0.12" stroke="#FFB300" strokeWidth="1.5"/>
+    <circle cx="8.5" cy="12" r="1.5" fill="#FFB300"/>
+    <circle cx="15.5" cy="12" r="1.5" fill="#FFB300"/>
+    <rect x="10.5" y="15" width="3" height="1" rx="0.5" fill="#FFB300"/>
+    <rect x="11.25" y="4" width="1.5" height="3" rx="0.75" fill="#fff" stroke="#FFB300" strokeWidth="1"/>
+    <rect x="3" y="10" width="2" height="4" rx="1" fill="#fff" stroke="#FFB300" strokeWidth="1"/>
+    <rect x="19" y="10" width="2" height="4" rx="1" fill="#fff" stroke="#FFB300" strokeWidth="1"/>
+  </svg>
+);
 import { Button } from './ui/button';
 import { useAuth } from '../contexts/AuthContext';
 import { Card, CardHeader, CardTitle, CardDescription } from './ui/card';
@@ -33,12 +46,14 @@ const Layout = ({ children, title, showBackButton = false }) => {
   const location = useLocation();
   const { user } = useAuth();
   const [hasNotifications, setHasNotifications] = useState(true);
+  const [showChat, setShowChat] = useState(false);
 
   const navigationItems = [
     { path: '/dashboard', icon: Home, label: 'Inicio' },
     { path: '/agenda', icon: Calendar, label: 'Agenda' },
     { path: '/mi-plan', icon: CreditCard, label: 'Mi Plan' },
-    { path: '/perfil', icon: User, label: 'Perfil' }
+    { path: '/perfil', icon: User, label: 'Perfil' },
+    { path: '/e-vita', icon: RobotIcon, label: 'e-Vita', isChat: true }
   ];
 
   return (
@@ -133,7 +148,20 @@ const Layout = ({ children, title, showBackButton = false }) => {
           {navigationItems.map((item) => {
             const Icon = item.icon;
             const isActive = location.pathname === item.path;
-            
+            // Si es el botón de chat, abre modal en vez de navegar
+            if (item.isChat) {
+              return (
+                <Button
+                  key={item.label}
+                  variant="ghost"
+                  className={`flex flex-col items-center space-y-1 h-auto py-2 px-3 rounded-lg transition-colors duration-300 text-vita-muted-foreground hover:text-vita-white hover:bg-white/5`}
+                  onClick={() => setShowChat(true)}
+                >
+                  <Icon className="h-5 w-5" />
+                  <span className="text-xs font-medium">{item.label}</span>
+                </Button>
+              );
+            }
             return (
               <Button
                 key={item.path}
@@ -152,6 +180,43 @@ const Layout = ({ children, title, showBackButton = false }) => {
           })}
         </div>
       </nav>
+
+      {/* Modal/Sheet para el chat e-Vita */}
+      {showChat && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center bg-black/30 backdrop-blur-sm">
+          <div className="relative w-full max-w-md m-4 glass-card rounded-2xl shadow-xl border border-white/20">
+            <button
+              className="absolute top-2 right-2 text-vita-muted-foreground hover:text-vita-orange"
+              onClick={() => setShowChat(false)}
+              aria-label="Cerrar chat"
+            >
+              ×
+            </button>
+            <div className="p-6">
+              <div className="flex items-center mb-4 gap-2">
+                <RobotIcon className="h-7 w-7" />
+                <span className="font-bold text-lg text-vita-orange">e-Vita</span>
+              </div>
+              <div className="mb-4 text-vita-white/80 text-sm">
+                ¿Tienes dudas sobre el uso de la app, tu cobertura o pagos? ¡Pregúntame por texto o voz!
+              </div>
+              {/* Chat UI aquí (placeholder) */}
+              <div className="h-56 bg-white/10 rounded-lg p-3 mb-3 overflow-y-auto border border-white/10">
+                <div className="text-vita-muted-foreground text-xs text-center mt-20">Inicia la conversación…</div>
+              </div>
+              <div className="flex gap-2">
+                <input type="text" className="flex-1 rounded-lg px-3 py-2 bg-white/10 text-white placeholder:text-vita-muted-foreground focus:outline-none focus:ring-2 focus:ring-vita-orange" placeholder="Escribe tu mensaje…" />
+                <button className="rounded-full bg-vita-orange p-2 text-white hover:bg-vita-orange/80 transition">
+                  <svg width="20" height="20" fill="none" viewBox="0 0 20 20"><path d="M2.5 10L17.5 3.5L11.25 10L17.5 16.5L2.5 10Z" fill="currentColor"/></svg>
+                </button>
+                <button className="rounded-full bg-white/10 p-2 text-vita-orange hover:bg-vita-orange/20 transition" title="Hablar">
+                  <svg width="20" height="20" fill="none" viewBox="0 0 20 20"><circle cx="10" cy="10" r="8" stroke="currentColor" strokeWidth="2"/><rect x="8.5" y="5" width="3" height="7" rx="1.5" fill="currentColor"/></svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

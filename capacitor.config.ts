@@ -1,20 +1,11 @@
-const config = {
+
+import type { CapacitorConfig } from '@capacitor/cli';
+
+const config: CapacitorConfig = {
   appId: 'com.vitacard.app',
-  appName: 'VitaCard365',
+  appName: 'VitaCard 365',   // nombre EXACTO
   webDir: 'dist',
-  bundledWebRuntime: false,
-  server: {
-    androidScheme: 'https'
-  },
-  plugins: {
-    BluetoothLe: {
-      displayStrings: {
-        scanning: 'Buscando dispositivos médicos...',
-        cancel: 'Cancelar',
-        availableDevices: 'Dispositivos disponibles',
-        noDeviceFound: 'No se encontraron dispositivos'
-      }
-    }
-  }
+  server: { androidScheme: 'https' },
 };
+
 export default config;
