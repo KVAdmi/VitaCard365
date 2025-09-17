@@ -1,3 +1,28 @@
+// Hotfix: función para controlar disponibilidad y permisos de Health Connect
+export async function ensureHealthReady(): Promise<{available:boolean, reason?:string}> {
+  if (!H()) return { available:false, reason:'HEALTH_CONNECT_NOT_AVAILABLE' };
+  const isAvail = await new Promise<boolean>(resolve => {
+    try {
+      H().isAvailable(
+        () => resolve(true),
+        () => resolve(false)
+      );
+    } catch { resolve(false); }
+  });
+  if (!isAvail) {
+    return { available:false, reason:'HEALTH_CONNECT_NOT_AVAILABLE' };
+  }
+  const granted = await new Promise<boolean>(resolve => {
+    H().requestAuthorization(
+      [{ read: [
+        'heart_rate', 'activities', 'steps', 'sleep'
+      ] }],
+      () => resolve(true),
+      () => resolve(false)
+    );
+  });
+  return { available: granted, reason: granted ? undefined : 'PERMISSIONS_DENIED' };
+}
 // src/lib/health.ts
 
 type Health = any; // cordova.plugins.health (tipado simple por ahora)

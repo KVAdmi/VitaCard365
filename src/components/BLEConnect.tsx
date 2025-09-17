@@ -28,11 +28,27 @@ export function useBLEVitals() {
       try { await (BleClient as any).requestLEScanPermissions?.(); } catch {}
       try { await (BleClient as any).requestLEPermissions?.(); } catch {}
 
-      // Ajusta UUIDs si usas otro servicio
-      const dev = await BleClient.requestDevice({ services: ["heart_rate"] });
+      // UUIDs correctos para Heart Rate BLE
+      const HEART_RATE_SERVICE = '0000180d-0000-1000-8000-00805f9b34fb';
+      const HEART_RATE_MEAS_CHAR = '00002a37-0000-1000-8000-00805f9b34fb';
+
+      const dev = await BleClient.requestDevice({ services: [HEART_RATE_SERVICE] });
       await BleClient.connect(dev.deviceId);
 
       setStatus(`Conectado: ${dev.name ?? dev.deviceId}`);
+
+      // Notificaciones de BPM
+      await BleClient.startNotifications(
+        dev.deviceId,
+        HEART_RATE_SERVICE,
+        HEART_RATE_MEAS_CHAR,
+        (data: DataView) => {
+          // Primer byte = flags; segundo byte = HR (si sin RR interval)
+          const flags = data.getUint8(0);
+          const hrValue = (flags & 0x01) ? data.getUint16(1, true) : data.getUint8(1);
+          setStatus(`BPM: ${hrValue}`);
+        }
+      );
     } catch (e: any) {
       setStatus(`Error BLE: ${e?.message ?? String(e)}`);
     } finally {
