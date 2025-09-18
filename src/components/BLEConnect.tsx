@@ -26,17 +26,17 @@ export function useBLEVitals() {
     const perms = window.cordova?.plugins?.permissions;
     if (!perms) return; // En iOS o web no aplica
 
-    // Android 12+ pide BLUETOOTH_SCAN / CONNECT; en <=11, FINE_LOCATION
+    // Android 12+ pide BLUETOOTH_SCAN / CONNECT; en <=11, pide BLUETOOTH, BLUETOOTH_ADMIN y FINE_LOCATION
     const api = Number(info.osVersion?.split('.')?.[0] || 0);
     const req: string[] = api >= 12
       ? [perms.BLUETOOTH_SCAN, perms.BLUETOOTH_CONNECT]
-      : [perms.ACCESS_FINE_LOCATION];
+      : [perms.BLUETOOTH, perms.BLUETOOTH_ADMIN, perms.ACCESS_FINE_LOCATION];
 
     await new Promise<void>((resolve, reject) => {
       perms.requestPermissions(req, (st: any) => {
         const granted = Object.values(st?.hasPermission ?? {}).every(Boolean) || st?.hasPermission === true;
-        granted ? resolve() : reject(new Error('BLE_PERMISSIONS_DENIED'));
-      }, () => reject(new Error('BLE_PERMISSIONS_DENIED')));
+        granted ? resolve() : reject(new Error('Faltan permisos de Bluetooth. Ve a Ajustes > Apps > Permisos y activa Bluetooth y Ubicación.'));
+      }, () => reject(new Error('Faltan permisos de Bluetooth. Ve a Ajustes > Apps > Permisos y activa Bluetooth y Ubicación.')));
     });
   }
 
@@ -76,6 +76,9 @@ export function useBLEVitals() {
       );
     } catch (e: any) {
       setStatus(`Error BLE: ${e?.message ?? String(e)}`);
+      if (e?.message?.includes('permisos')) {
+        alert('Debes otorgar permisos de Bluetooth y Ubicación para usar sensores BLE. Ve a Ajustes > Apps > Permisos.');
+      }
     } finally {
       setIsConnecting(false);
     }

@@ -22,24 +22,86 @@ const VitalForm = ({ fields, onSubmit, onSave, submitText = "Analizar" }) => {
     onSubmit(formData);
   };
 
+  const brazoOptions = ["Izquierdo", "Derecho"];
+  const posturaOptions = ["Sentado", "De pie", "Acostado"];
+  const condicionOptions = ["Ayuno", "Postprandial"];
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="space-y-4">
-        {fields.map((field) => (
-          <div key={field.name} className="space-y-2">
-            <Label htmlFor={field.name}>{field.label}</Label>
-            <Input
-              id={field.name}
-              name={field.name}
-              type={field.type || "text"}
-              placeholder={field.placeholder}
-              value={formData[field.name]}
-              onChange={handleChange}
-              required
-              inputMode={field.type === 'tel' ? 'numeric' : undefined}
-            />
-          </div>
-        ))}
+        {fields.map((field) => {
+          if (field.name === "arm") {
+            return (
+              <div key={field.name} className="space-y-2">
+                <Label htmlFor={field.name}>{field.label}</Label>
+                <div className="flex gap-3">
+                  {brazoOptions.map((option) => (
+                    <button
+                      type="button"
+                      key={option}
+                      className={`px-4 py-2 rounded-lg border font-semibold transition-all ${formData[field.name] === option ? 'bg-vita-orange text-white border-vita-orange' : 'bg-white/10 text-white border-white/20 hover:bg-vita-orange/80 hover:text-white'}`}
+                      onClick={() => setFormData((prev) => ({ ...prev, [field.name]: option }))}
+                    >
+                      {option}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            );
+          }
+          if (field.name === "posture") {
+            return (
+              <div key={field.name} className="space-y-2">
+                <Label htmlFor={field.name}>{field.label}</Label>
+                <div className="flex gap-3 flex-wrap">
+                  {posturaOptions.map((option) => (
+                    <button
+                      type="button"
+                      key={option}
+                      className={`px-4 py-2 rounded-lg border font-semibold transition-all ${formData[field.name] === option ? 'bg-vita-orange text-white border-vita-orange' : 'bg-white/10 text-white border-white/20 hover:bg-vita-orange/80 hover:text-white'}`}
+                      onClick={() => setFormData((prev) => ({ ...prev, [field.name]: option }))}
+                    >
+                      {option}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            );
+          }
+          if (field.name === "condicion" || field.name === "condición") {
+            return (
+              <div key={field.name} className="space-y-2">
+                <Label htmlFor={field.name}>{field.label}</Label>
+                <div className="flex gap-3 flex-wrap">
+                  {condicionOptions.map((option) => (
+                    <button
+                      type="button"
+                      key={option}
+                      className={`px-4 py-2 rounded-lg border font-semibold transition-all ${formData[field.name] === option ? 'bg-vita-orange text-white border-vita-orange' : 'bg-white/10 text-white border-white/20 hover:bg-vita-orange/80 hover:text-white'}`}
+                      onClick={() => setFormData((prev) => ({ ...prev, [field.name]: option }))}
+                    >
+                      {option}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            );
+          }
+          return (
+            <div key={field.name} className="space-y-2">
+              <Label htmlFor={field.name}>{field.label}</Label>
+              <Input
+                id={field.name}
+                name={field.name}
+                type={field.type || "text"}
+                placeholder={field.placeholder}
+                value={formData[field.name]}
+                onChange={handleChange}
+                required
+                inputMode={field.type === 'tel' ? 'numeric' : undefined}
+              />
+            </div>
+          );
+        })}
       </div>
       <motion.div
         initial={{ opacity: 0, y: 20 }}

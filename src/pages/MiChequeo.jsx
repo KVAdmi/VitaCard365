@@ -4,8 +4,8 @@ import Layout from '../components/Layout';
 import { Button } from '../components/ui/button';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { motion } from 'framer-motion';
-import { Plus, Download, FileText, Info } from 'lucide-react';
-import { Card, CardContent } from '../components/ui/card';
+import { Plus, Info } from 'lucide-react';
+import NASAHistoryCardsPanel from '../components/mi-chequeo/NASAHistoryCardsPanel';
 import { HeartPulse, Wind, Thermometer, Activity, Weight, Moon, AlertTriangle } from 'lucide-react';
 import { useToast } from '../components/ui/use-toast';
 
@@ -305,72 +305,20 @@ const MiChequeo = () => {
 
   return (
     <Layout title="Mi Chequeo">
-      <div className="p-4 md:p-6 space-y-6">
-        <p className="text-center text-white/80 text-sm">
-          Registra tus signos vitales, peso y síntomas para un seguimiento completo de tu salud.
-        </p>
-
-        {/* TODO: Aquí se integrarán los módulos propios:
-              - Pulso con cámara (PPG)
-              - Respiración
-              - Cuestionario de síntomas
-        */}
-
-        <Button
-          size="lg"
-          className="w-full bg-vita-orange"
-          onClick={() => navigate('/mi-chequeo/nueva')}
-        >
-          <Plus className="mr-2 h-5 w-5" />
-          Registrar Nueva Medición
-        </Button>
-
-        <Card>
-          <CardContent className="p-4">
-            <h3 className="text-lg font-bold text-white mb-4">Gráfica de Evolución</h3>
-            <div className="h-64">
-              <Line data={evolutionChartData} options={chartOptions} />
-            </div>
-          </CardContent>
-        </Card>
-
-        <h2 className="text-xl font-bold text-white pt-4 border-t border-white/10">
-          Historial de Mediciones
-        </h2>
-
-        {Object.keys(groupedMeasurements).length > 0 ? (
-          Object.entries(groupedMeasurements).map(([date, entries]) => (
-            <motion.div
-              key={date}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0 }}
-              className="space-y-4"
-            >
-              <h3 className="font-semibold text-white/90">{date}</h3>
-              {entries.map((m, i) => (
-                <MeasurementCard key={m.id || i} measurement={m} />
-              ))}
-            </motion.div>
-          ))
-        ) : (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="text-center py-10"
+      <div className="p-4 md:p-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-2">
+          <h2 className="text-xl font-bold text-white">Historial de Mediciones</h2>
+          <Button
+            size="sm"
+            className="bg-vita-orange text-white px-4 py-2 rounded-lg shadow hover:bg-vita-orange/90 transition-all"
+            onClick={() => navigate('/mi-chequeo/nueva')}
           >
-            <FileText className="mx-auto h-12 w-12 text-vita-muted-foreground" />
-            <p className="text-white mt-4">Aún no tienes mediciones registradas.</p>
-            <p className="text-sm text-white/50">¡Empieza registrando una nueva!</p>
-          </motion.div>
-        )}
-      </div>
-      <footer className="fixed bottom-[72px] left-0 right-0 bg-vita-background/80 backdrop-blur-sm p-3 text-center border-t border-white/10">
-        <div className="flex items-center justify-center text-xs text-white/70">
-          <Info className="h-4 w-4 mr-2" />
-          <span>Descarga tus PDFs, por seguridad se eliminarán en unos días.</span>
+            <Plus className="mr-2 h-4 w-4" /> Registrar Nueva Medición
+          </Button>
         </div>
-      </footer>
+        {/* Panel de tarjetas NASA glass, 100% responsive */}
+        <NASAHistoryCardsPanel />
+      </div>
     </Layout>
   );
 };

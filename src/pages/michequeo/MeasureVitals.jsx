@@ -1,5 +1,7 @@
 
 import React, { useState } from "react";
+
+import { useNavigate } from 'react-router-dom';
 import CameraPPG from "../../components/michequeo/CameraPPG";
 import { supabase } from "../../lib/supabaseClient";
 import { useAuth } from "../../contexts/AuthContext";
@@ -13,6 +15,7 @@ import {
 } from "../../lib/health";
 
 export default function MeasureVitals() {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const [uiState, setUiState] = useState('idle');
   const [msg, setMsg] = useState("");
@@ -68,6 +71,19 @@ export default function MeasureVitals() {
 
   return (
     <div style={{ display: "grid", gap: 12, padding: 12 }}>
+
+      {/* Botón de regreso */}
+      <div className="flex items-center p-4 pt-6">
+        <button
+          onClick={() => navigate(-1)}
+          className="flex items-center text-white hover:text-vita-orange font-semibold text-base focus:outline-none"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+          </svg>
+          Regresar
+        </button>
+      </div>
       <h2>Mi Chequeo</h2>
 
       {/* Selector de modo */}
@@ -242,7 +258,7 @@ export default function MeasureVitals() {
             <VitalForm
               fields={[
                 { name: 'glucose', label: 'Glucosa (mg/dL)', type: 'tel', placeholder: 'Ej: 95' },
-                { name: 'condition', label: 'Condición', type: 'text', placeholder: 'Ayuno/Postprandial' },
+                { name: 'condicion', label: 'Condición', type: 'text', placeholder: 'Ayuno/Postprandial' },
                 { name: 'ts', label: 'Fecha y hora', type: 'datetime-local', placeholder: '' },
               ]}
               submitText="Guardar medición"
@@ -259,7 +275,7 @@ export default function MeasureVitals() {
                   unit: 'mg/dL',
                   ts: data.ts || new Date().toISOString(),
                   source: 'manual',
-                  extra: { condition: data.condition }
+                  extra: { condicion: data.condicion }
                 }]);
                 if (error) {
                   setFeedback({visible:true, color:'#f06340', titulo:'Error', valor:'-', diagnostico:'No se pudo guardar', detalle:error.message});

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import { useAuth } from '../../contexts/AuthContext';
 import MeasureLayout from '../../components/michequeo/MeasureLayout';
+import NASAHistoryCardsPanel from '../../components/mi-chequeo/NASAHistoryCardsPanel';
 import { Card } from '../../components/ui/card';
 
 
@@ -62,9 +63,11 @@ const History = () => {
 
   return (
     <MeasureLayout
-      title="Historial de Signos Vitales"
-      subtitle="Consulta y descarga tus mediciones"
+      title="Historial de Mediciones"
+      subtitle="Consulta y descarga tus mediciones. Visualiza tu progreso semanal en cada área."
     >
+      {/* Panel de tarjetas NASA para cada sección */}
+      <NASAHistoryCardsPanel />
       <div className="space-y-6">
         <div className="flex flex-wrap gap-2 mb-2">
           <select value={tipo} onChange={e=>setTipo(e.target.value)} className="rounded-lg px-3 py-2 bg-white/10 text-white">

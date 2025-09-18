@@ -88,8 +88,15 @@ const Perfil = () => {
   };
 
   const handleSave = async () => {
-    const currentErrors = Object.values(errors).filter(e => e !== '');
-    if (currentErrors.length > 0) {
+    let validationErrors = { ...errors };
+    if (!profileData.bloodType || profileData.bloodType.trim().length < 2) {
+      validationErrors.bloodType = 'El tipo de sangre es obligatorio';
+    } else {
+      validationErrors.bloodType = '';
+    }
+    const hasErrors = Object.values(validationErrors).some(e => e !== '');
+    if (hasErrors) {
+      setErrors(validationErrors);
       toast({
         title: 'Datos inválidos',
         description: 'Por favor, corrige los errores antes de guardar.',
@@ -97,6 +104,7 @@ const Perfil = () => {
       });
       return;
     }
+    setErrors(validationErrors);
 
     try {
       await updateUser(profileData);
@@ -234,6 +242,22 @@ const Perfil = () => {
               <div className="space-y-2">
                 <FieldLabel htmlFor="birthDate">Fecha de Nacimiento</FieldLabel>
                 <Input id="birthDate" name="birthDate" type="date" value={profileData.birthDate} onChange={handleInputChange} disabled={!isEditing} required />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="bloodType">Tipo de Sangre</Label>
+                <Input
+                  id="bloodType"
+                  name="bloodType"
+                  type="text"
+                  value={profileData.bloodType || ''}
+                  onChange={handleInputChange}
+                  disabled={!isEditing}
+                  placeholder="Ejemplo: A+"
+                  className="w-full rounded-xl px-4 py-2 bg-white/10 text-white font-bold text-lg shadow-inner focus:outline-none focus:ring-2 focus:ring-vita-orange border border-vita-orange/40"
+                  required
+                  minLength={2}
+                />
+                {errors.bloodType && <p className="text-xs text-red-400">{errors.bloodType}</p>}
               </div>
               
               {isEditing ? (

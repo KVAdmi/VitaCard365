@@ -52,7 +52,7 @@ const Coberturas = () => {
       { id: 'apoyo_medicamentos', name: 'Apoyo compra y envío de medicamentos', events: 2, unlimited: false, value: 'Hasta $500 MXN c/u' },
       { id: 'consulta_especialista', name: 'Consulta Médico especialista', events: 1, unlimited: false, value: 'Hasta $1,200' },
       { id: 'quimica_6_elementos', name: 'Química de 6 elementos y examen médico', events: 1, unlimited: false, value: 'Hasta $600 MXN' },
-      { id: 'mastografia', name: 'Mastografía', events: 1, unlimited: false, value: 'Sin costo para el afiliado' },
+  { id: 'mastografia_antigeno', name: 'Mastografía o Antígeno prostático', events: 1, unlimited: false, value: 'Sin costo para el afiliado' },
       { id: 'orientacion_psicologica', name: 'Consulta u orientación telefónica psicológica 24 hrs', events: 0, unlimited: true, value: 'Sin costo para el afiliado' },
       { id: 'referencias_terapeutas', name: 'Referencias de terapeutas', events: 0, unlimited: true, value: 'Sin costo para el afiliado' },
       { id: 'limpieza_dental', name: 'Asistencia Dental - Limpieza Dental', events: 1, unlimited: false, value: 'Sin costo para el afiliado' },

@@ -1,3 +1,9 @@
+// Solución para error TS: declarar window.cordova
+declare global {
+  interface Window {
+    cordova?: any;
+  }
+}
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "../../lib/supabaseClient";
 import { useAuth } from '../../contexts/AuthContext';
@@ -28,20 +34,43 @@ export default function CameraPPG({ sampleSeconds = 30, autoTorch = true, onSave
     setMsg(""); setBpm(null);
     valuesRef.current = []; timeRef.current = [];
     try {
-      const s = await navigator.mediaDevices.getUserMedia({
-        audio: false,
-        video: {
-          facingMode: { ideal: "environment" },
-          frameRate: { ideal: 30 },
-          width: { ideal: 640 }, height: { ideal: 480 },
-        },
-      });
+      // Pedir permiso explícito en móvil (Cordova/Capacitor)
+      if (window.cordova && window.cordova.plugins && window.cordova.plugins.permissions) {
+        const perms = window.cordova.plugins.permissions;
+        await new Promise((resolve, reject) => {
+          perms.requestPermission(perms.CAMERA, (st: any) => {
+            if (st.hasPermission) resolve(true); else reject(new Error('Permiso de cámara denegado'));
+          }, () => reject(new Error('Permiso de cámara denegado')));
+        });
+      }
+      // Web y nativo: pedir cámara trasera
+      let s;
+      try {
+        s = await navigator.mediaDevices.getUserMedia({
+          audio: false,
+          video: {
+            facingMode: { ideal: "environment" },
+            frameRate: { ideal: 30 },
+            width: { ideal: 640 }, height: { ideal: 480 },
+          },
+        });
+      } catch (err) {
+        setMsg("No se pudo acceder a la cámara. Verifica permisos en tu dispositivo.");
+        return;
+      }
       streamRef.current = s;
 
+      // Intentar activar flash/torch si está disponible
       if (autoTorch) {
         const track = s.getVideoTracks()[0] as any;
         const caps = track.getCapabilities?.();
-        if (caps?.torch) { try { await track.applyConstraints({ advanced: [{ torch: true }] }); } catch {} }
+        if (caps?.torch) {
+          try {
+            await track.applyConstraints({ advanced: [{ torch: true }] });
+          } catch {
+            setMsg("No se pudo activar el flash. Usa buena iluminación.");
+          }
+        }
       }
 
       if (videoRef.current) {
@@ -78,7 +107,7 @@ export default function CameraPPG({ sampleSeconds = 30, autoTorch = true, onSave
         }
       }, sampleSeconds * 1000);
     } catch (e: any) {
-      setMsg(e?.message || "No se pudo iniciar cámara.");
+      setMsg(e?.message || "No se pudo iniciar cámara. Verifica permisos en tu dispositivo.");
     }
   };
 
