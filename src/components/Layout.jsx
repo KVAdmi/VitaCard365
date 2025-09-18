@@ -49,10 +49,10 @@ const Layout = ({ children, title, showBackButton = false }) => {
     const userAlias = user?.alias || user?.name || "Tú";
   const [hasNotifications, setHasNotifications] = useState(true);
   const [showChat, setShowChat] = useState(false);
-  // Chat e-Vita
+  // Chat i-Vita
   const [chatInput, setChatInput] = useState("");
     const [chatMessages, setChatMessages] = useState([
-      { from: "bot", text: "¡Hola! Soy e-Vita. ¿En qué puedo ayudarte hoy?" }
+  { from: "bot", text: "¡Hola! Soy i-Vita. ¿En qué puedo ayudarte hoy?" }
     ]);
   const [loadingChat, setLoadingChat] = useState(false);
 
@@ -61,7 +61,7 @@ const Layout = ({ children, title, showBackButton = false }) => {
     { path: '/agenda', icon: Calendar, label: 'Agenda' },
     { path: '/mi-plan', icon: CreditCard, label: 'Mi Plan' },
     { path: '/perfil', icon: User, label: 'Perfil' },
-    { path: '/e-vita', icon: RobotIcon, label: 'e-Vita', isChat: true }
+  { path: '/i-vita', icon: RobotIcon, label: 'i-Vita', isChat: true }
   ];
 
   return (
@@ -189,7 +189,7 @@ const Layout = ({ children, title, showBackButton = false }) => {
         </div>
       </nav>
 
-      {/* Modal/Sheet para el chat e-Vita */}
+  {/* Modal/Sheet para el chat i-Vita */}
       {showChat && (
         <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center bg-black/30 backdrop-blur-sm">
           <div className="relative w-full max-w-full h-full m-0 glass-card rounded-none shadow-xl border border-white/20 flex flex-col justify-center items-center">
@@ -202,7 +202,7 @@ const Layout = ({ children, title, showBackButton = false }) => {
             </button>
             <div className="p-6 w-full max-w-2xl mx-auto">
               <div className="flex items-center mb-4 gap-2">
-                <span className="font-bold text-2xl text-vita-orange">e-Vita</span>
+                <span className="font-bold text-2xl text-vita-orange">i-Vita</span>
               </div>
               <div className="mb-4 text-vita-white/80 text-lg">
                 ¿En qué puedo ayudarte?
@@ -215,7 +215,7 @@ const Layout = ({ children, title, showBackButton = false }) => {
                   </div>
                 ))}
                 {loadingChat && (
-                  <div className="text-xs text-vita-orange animate-pulse">e-Vita está escribiendo…</div>
+                  <div className="text-xs text-vita-orange animate-pulse">i-Vita está escribiendo…</div>
                 )}
               </div>
                    <form className="flex gap-2" onSubmit={async e => {
@@ -262,7 +262,7 @@ const Layout = ({ children, title, showBackButton = false }) => {
                      </button>
                    </form>
                    <div className="mt-2 text-xs text-vita-white/70 text-center px-2">
-                     Las recomendaciones de e-Vita se basan en inteligencia artificial y no sustituyen la consulta con un profesional de la salud. Ante dudas o síntomas graves, acude siempre con tu médico.
+                     Las recomendaciones de i-Vita se basan en inteligencia artificial y no sustituyen la consulta con un profesional de la salud. Ante dudas o síntomas graves, acude siempre con tu médico.
                    </div>
             </div>
           </div>
