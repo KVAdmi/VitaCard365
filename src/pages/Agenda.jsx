@@ -123,11 +123,9 @@ const Agenda = () => {
                 <TabsTrigger value="medicinas"><Pill className="mr-2 h-4 w-4" />Medicinas</TabsTrigger>
                 <TabsTrigger value="citas"><Stethoscope className="mr-2 h-4 w-4" />Citas Médicas</TabsTrigger>
               </TabsList>
-              <Button onClick={handleExport} variant="outline" size="sm">
-                <Download className="mr-2 h-4 w-4" /> Exportar
-              </Button>
+
             </div>
-            
+
             <AnimatePresence mode="wait">
               <motion.div
                 key={activeTab}
@@ -137,20 +135,35 @@ const Agenda = () => {
                 transition={{ duration: 0.2 }}
               >
                 <TabsContent value="medicinas">
+                  <h3 className="text-lg font-bold text-vita-orange mb-2">Toma de Medicamentos</h3>
                   {medicines.length === 0 ? (
-                    <Card className="text-center p-10">
+                    <Card className="text-center p-10 glass-card">
                       <p className="text-vita-white">No tienes medicinas en tu agenda.</p>
                       <p className="text-vita-muted-foreground text-sm mt-1">Usa el botón '+' para agregar una.</p>
                     </Card>
                   ) : (
                     <div className="space-y-4">
                       {medicines.map(med => (
-                        <Card key={med.id} className="flex items-center justify-between p-4">
+                        <Card key={med.id} className="flex items-center justify-between p-4 glass-card border border-vita-orange/30 shadow-lg">
                            <div className="flex items-center">
                              <input type="checkbox" checked={med.taken} onChange={() => toggleMedicineTaken(med.id)} className="h-6 w-6 rounded-full text-vita-orange focus:ring-vita-orange bg-white/20 border-white/30" />
                              <div className="ml-4">
-                               <p className={`font-bold ${med.taken ? 'line-through text-vita-muted-foreground' : 'text-vita-white'}`}>{med.name}</p>
-                               <p className="text-sm text-vita-muted-foreground">{med.dose} - {med.time}</p>
+                               <div className="flex items-center gap-2">
+                                 <Pill className="h-6 w-6 text-vita-orange" />
+                                 <p className={`font-bold text-lg ${med.taken ? 'line-through text-vita-muted-foreground' : 'text-vita-white'}`}>{med.name}</p>
+                               </div>
+                               <p className="text-sm text-vita-muted-foreground mt-1">{med.dose}</p>
+                               <div className="flex items-center gap-2 mt-1">
+                                 <span className="inline-flex items-center gap-1 text-white/80 text-xs bg-vita-orange/20 rounded-full px-2 py-1">
+                                   <svg width="16" height="16" fill="none" viewBox="0 0 24 24"><path stroke="#fff" strokeWidth="2" d="M12 6v6l4 2"/></svg>
+                                   {med.time}
+                                 </span>
+                                 {med.repeat && med.repeat !== 'none' && (
+                                   <span className="inline-flex items-center gap-1 text-xs bg-vita-blue-dark/40 rounded-full px-2 py-1">
+                                     Repite: {med.repeat}
+                                   </span>
+                                 )}
+                               </div>
                              </div>
                            </div>
                            <div className="flex gap-2">
@@ -167,21 +180,33 @@ const Agenda = () => {
                   )}
                 </TabsContent>
                 <TabsContent value="citas">
+                  <h3 className="text-lg font-bold text-vita-blue mb-2">Citas Médicas</h3>
                   {appointments.length === 0 ? (
-                    <Card className="text-center p-10">
+                    <Card className="text-center p-10 glass-card">
                       <p className="text-vita-white">No tienes citas en tu agenda.</p>
                       <p className="text-vita-muted-foreground text-sm mt-1">Usa el botón '+' para agregar una.</p>
                     </Card>
                   ) : (
                     <div className="space-y-4">
                       {appointments.map(appt => (
-                        <Card key={appt.id} className="p-4">
+                        <Card key={appt.id} className="p-4 glass-card border border-vita-blue/30 shadow-lg">
                           <div className="flex justify-between items-start">
                             <div>
-                              <p className="font-bold text-vita-white">{appt.title}</p>
-                              <p className="text-sm text-vita-muted-foreground">{new Date(appt.datetime).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}</p>
+                              <div className="flex items-center gap-2 mb-1">
+                                <Stethoscope className="h-6 w-6 text-vita-blue" />
+                                <p className="font-bold text-lg text-vita-white">{appt.title}</p>
+                              </div>
+                              <div className="flex items-center gap-2 text-xs text-white/80 mb-1">
+                                <svg width="16" height="16" fill="none" viewBox="0 0 24 24"><path stroke="#fff" strokeWidth="2" d="M12 6v6l4 2"/></svg>
+                                {new Date(appt.datetime).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}
+                              </div>
                               {appt.location && <p className="text-sm text-vita-muted-foreground">Lugar: {appt.location}</p>}
                               {appt.notes && <p className="text-sm text-vita-white mt-2">Nota: {appt.notes}</p>}
+                              {appt.repeat && appt.repeat !== 'none' && (
+                                <span className="inline-flex items-center gap-1 text-xs bg-vita-blue-dark/40 rounded-full px-2 py-1 mt-1">
+                                  Repite: {appt.repeat}
+                                </span>
+                              )}
                             </div>
                             <div className="flex gap-2">
                               <Button variant="ghost" size="icon" className="h-8 w-8 text-white/70 hover:text-white" onClick={() => { setEditingItem(appt); setDialogOpen(true); }}>

@@ -1,4 +1,5 @@
 import React, { useMemo } from 'react';
+import AnimatedStats from '../components/dashboard/AnimatedStats';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Helmet } from 'react-helmet';
@@ -85,19 +86,20 @@ const Dashboard = () => {
 
           <div className="space-y-4">
             <h3 className="text-lg font-semibold text-vita-white px-2">Accesos Rápidos</h3>
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               {quickActions.map((action, index) => (
                 <motion.div
                   key={index}
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={() => navigate(action.path)}
-                  className="flex flex-col items-center justify-center space-y-2 p-4 rounded-2xl glass-card cursor-pointer"
+                  className="flex flex-col items-center justify-center space-y-3 p-6 sm:p-4 rounded-2xl glass-card cursor-pointer transition-all shadow-lg border border-white/10"
+                  style={{ minHeight: '110px', minWidth: '100px', boxShadow: '0 4px 24px 0 rgba(96,165,250,0.10)' }}
                 >
-                  <div className="w-12 h-12 flex items-center justify-center rounded-full shadow-lg" style={{ backgroundColor: '#f06340' }}>
-                    <action.icon className="h-7 w-7 text-white" />
+                  <div className="w-16 h-16 sm:w-12 sm:h-12 flex items-center justify-center rounded-full shadow-lg" style={{ backgroundColor: '#f06340' }}>
+                    <action.icon className="h-8 w-8 sm:h-7 sm:w-7 text-white" />
                   </div>
-                  <p className="text-xs font-semibold text-center text-vita-white">{action.title}</p>
+                  <p className="text-base sm:text-xs font-semibold text-center text-vita-white">{action.title}</p>
                 </motion.div>
               ))}
             </div>
@@ -107,13 +109,9 @@ const Dashboard = () => {
             <CardHeader>
               <CardTitle>Nuestros Resultados</CardTitle>
             </CardHeader>
-            <CardContent className="p-4 pt-0">
-              <div className="bg-black/20 p-4 rounded-lg">
-                <img 
-                  src="https://horizons-cdn.hostinger.com/968e2ff6-489b-4213-8f79-173bd439ef43/fb52b4ec4915d3a26b3b61eafc277b5e.png" 
-                  alt="Datos de impacto de VitaCard 365"
-                  className="w-full h-auto rounded-md"
-                />
+            <CardContent className="p-2 pt-0">
+              <div className="p-2 rounded-lg">
+                <AnimatedStats />
               </div>
             </CardContent>
           </Card>

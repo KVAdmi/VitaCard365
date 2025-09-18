@@ -9,6 +9,8 @@ import { Play, StopCircle, Mic, AlertCircle, Save, FileDown, Trash2 } from 'luci
 import { v4 as uuidv4 } from 'uuid';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
+import AudioCleanupPanel from '../../components/mi-chequeo/AudioCleanupPanel';
+import SleepHistoryGlass from '../../components/mi-chequeo/SleepHistoryGlass';
 
 const SleepMonitor = () => {
   const [isMonitoring, setIsMonitoring] = useState(false);
@@ -166,7 +168,16 @@ const SleepSummary = ({ summary, clearSummary }) => {
   );
 };
 
+
 const MeasureSleep = () => {
+  const [sleepHistory] = useLocalStorage('vita-sleep-history', []);
+  // Última sesión
+  const lastSleep = React.useMemo(() => {
+    if (!sleepHistory.length) return null;
+    const sorted = [...sleepHistory].sort((a, b) => new Date(b.date) - new Date(a.date));
+    return sorted[0];
+  }, [sleepHistory]);
+
   return (
     <MeasureLayout
       title="Salud del Sueño"
@@ -179,6 +190,46 @@ const MeasureSleep = () => {
             Monitoreo de sueño: los datos se procesan en tu dispositivo. Te recomendamos descargar tus resúmenes con frecuencia. Este módulo no sustituye evaluación clínica.
           </AlertDescription>
         </Alert>
+
+        {/* Panel resumen glass de la última sesión */}
+        {lastSleep && (
+          <Card className="glass-card mb-4">
+            <CardContent className="p-6 flex flex-col md:flex-row gap-6 items-center">
+              <div className="flex-1 min-w-[220px]">
+                <h3 className="text-lg font-bold text-vita-white mb-1">Última Sesión de Sueño</h3>
+                <div className="flex flex-wrap gap-4 items-center mb-2">
+                  <div className="flex flex-col items-center">
+                    <span className="text-3xl font-extrabold text-vita-blue-light drop-shadow">{lastSleep.score_sueno ?? '--'}</span>
+                    <span className="text-xs text-vita-muted-foreground">Sleep Score</span>
+                  </div>
+                  <div className="flex flex-col items-center">
+                    <span className="text-2xl font-bold text-white">{lastSleep.duracion_monitorizada ? (lastSleep.duracion_monitorizada/60).toFixed(1) : '--'} h</span>
+                    <span className="text-xs text-vita-muted-foreground">Horas dormidas</span>
+                  </div>
+                  <div className="flex flex-col items-center">
+                    <span className="text-2xl font-bold text-yellow-300">{lastSleep['%_ronquido'] ?? '--'}</span>
+                    <span className="text-xs text-vita-muted-foreground">% Ronquido</span>
+                  </div>
+                  <div className="flex flex-col items-center">
+                    <span className="text-2xl font-bold text-orange-400">{lastSleep.picos_ruido ?? '--'}</span>
+                    <span className="text-xs text-vita-muted-foreground">Picos de ruido</span>
+                  </div>
+                </div>
+                <div className="flex flex-col gap-1 mt-2">
+                  <span className="text-xs text-vita-muted-foreground">Fecha: {lastSleep.date ? new Date(lastSleep.date).toLocaleString('es-ES', { dateStyle: 'medium', timeStyle: 'short' }) : '--'}</span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Gráfica de sueño 7 días glass */}
+        <SleepHistoryGlass sleepHistory={sleepHistory} />
+
+        {/* Panel de limpieza de audios locales y privacidad */}
+        <AudioCleanupPanel />
+
+        {/* Monitor en vivo */}
         <SleepMonitor />
       </div>
     </MeasureLayout>

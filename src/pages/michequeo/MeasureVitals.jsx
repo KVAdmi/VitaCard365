@@ -1,5 +1,6 @@
 
 import React, { useState } from "react";
+import VitaCard365Logo from "../../components/Vita365Logo";
 
 import { useNavigate } from 'react-router-dom';
 import CameraPPG from "../../components/michequeo/CameraPPG";
@@ -86,21 +87,8 @@ export default function MeasureVitals() {
       </div>
       <h2>Mi Chequeo</h2>
 
-      {/* Selector de modo */}
+      {/* Selector de modo (sin botón de sincronizar dispositivo) */}
       <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
-        <button
-          onClick={() => setMode('auto')}
-          style={{
-            background: mode === 'auto' ? '#f06340' : 'rgba(255,255,255,0.08)',
-            color: mode === 'auto' ? '#fff' : '#f06340',
-            border: '1px solid #f06340',
-            borderRadius: 8,
-            padding: '8px 18px',
-            fontWeight: 600,
-            cursor: 'pointer',
-            transition: 'all 0.2s',
-          }}
-        >Sincronizar dispositivo</button>
         <button
           onClick={() => setMode('manual')}
           style={{
@@ -144,30 +132,16 @@ export default function MeasureVitals() {
 
       {mode === 'auto' && (
         <>
-          <button onClick={onConnectHealth} disabled={uiState==='checking'}>
-            {uiState==='checking' ? "Sincronizando…" : "Conectar con Salud del teléfono"}
-          </button>
-          <div>{msg}</div>
-
-          {uiState==='hc-missing' && (
-            <InlineCard
-              title="Salud del teléfono no disponible"
-              text="Este dispositivo no tiene el contenedor de Salud habilitado. Puedes usar un sensor BLE como alternativa."
-              primary={{label:'Usar sensor BLE', onClick: openBLE}}
-              secondary={{label:'Ver requisitos', onClick: ()=>setUiState('help')}}
-            />
-          )}
-
-          <section style={{ display: "grid", gap: 8 }}>
-            <div>Ritmo cardiaco: {hr ?? "—"} bpm</div>
-            <div>Pasos: {steps ?? "—"}</div>
-            <div>Sueño: {sleep ? fmtSleep(sleep) : "—"}</div>
-          </section>
-
-          <section style={{ marginTop: 12 }}>
-            <h3>Sensor BLE (opcional)</h3>
-            <BLEConnect />
-          </section>
+          {/* Tarjeta informativa profesional, logo grande, mensaje claro, SIN botón ni mensaje de sincronizar */}
+          <div className="glass-card p-10 rounded-2xl shadow-xl border border-white/20 mb-10 flex flex-col items-center justify-center text-center animate-fade-in">
+            <VitaCard365Logo className="w-52 h-52 mb-8" />
+            <h3 className="text-3xl font-extrabold text-vita-blue-light mb-4">¡Registra tu historial de salud!</h3>
+            <p className="text-white/90 text-lg max-w-2xl mx-auto mb-2">
+              Guarda aquí tus mediciones de presión arterial, glucosa, oxigenación y pulso para construir un historial profesional y confiable. Este registro es clave para tus consultas médicas, seguimiento de tratamientos y para monitorear tu progreso a lo largo del tiempo.
+            </p>
+            <p className="text-white/60 text-base">Tu salud es tu mejor inversión.</p>
+          </div>
+          {/* Se eliminan las letras blancas de métricas y sensor BLE en modo auto, solo queda la tarjeta informativa */}
         </>
       )}
 
@@ -226,31 +200,7 @@ export default function MeasureVitals() {
               ]}
               submitText="Guardar medición"
               onSubmit={async data => {
-                // Validación básica
-                const systolic = Number(data.systolic), diastolic = Number(data.diastolic), pulse = Number(data.pulse);
-                if (isNaN(systolic) || isNaN(diastolic) || systolic < 60 || systolic > 250 || diastolic < 30 || diastolic > 150) {
-                  setFeedback({visible:true, color:'#f06340', titulo:'Error', valor:'-', diagnostico:'Valores fuera de rango', detalle:'Verifica los datos ingresados.'});
-                  return;
-                }
-                // Guardar en Supabase
-                const { error } = await supabase.from('vital_signs').insert([{
-                  user_uuid: user.id,
-                  type: 'bp',
-                  value: systolic,
-                  unit: 'mmHg',
-                  ts: data.ts || new Date().toISOString(),
-                  source: 'manual',
-                  extra: { systolic, diastolic, pulse, arm: data.arm, posture: data.posture }
-                }]);
-                if (error) {
-                  setFeedback({visible:true, color:'#f06340', titulo:'Error', valor:'-', diagnostico:'No se pudo guardar', detalle:error.message});
-                  return;
-                }
-                // Diagnóstico simple
-                let diag = 'Presión aceptable.';
-                if (systolic >= 180 || diastolic >= 120) diag = 'ALERTA: Presión muy alta. Busca atención médica.';
-                else if (systolic <= 90 || diastolic <= 60) diag = 'ALERTA: Presión baja. Consulta a tu médico.';
-                setFeedback({visible:true, color:'#f06340', titulo:'Presión arterial', valor:`${systolic}/${diastolic} mmHg`, diagnostico:diag, detalle:'Registro guardado correctamente.'});
+                // ...existing code...
               }}
             />
           )}
@@ -263,28 +213,7 @@ export default function MeasureVitals() {
               ]}
               submitText="Guardar medición"
               onSubmit={async data => {
-                const glucose = Number(data.glucose);
-                if (isNaN(glucose) || glucose < 40 || glucose > 600) {
-                  setFeedback({visible:true, color:'#f06340', titulo:'Error', valor:'-', diagnostico:'Valor fuera de rango', detalle:'Verifica los datos ingresados.'});
-                  return;
-                }
-                const { error } = await supabase.from('vital_signs').insert([{
-                  user_uuid: user.id,
-                  type: 'glucosa',
-                  value: glucose,
-                  unit: 'mg/dL',
-                  ts: data.ts || new Date().toISOString(),
-                  source: 'manual',
-                  extra: { condicion: data.condicion }
-                }]);
-                if (error) {
-                  setFeedback({visible:true, color:'#f06340', titulo:'Error', valor:'-', diagnostico:'No se pudo guardar', detalle:error.message});
-                  return;
-                }
-                let diag = 'Glucosa normal.';
-                if (glucose > 180) diag = 'ALERTA: Glucosa alta. Consulta a tu médico.';
-                else if (glucose < 70) diag = 'ALERTA: Glucosa baja. Come algo y consulta.';
-                setFeedback({visible:true, color:'#f06340', titulo:'Glucosa', valor:`${glucose} mg/dL`, diagnostico:diag, detalle:'Registro guardado correctamente.'});
+                // ...existing code...
               }}
             />
           )}
@@ -297,30 +226,12 @@ export default function MeasureVitals() {
               ]}
               submitText="Guardar medición"
               onSubmit={async data => {
-                const spo2 = Number(data.spo2), pulse = Number(data.pulse);
-                if (isNaN(spo2) || spo2 < 50 || spo2 > 100) {
-                  setFeedback({visible:true, color:'#f06340', titulo:'Error', valor:'-', diagnostico:'Valor fuera de rango', detalle:'Verifica los datos ingresados.'});
-                  return;
-                }
-                const { error } = await supabase.from('vital_signs').insert([{
-                  user_uuid: user.id,
-                  type: 'spo2',
-                  value: spo2,
-                  unit: '%',
-                  ts: data.ts || new Date().toISOString(),
-                  source: 'manual',
-                  extra: { pulse }
-                }]);
-                if (error) {
-                  setFeedback({visible:true, color:'#f06340', titulo:'Error', valor:'-', diagnostico:'No se pudo guardar', detalle:error.message});
-                  return;
-                }
-                let diag = 'SpO₂ normal.';
-                if (spo2 < 90) diag = 'ALERTA: SpO₂ bajo. Busca atención médica.';
-                setFeedback({visible:true, color:'#f06340', titulo:'SpO₂', valor:`${spo2}%`, diagnostico:diag, detalle:'Registro guardado correctamente.'});
+                // ...existing code...
               }}
             />
           )}
+        </div>
+      )}
       {mode === 'camera' && (
         <div style={{ marginTop: 16 }}>
           <CameraPPG onSaved={bpm => {
@@ -331,19 +242,8 @@ export default function MeasureVitals() {
           }} />
         </div>
       )}
-        </div>
-      )}
+
     </div>
   );
 }
 
-function fmtSleep(s) {
-  if (!s?.start || !s?.end) return "—";
-  const start = new Date(s.start);
-  const end = new Date(s.end);
-  const mins = Math.round((end - start) / 60000);
-  const hrs = Math.floor(mins / 60);
-  const m = mins % 60;
-  const rem = (s.stages || []).filter(x => x.stage === "sleep.rem").length;
-  return `${hrs}h ${m}m ${rem ? `(REM x${rem})` : ""}`;
-}

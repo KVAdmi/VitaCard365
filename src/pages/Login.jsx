@@ -186,7 +186,7 @@ const Login = () => {
                   to="/register"
                   className="font-semibold text-vita-orange hover:text-vita-orange/80"
                 >
-                  Regístrate aquí
+                  Crea tu cuenta aquí
                 </Link>
               </div>
             </div>
