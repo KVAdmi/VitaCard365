@@ -14,6 +14,8 @@ import {
 } from 'chart.js';
 import { v4 as uuidv4 } from 'uuid';
 import { useLocalStorage } from '../../hooks/useLocalStorage';
+import { supabase } from '../../lib/supabaseClient';
+import { getOrCreateLocalUserId } from '../../lib/getOrCreateLocalUserId';
 import { useToast } from '../../components/ui/use-toast';
 import MeasureLayout from '../../components/michequeo/MeasureLayout';
 import { Button } from '../../components/ui/button';
@@ -101,7 +103,7 @@ const MeasureWeight = () => {
     }
   }, [measurements, setLastBmi]);
 
-  const handleSaveWeight = () => {
+  const handleSaveWeight = async () => {
     const weightValue = parseFloat(currentWeight);
     const heightValue = parseFloat(height);
 
@@ -126,31 +128,55 @@ const MeasureWeight = () => {
     const calculatedBmi = weightValue / ((heightValue / 100) * (heightValue / 100));
     setLastBmi(calculatedBmi);
 
-    const newEntry = {
-      id: uuidv4(),
-      date: new Date().toISOString(),
-      time: new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', hour12: true }).toUpperCase(),
-      type: 'weight',
-      vitals: {
-        weight: weightValue,
-        bmi: calculatedBmi,
-      },
+    // Guardar en Supabase
+    // Usa el usuario_id real del usuario logueado si está disponible
+    let usuario_id = null;
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      usuario_id = user?.id || getOrCreateLocalUserId();
+    } catch {
+      usuario_id = getOrCreateLocalUserId();
+    }
+    const payload = {
+      usuario_id,
+      peso_kg: weightValue,
+      tipo: 'peso',
       source: 'manual',
+      ts: new Date().toISOString(),
     };
-    
-    setMeasurements([...measurements, newEntry]);
+    const { error } = await supabase.from('mediciones').insert([payload]);
+    if (error) {
+      toast({ title: 'Error al guardar', description: error.message, variant: 'destructive' });
+      return;
+    }
     setCurrentWeight('');
     toast({
-      title: '¡Guardado!',
+      title: '¡Guardado en la nube!',
       description: `Se ha registrado un peso de ${weightValue} kg.`,
     });
   };
 
-  const weightHistory = useMemo(() => {
-    return measurements
-      .filter(m => m.type === 'weight')
-      .sort((a,b) => new Date(a.date) - new Date(b.date));
-  }, [measurements]);
+  // Leer historial real de Supabase
+  const [weightHistory, setWeightHistory] = useState([]);
+  useEffect(() => {
+    async function fetchWeight() {
+      let usuario_id = null;
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        usuario_id = user?.id || getOrCreateLocalUserId();
+      } catch {
+        usuario_id = getOrCreateLocalUserId();
+      }
+      const { data, error } = await supabase
+        .from('mediciones')
+        .select('*')
+        .eq('usuario_id', usuario_id)
+        .eq('tipo', 'peso')
+        .order('ts', { ascending: true });
+      if (!error && data) setWeightHistory(data);
+    }
+    fetchWeight();
+  }, []);
 
 
   const chartData = {

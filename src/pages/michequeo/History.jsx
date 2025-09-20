@@ -56,9 +56,33 @@ const History = () => {
     return { nivel: '', color: '', texto: '' };
   }
 
-  // Descargar PDF (placeholder)
-  function descargarPDF(m) {
-    alert('Descarga PDF no implementada aún. Medida: ' + JSON.stringify(m));
+  // Descargar PDF real de la tarjeta
+  async function descargarPDF(m) {
+    try {
+      // Buscar el div de la tarjeta por id
+      const cardDiv = document.getElementById('medicion-' + m.id);
+      if (!cardDiv) throw new Error('No se encontró la tarjeta para exportar');
+      await new Promise(res => setTimeout(res, 300));
+      const html2canvas = (await import('html2canvas')).default;
+      const jsPDF = (await import('jspdf')).default;
+      const canvas = await html2canvas(cardDiv, { backgroundColor: '#18181b', scale: 2 });
+      const imgData = canvas.toDataURL('image/png');
+      if (!imgData.startsWith('data:image/png')) throw new Error('No se pudo generar la imagen del reporte.');
+      const pdf = new jsPDF({ orientation: 'p', unit: 'pt', format: 'a4' });
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      const imgWidth = pageWidth - 80;
+      const imgHeight = (canvas.height / canvas.width) * imgWidth;
+      pdf.setFillColor('#18181b');
+      pdf.rect(0, 0, pageWidth, pageHeight, 'F');
+      pdf.addImage(imgData, 'PNG', 40, 40, imgWidth, imgHeight);
+      pdf.setFontSize(10);
+      pdf.setTextColor('#aaa');
+      pdf.text('VitaCard365 · Salud y Bienestar · confidencial', pageWidth/2, pageHeight - 16, { align: 'center' });
+      pdf.save('medicion-vitacard365.pdf');
+    } catch (e) {
+      alert('Error al exportar PDF: ' + e.message);
+    }
   }
 
   return (
@@ -93,7 +117,7 @@ const History = () => {
             {medidas.map((m) => {
               const diag = diagnostico(m);
               return (
-                <div key={m.id} className="glass-card p-4 rounded-2xl shadow-xl border border-white/20">
+                <div key={m.id} id={`medicion-${m.id}`} className="glass-card p-4 rounded-2xl shadow-xl border border-white/20">
                   <div className="flex justify-between text-xs text-white/60 mb-1">
                     <span>{new Date(m.ts).toLocaleDateString()} {new Date(m.ts).toLocaleTimeString()}</span>
                     <span>{m.unit}</span>

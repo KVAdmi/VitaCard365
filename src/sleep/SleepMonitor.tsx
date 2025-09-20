@@ -25,7 +25,15 @@ export default function SleepMonitor({ onSaved }:{ onSaved?:()=>void }) {
     } catch {}
   }
 
+  const [micError, setMicError] = useState<string>("");
   const start = async () => {
+    setMicError("");
+    try {
+      await navigator.mediaDevices.getUserMedia({ audio: true });
+    } catch (err) {
+      setMicError("Debes otorgar permiso de micrófono para monitorear calidad de sueño.");
+      return;
+    }
     const ts = Date.now();
     setStartTs(ts);
     setActive(ts);
@@ -70,18 +78,20 @@ export default function SleepMonitor({ onSaved }:{ onSaved?:()=>void }) {
   }, [running]);
 
   return (
-    <div className="card p-6">
-      <div className="text-center text-5xl font-bold tabular-nums">{fmt(running ? elapsed : 0)}</div>
-      <p className="text-center opacity-80 mt-2">{running ? 'Monitoreando…' : 'Listo para iniciar el monitoreo'}</p>
-      <div className="mt-6">
-        {!running ? (
-          <button className="btn btn-primary w-full" onClick={start}>▶ Iniciar Monitoreo</button>
-        ) : (
-          <button className="btn btn-error w-full" onClick={stop}>■ Detener y Guardar</button>
-        )}
+      <div className="card p-6">
+        <div className="text-center text-5xl font-bold tabular-nums">{fmt(running ? elapsed : 0)}</div>
+        <p className="text-center opacity-80 mt-2">{running ? 'Monitoreando…' : 'Listo para iniciar el monitoreo'}</p>
+        {micError && <div className="text-center text-red-400 font-semibold mt-2">{micError}</div>}
+        <div className="mt-6">
+          {!running ? (
+            <button className="btn btn-primary w-full" onClick={start}>▶ Iniciar Monitoreo</button>
+          ) : (
+            <button className="btn btn-error w-full" onClick={stop}>■ Detener y Guardar</button>
+          )}
+        </div>
+        <p className="mt-3 text-xs opacity-70">
+          Los datos se procesan en tu dispositivo. Cierra esta pestaña y el cronómetro se detendrá (limitación de navegador).
+        </p>
       </div>
-      <p className="mt-3 text-xs opacity-70">
-        Los datos se procesan en tu dispositivo. Cierra esta pestaña y el cronómetro se detendrá (limitación de navegador).
-      </p>
-    </div>
-  );
+    );
+  }

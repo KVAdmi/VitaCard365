@@ -7,6 +7,8 @@ import { Button } from '../../components/ui/button';
 import { useToast } from '../../components/ui/use-toast';
 import { runTriage } from '../../lib/triageRules';
 import { useLocalStorage } from '../../hooks/useLocalStorage';
+import { supabase } from '../../lib/supabaseClient';
+import { useAuth } from '../../contexts/AuthContext';
 import { Bluetooth, Save, Camera, Edit2, AlertTriangle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs';
@@ -137,29 +139,34 @@ const MeasurePressure = () => {
     setCurrentData(data);
   };
   
-  const handleSave = () => {
+  const { user } = useAuth();
+  const handleSave = async () => {
     if (!currentData) {
       toast({ title: "Sin datos", description: "Primero analiza una medición para poder guardarla.", variant: 'destructive' });
       return;
     }
-
-    const newMeasurement = {
-      id: uuidv4(),
-      date: new Date().toISOString().split('T')[0],
-      time: new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }),
-      type: 'pressure',
-      vitals: {
-        pressure: `${currentData.systolic}/${currentData.diastolic}`,
-        heartRate: currentData.heartRate,
-      },
-      source: currentData.source,
-      triage: triageResult,
+    if (!user?.id) {
+      toast({ title: "No autenticado", description: "Debes iniciar sesión para guardar en la nube.", variant: 'destructive' });
+      return;
+    }
+    // Guardar en Supabase con el user.id autenticado
+    const payload = {
+      usuario_id: user.id,
+      sistolica: currentData.systolic,
+      diastolica: currentData.diastolic,
+      pulso_bpm: currentData.heartRate,
+      source: currentData.source || 'manual',
+      ts: new Date().toISOString(),
+      // Puedes agregar más campos si tu formulario los tiene (ej. brazo, postura, notas)
     };
-
-    setMeasurements([...measurements, newMeasurement]);
+    const { error } = await supabase.from('mediciones').insert([payload]);
+    if (error) {
+      toast({ title: 'Error al guardar', description: error.message, variant: 'destructive' });
+      return;
+    }
     toast({
-      title: '¡Guardado!',
-      description: 'Tu medición de presión ha sido guardada en el historial.',
+      title: '¡Guardado en la nube!',
+      description: 'Tu medición de presión ha sido guardada correctamente.',
     });
     navigate('/mi-chequeo');
   };

@@ -5,7 +5,7 @@ import VitaCard365Logo from "../../components/Vita365Logo";
 import { useNavigate } from 'react-router-dom';
 import CameraPPG from "../../components/michequeo/CameraPPG";
 import { supabase } from "../../lib/supabaseClient";
-import { useAuth } from "../../contexts/AuthContext";
+import { getOrCreateLocalUserId } from "../../lib/getOrCreateLocalUserId";
 import BLEConnect from "../../components/BLEConnect";
 import VitalForm from "../../components/michequeo/VitalForm";
 import {
@@ -17,7 +17,6 @@ import {
 
 export default function MeasureVitals() {
   const navigate = useNavigate();
-  const { user } = useAuth();
   const [uiState, setUiState] = useState('idle');
   const [msg, setMsg] = useState("");
   const [hr, setHr] = useState(null);
@@ -200,7 +199,19 @@ export default function MeasureVitals() {
               ]}
               submitText="Guardar medición"
               onSubmit={async data => {
-                // ...existing code...
+                const usuario_id = getOrCreateLocalUserId();
+                const payload = {
+                  usuario_id,
+                  sistolica: parseInt(data.systolic, 10),
+                  diastolica: parseInt(data.diastolic, 10),
+                  pulso_bpm: parseInt(data.pulse, 10),
+                  source: 'manual',
+                  ts: data.ts ? new Date(data.ts).toISOString() : new Date().toISOString(),
+                  // Puedes agregar brazo/postura si tu formulario los tiene
+                };
+                const { error } = await supabase.from('mediciones').insert([payload]);
+                if (error) alert('Error al guardar: ' + error.message);
+                else alert('¡Medición de presión guardada!');
               }}
             />
           )}
@@ -213,7 +224,17 @@ export default function MeasureVitals() {
               ]}
               submitText="Guardar medición"
               onSubmit={async data => {
-                // ...existing code...
+                const usuario_id = getOrCreateLocalUserId();
+                const payload = {
+                  usuario_id,
+                  glucosa_mg_dl: parseFloat(data.glucose),
+                  source: 'manual',
+                  ts: data.ts ? new Date(data.ts).toISOString() : new Date().toISOString(),
+                  notas: data.condicion || null,
+                };
+                const { error } = await supabase.from('glucosa').insert([payload]);
+                if (error) alert('Error al guardar: ' + error.message);
+                else alert('¡Medición de glucosa guardada!');
               }}
             />
           )}
@@ -226,7 +247,17 @@ export default function MeasureVitals() {
               ]}
               submitText="Guardar medición"
               onSubmit={async data => {
-                // ...existing code...
+                const usuario_id = getOrCreateLocalUserId();
+                const payload = {
+                  usuario_id,
+                  spo2: parseFloat(data.spo2),
+                  pulso_bpm: data.pulse ? parseInt(data.pulse, 10) : null,
+                  source: 'manual',
+                  ts: data.ts ? new Date(data.ts).toISOString() : new Date().toISOString(),
+                };
+                const { error } = await supabase.from('mediciones').insert([payload]);
+                if (error) alert('Error al guardar: ' + error.message);
+                else alert('¡Medición de SpO₂ guardada!');
               }}
             />
           )}

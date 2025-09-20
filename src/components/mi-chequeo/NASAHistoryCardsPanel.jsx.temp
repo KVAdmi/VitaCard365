@@ -1,0 +1,188 @@
+import React from 'react';
+import NASAHistoryCard from './NASAHistoryCard';
+import jsPDF from 'jspdf';
+
+const generatePDF = async (title, data, cardIndex, dataLabels = ['Valor']) => {
+  try {
+    const pdf = new jsPDF({ orientation: 'p', unit: 'pt', format: 'a4' });
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const pageHeight = pdf.internal.pageSize.getHeight();
+
+    // Fondo azul oscuro
+    pdf.setFillColor('#0B1437');
+    pdf.rect(0, 0, pageWidth, pageHeight, 'F');
+
+    // Logo VITACARD365
+    pdf.setFillColor('#f06340');
+    pdf.rect(60, 40, 180, 60, 'F');
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(36);
+    pdf.setTextColor('#FFFFFF');
+    pdf.text('VITACARD', 70, 80);
+    pdf.text('365', 160, 80);
+    pdf.text(title.toUpperCase(), pageWidth - 60, 80, { align: 'right' });
+
+    // Información del usuario
+    pdf.setFont('helvetica', 'normal');
+    pdf.setFontSize(14);
+    pdf.text('Usuario:', 60, 150);
+    pdf.text('Folio VitaCard:', 60, 180);
+
+    // Tabla de mediciones
+    pdf.setFillColor('#f06340');
+    pdf.rect(60, 220, pageWidth-120, 40, 'F');
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(14);
+
+    // Headers según el módulo
+    if (title.toLowerCase().includes('oxígeno')) {
+      pdf.text('FECHA MEDICIÓN', 100, 245);
+      pdf.text('S P O₂', 400, 245);
+    } else if (title.toLowerCase().includes('presión')) {
+      pdf.text('FECHA MEDICIÓN', 100, 245);
+      pdf.text('SISTOLICA', 300, 245);
+      pdf.text('DIASTOLICA', 400, 245);
+      pdf.text('PULSO', 500, 245);
+    }
+
+    // Datos de la tabla
+    let y = 280;
+    pdf.setFont('helvetica', 'normal');
+    pdf.setFontSize(12);
+    data.forEach((value, index) => {
+      pdf.text('19/09/2025', 100, y);
+      if (Array.isArray(value)) {
+        pdf.text(String(value[0]), 300, y);
+        pdf.text(String(value[1]), 400, y);
+      } else {
+        pdf.text(String(value), 400, y);
+      }
+      y += 30;
+    });
+
+    // Análisis de Resultados
+    y += 30;
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(14);
+    pdf.setTextColor('#f06340');
+    pdf.text('Análisis de Resultados:', 60, y);
+
+    // Resumen según tipo de medición
+    y += 30;
+    pdf.setFont('helvetica', 'normal');
+    pdf.setFontSize(12);
+    pdf.setTextColor('#FFFFFF');
+    let resumen = '';
+    
+    if (title.toLowerCase().includes('oxígeno')) {
+      const avg = data.reduce((a,b) => a+b, 0) / data.length;
+      if (avg >= 95) {
+        resumen = 'Los niveles de saturación de oxígeno se mantienen en rango óptimo, indicando una buena oxigenación.';
+      } else if (avg >= 90) {
+        resumen = 'Los niveles de saturación requieren seguimiento. Se recomienda mantener monitoreo constante.';
+      } else {
+        resumen = 'Los niveles de saturación requieren atención médica inmediata.';
+      }
+    } else if (title.toLowerCase().includes('presión')) {
+      const sistolicas = data.map(d => d[0]);
+      const diastolicas = data.map(d => d[1]);
+      const avgSis = sistolicas.reduce((a,b) => a+b, 0) / sistolicas.length;
+      const avgDia = diastolicas.reduce((a,b) => a+b, 0) / diastolicas.length;
+      
+      if (avgSis <= 120 && avgDia <= 80) {
+        resumen = 'Los registros muestran una presión arterial óptima dentro de los rangos recomendados.';
+      } else if (avgSis <= 129 && avgDia <= 84) {
+        resumen = 'La presión arterial muestra una tendencia normal-alta. Se recomienda monitoreo regular.';
+      } else {
+        resumen = 'Los registros indican presión arterial elevada que requiere atención profesional.';
+      }
+    }
+    
+    pdf.text(resumen, 60, y, { maxWidth: pageWidth-120 });
+
+    // Línea separadora
+    y += 50;
+    pdf.setLineWidth(0.5);
+    pdf.setDrawColor('#aaaaaa');
+    pdf.line(60, y, pageWidth-60, y);
+
+    // Disclaimer
+    y += 30;
+    pdf.setFont('helvetica', 'italic');
+    pdf.setFontSize(10);
+    pdf.setTextColor('#aaaaaa');
+    pdf.text('AVISO IMPORTANTE: Este reporte ha sido generado utilizando análisis asistido por Inteligencia Artificial.', 60, y);
+    y += 15;
+    pdf.text('Los resultados y sugerencias presentados son orientativos y NO sustituyen una evaluación médica profesional.', 60, y);
+    y += 15;
+    pdf.text('Para cualquier decisión relacionada con su salud, consulte siempre a un profesional médico calificado.', 60, y);
+    y += 30;
+    pdf.text('Este documento es confidencial y para uso exclusivo del usuario. VitaCard365 no se hace responsable del uso indebido de esta información.', 60, y);
+
+    // Pie de página
+    pdf.text('VitaCard365 · Salud y Bienestar · confidencial', pageWidth/2, pageHeight - 20, { align: 'center' });
+
+    // Guardar PDF sin usar caracteres especiales en el nombre
+    pdf.save(\`\${title.toLowerCase().replace(/[^a-z0-9]/g, '-')}-vitacard365.pdf\`);
+  } catch (e) {
+    alert('Error al exportar PDF: ' + e.message);
+  }
+};
+
+const NASAHistoryCardsPanel = () => {
+  return (
+    <div>
+      <NASAHistoryCard 
+        title="Presión arterial"
+        subtitle="Historial semanal de presión arterial"
+        data={[[120, 80], [118, 78], [122, 82], [119, 79], [121, 81], [117, 77], [120, 80]]}
+        chartType="area"
+        onDownloadPDF={() => generatePDF('Presión Arterial', [[120, 80], [118, 78], [122, 82], [119, 79], [121, 81], [117, 77], [120, 80]], 0, ['Sistólica', 'Diastólica'])}
+      />
+      <NASAHistoryCard
+        title="Glucosa"
+        subtitle="Historial semanal de glucosa" 
+        data={[90, 110, 105, 100, 120, 115, 108]}
+        chartType="line"
+        onDownloadPDF={() => generatePDF('Glucosa', [90, 110, 105, 100, 120, 115, 108], 1, ['Glucosa mg/dL'])}
+      />
+      <NASAHistoryCard
+        title="SpO₂"
+        subtitle="Historial semanal de saturación de oxígeno"
+        data={[98, 97, 99, 98, 96, 97, 98]}
+        chartType="line"
+        onDownloadPDF={() => generatePDF('Saturación de Oxígeno', [98, 97, 99, 98, 96, 97, 98], 2, ['SpO₂ %'])}
+      />
+      <NASAHistoryCard
+        title="Peso y Talla"
+        subtitle="Peso (kg) y talla (cm) últimos 7 días"
+        data={[
+          {label: 'Peso', color: '#f06340', values: [70, 70.2, 70.1, 70, 69.9, 70, 70.1]},
+          {label: 'Talla', color: '#4ade80', values: [170, 170, 170, 170, 170, 170, 170]}
+        ]}
+        multiLine
+        chartType="bar"
+        onDownloadPDF={() => generatePDF('Peso y Talla', [
+          {label: 'Peso (kg)', values: [70, 70.2, 70.1, 70, 69.9, 70, 70.1]},
+          {label: 'Talla (cm)', values: [170, 170, 170, 170, 170, 170, 170]}
+        ], 3)}
+      />
+      <NASAHistoryCard
+        title="Test de Alertas"
+        subtitle="Resultados recientes del test"
+        data={[1, 0, 1, 1, 0, 1, 1]} 
+        chartType="gauge"
+        onDownloadPDF={() => generatePDF('Test de Alertas', [1, 0, 1, 1, 0, 1, 1], 4, ['Nivel de Alerta'])}
+      />
+      <NASAHistoryCard
+        title="Calidad de Sueño"
+        subtitle="Horas de sueño por noche"
+        data={[7, 6.5, 8, 7.5, 6, 7, 7.2]}
+        chartType="area"
+        onDownloadPDF={() => generatePDF('Calidad de Sueño', [7, 6.5, 8, 7.5, 6, 7, 7.2], 5, ['Horas de sueño'])}
+      />
+    </div>
+  );
+};
+
+export default NASAHistoryCardsPanel;

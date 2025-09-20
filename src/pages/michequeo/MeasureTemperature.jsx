@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import { useToast } from '../../components/ui/use-toast';
@@ -6,8 +5,8 @@ import MeasureLayout from '../../components/michequeo/MeasureLayout';
 import { Input } from '../../components/ui/input';
 import { Button } from '../../components/ui/button';
 
-const MeasureHeartRate = () => {
-  const [bpm, setBpm] = useState('');
+const MeasureTemperature = () => {
+  const [temperature, setTemperature] = useState('');
   const [history, setHistory] = useState([]);
   const { toast } = useToast();
 
@@ -16,7 +15,7 @@ const MeasureHeartRate = () => {
       const { data, error } = await supabase
         .from('mediciones')
         .select('*')
-        .eq('tipo', 'fc')
+        .eq('tipo', 'temperatura')
         .order('ts', { ascending: false });
       if (!error && data) setHistory(data);
     }
@@ -32,8 +31,8 @@ const MeasureHeartRate = () => {
     }
     const payload = {
       usuario_id,
-      pulso_bpm: parseInt(bpm, 10),
-      tipo: 'fc',
+      temperatura: parseFloat(temperature),
+      tipo: 'temperatura',
       ts: new Date().toISOString(),
       source: 'manual',
     };
@@ -43,27 +42,27 @@ const MeasureHeartRate = () => {
       return;
     }
     toast({ title: '¡Guardado!', description: 'Medición registrada.' });
-    setBpm('');
+    setTemperature('');
     // Refresca historial
     const { data } = await supabase
       .from('mediciones')
       .select('*')
-      .eq('tipo', 'fc')
+      .eq('tipo', 'temperatura')
       .order('ts', { ascending: false });
     setHistory(data || []);
   };
 
   return (
-    <MeasureLayout title="Frecuencia Cardíaca" subtitle="Registra tu pulso (BPM).">
+    <MeasureLayout title="Temperatura" subtitle="Registra tu temperatura corporal.">
       <form onSubmit={handleSave} className="space-y-4">
-        <Input type="number" min="30" max="230" placeholder="Pulso (BPM)" value={bpm} onChange={e => setBpm(e.target.value)} required />
+        <Input type="number" step="0.1" min="30" max="45" placeholder="Temperatura (°C)" value={temperature} onChange={e => setTemperature(e.target.value)} required />
         <Button type="submit">Guardar</Button>
       </form>
       <div className="mt-6">
         <h3 className="text-white font-bold mb-2">Historial</h3>
         <ul className="text-white text-sm space-y-1">
           {history.map((h, i) => (
-            <li key={h.id || i}>{new Date(h.ts).toLocaleString()} - {h.pulso_bpm} bpm</li>
+            <li key={h.id || i}>{new Date(h.ts).toLocaleString()} - {h.temperatura}°C</li>
           ))}
         </ul>
       </div>
@@ -71,4 +70,4 @@ const MeasureHeartRate = () => {
   );
 };
 
-export default MeasureHeartRate;
+export default MeasureTemperature;

@@ -10,13 +10,18 @@ function getServiceTime() {
   const now = new Date();
   let diff = now - START_DATE;
   const years = Math.floor(diff / (1000 * 60 * 60 * 24 * 365.25));
-  diff -= years * 1000 * 60 * 60 * 24 * 365.25;
-  const months = Math.floor(diff / (1000 * 60 * 60 * 24 * 30.44));
-  diff -= months * 1000 * 60 * 60 * 24 * 30.44;
-  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-  diff -= days * 1000 * 60 * 60 * 24;
-  const hours = Math.floor(diff / (1000 * 60 * 60));
-  return { years, months, days, hours };
+  const lastAnniversary = new Date(START_DATE.getFullYear() + years, START_DATE.getMonth(), START_DATE.getDate(), 0, 0, 0);
+  let sinceAnniv = now - lastAnniversary;
+  if (sinceAnniv < 0) {
+    // Si el aniversario aún no ha llegado este año
+    const prevAnniv = new Date(lastAnniversary.getFullYear() - 1, lastAnniversary.getMonth(), lastAnniversary.getDate(), 0, 0, 0);
+    sinceAnniv = now - prevAnniv;
+  }
+  const days = Math.floor(sinceAnniv / (1000 * 60 * 60 * 24));
+  const hours = Math.floor((sinceAnniv % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+  const minutes = Math.floor((sinceAnniv % (1000 * 60 * 60)) / (1000 * 60));
+  const seconds = Math.floor((sinceAnniv % (1000 * 60)) / 1000);
+  return { years, days, hours, minutes, seconds };
 }
 
 function useAnimatedCount(finalValue, duration = 3500, startValue = 0) {
@@ -47,7 +52,7 @@ const AnimatedStats = () => {
   useEffect(() => {
     const interval = setInterval(() => {
       setServiceTime(getServiceTime());
-    }, 1000 * 60 * 60); // update every hour
+    }, 1000); // update every second for live clock
     return () => clearInterval(interval);
   }, []);
 
@@ -69,15 +74,21 @@ const AnimatedStats = () => {
         <div className="mt-10 text-4xl font-extrabold tracking-tight">+{services.toLocaleString()}</div>
         <div className="text-lg mt-2 font-medium">Solicitudes atendidas</div>
       </div>
-      {/* Años de servicio continuo (animado) */}
+      {/* Años de servicio continuo (animado, reloj digital) */}
   <div className="rounded-2xl glass-card text-white p-4 sm:p-8 flex flex-col items-center shadow-xl relative min-h-[110px] sm:min-h-[180px] backdrop-blur-md bg-white/10 border border-white/10" style={{background:'rgba(24,28,40,0.30)'}}>
         <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-vita-orange rounded-full p-4 shadow-lg border-4 border-white">
           <Clock className="h-10 w-10 text-white" />
         </div>
         <div className="mt-10 text-3xl font-extrabold tracking-tight text-center">
-          +{animatedYears} Años<br />
-          <span className="text-2xl font-bold">{serviceTime.months} meses {serviceTime.days} días</span><br />
-          <span className="text-lg font-semibold">{serviceTime.hours} horas</span>
+          +{animatedYears} Años
+        </div>
+        <div className="text-base font-semibold text-center mt-1">
+          Día <span className="font-mono">{serviceTime.days}</span>
+        </div>
+        <div className="text-xl font-mono font-bold text-center mt-1" style={{letterSpacing:'1px'}}>
+          {serviceTime.hours.toString().padStart(2, '0')}
+          :{serviceTime.minutes.toString().padStart(2, '0')}
+          :{serviceTime.seconds.toString().padStart(2, '0')}
         </div>
         <div className="text-lg mt-2 font-medium">Años de servicio continuo</div>
       </div>

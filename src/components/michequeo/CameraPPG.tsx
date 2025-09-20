@@ -5,6 +5,7 @@ declare global {
   }
 }
 import { useEffect, useRef, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "../../lib/supabaseClient";
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -24,6 +25,8 @@ export default function CameraPPG({ sampleSeconds = 30, autoTorch = true, onSave
   const [running, setRunning] = useState(false);
   const [bpm, setBpm] = useState<number | null>(null);
   const [msg, setMsg] = useState<string>("");
+  const [signal, setSignal] = useState<number>(0); // 0-100 calidad de señal
+  const [phase, setPhase] = useState<'idle'|'instruct'|'measuring'|'done'>('idle');
 
   const valuesRef = useRef<number[]>([]);
   const timeRef   = useRef<number[]>([]);
@@ -31,9 +34,12 @@ export default function CameraPPG({ sampleSeconds = 30, autoTorch = true, onSave
   useEffect(() => () => stop(), []);
 
   const start = async () => {
-    setMsg(""); setBpm(null);
+    setMsg(""); setBpm(null); setSignal(0); setPhase('instruct');
     valuesRef.current = []; timeRef.current = [];
-    try {
+    // Mostrar instrucciones animadas 2s antes de iniciar
+    setTimeout(async () => {
+      setPhase('measuring');
+      try {
       // Pedir permiso explícito en móvil (Cordova/Capacitor)
       if (window.cordova && window.cordova.plugins && window.cordova.plugins.permissions) {
         const perms = window.cordova.plugins.permissions;
@@ -56,6 +62,7 @@ export default function CameraPPG({ sampleSeconds = 30, autoTorch = true, onSave
         });
       } catch (err) {
         setMsg("No se pudo acceder a la cámara. Verifica permisos en tu dispositivo.");
+        setPhase('idle');
         return;
       }
       streamRef.current = s;
@@ -83,8 +90,9 @@ export default function CameraPPG({ sampleSeconds = 30, autoTorch = true, onSave
 
       setTimeout(async () => {
         stop();
+        setPhase('done');
         const est = computeBPM(valuesRef.current, timeRef.current);
-        if (!est || !isFinite(est)) { setMsg("Señal insuficiente. Cubre bien cámara/flash y mantén firme."); return; }
+        if (!est || !isFinite(est)) { setMsg("Señal insuficiente. Cubre bien cámara/flash, mantén firme y repite."); return; }
         const rounded = Math.round(est);
         setBpm(rounded);
 
@@ -108,11 +116,14 @@ export default function CameraPPG({ sampleSeconds = 30, autoTorch = true, onSave
       }, sampleSeconds * 1000);
     } catch (e: any) {
       setMsg(e?.message || "No se pudo iniciar cámara. Verifica permisos en tu dispositivo.");
+      setPhase('idle');
     }
+    }, 1800); // 1.8s de instrucciones antes de medir
   };
 
   const stop = () => {
     setRunning(false);
+    setPhase('idle');
     if (rafRef.current) cancelAnimationFrame(rafRef.current);
     rafRef.current = null;
     if (streamRef.current) { streamRef.current.getTracks().forEach(t => t.stop()); streamRef.current = null; }
@@ -131,7 +142,7 @@ export default function CameraPPG({ sampleSeconds = 30, autoTorch = true, onSave
 
     // canal rojo promedio
     let sum = 0; const px = rw*rh;
-    for (let i=0; i<img.length; i+=4) sum += img[i];
+    for (let i=0;i<img.length;i+=4) sum += img[i];
     const meanR = sum / px;
 
     const t = performance.now()/1000;
@@ -141,6 +152,21 @@ export default function CameraPPG({ sampleSeconds = 30, autoTorch = true, onSave
     while (timeRef.current.length && t - timeRef.current[0] > Math.max(sampleSeconds, 60)) {
       timeRef.current.shift(); valuesRef.current.shift();
     }
+
+    // Feedback de señal: varianza y rango
+    const vals = valuesRef.current;
+    let sig = 0;
+    if (vals.length > 15) {
+      const min = Math.min(...vals.slice(-15));
+      const max = Math.max(...vals.slice(-15));
+      const range = max - min;
+      // Tolerancia realista: >=8 es excelente, >=5 aceptable, <5 pobre
+      if (range >= 8) sig = 100;
+      else if (range >= 5) sig = 60 + (range-5)*13;
+      else sig = Math.max(0, (range-2)*20);
+    }
+    setSignal(Math.round(sig));
+
     rafRef.current = requestAnimationFrame(loop);
   };
 
@@ -171,10 +197,30 @@ export default function CameraPPG({ sampleSeconds = 30, autoTorch = true, onSave
 
   return (
     <div className="w-full max-w-md mx-auto">
-      <div className="rounded-xl overflow-hidden bg-black">
-        <video ref={videoRef} muted playsInline autoPlay style={{ width:"100%", height:"auto", objectFit:"cover" }}/>
+      <div className="rounded-xl overflow-hidden bg-black relative">
+        <video ref={videoRef} muted playsInline autoPlay style={{ width:"100%", height:"auto", objectFit:"cover", filter: running? 'brightness(1.2) saturate(1.2)' : undefined }}/>
+        {/* Indicador de señal tipo barra NASA */}
+        <AnimatePresence>
+        {running && (
+          <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="absolute left-0 right-0 bottom-0 flex items-center justify-center pb-2">
+            <div style={{width:180, height:18, background:'#2228', borderRadius:10, border:'1px solid #fff3', overflow:'hidden', boxShadow:'0 0 8px #000a'}}>
+              <motion.div style={{height:'100%', borderRadius:10, background: signal>80?'#00ffb3':signal>60?'#ffe066':'#ff5e5e', width: signal+"%", transition:'width 0.2s'}} />
+            </div>
+            <span className="ml-2 text-xs font-bold" style={{color: signal>80?'#00ffb3':signal>60?'#ffe066':'#ff5e5e'}}>{signal}%</span>
+          </motion.div>
+        )}
+        </AnimatePresence>
       </div>
       <canvas ref={canvasRef} hidden />
+      {/* Instrucciones animadas tipo NASA */}
+      <AnimatePresence>
+        {phase==='instruct' && (
+          <motion.div initial={{opacity:0, y:20}} animate={{opacity:1, y:0}} exit={{opacity:0, y:-20}} className="mt-4 text-center text-white/90 text-base font-semibold animate-pulse">
+            <div className="mb-2">Coloca tu dedo cubriendo <span className="text-vita-orange font-bold">cámara y flash</span>.<br/>Mantén el móvil firme y no presiones demasiado.</div>
+            <div className="text-xs text-white/60">La medición iniciará automáticamente…</div>
+          </motion.div>
+        )}
+      </AnimatePresence>
       <div className="mt-3 flex gap-2">
         {!running ? (
           <button className="btn btn-primary flex-1" onClick={start}>

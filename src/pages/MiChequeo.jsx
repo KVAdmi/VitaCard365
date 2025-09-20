@@ -5,6 +5,7 @@ import { Button } from '../components/ui/button';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { motion } from 'framer-motion';
 import { Plus, Info, Download } from 'lucide-react';
+
 import NASAHistoryCardsPanel from '../components/mi-chequeo/NASAHistoryCardsPanel';
 import AudioCleanupPanel from '../components/mi-chequeo/AudioCleanupPanel';
 import { Card, CardContent } from '../components/ui/card';
@@ -40,8 +41,7 @@ ChartJS.register(
   Legend
 );
 
-import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
+
 
 const MeasurementCard = ({ measurement }) => {
   const { toast } = useToast();
@@ -98,15 +98,7 @@ const MeasurementCard = ({ measurement }) => {
           </div>
         </div>
       )}
-      {measurement.vitals.temperature && (
-        <div className="flex items-center space-x-2">
-          <Thermometer className="w-5 h-5 text-yellow-400" />
-          <div>
-            <span className="font-bold text-white">{measurement.vitals.temperature}</span>
-            <span className="text-white/80 ml-1">°C</span>
-          </div>
-        </div>
-      )}
+        {/* Temperatura eliminada completamente, no mostrar tarjeta ni placeholder */}
     </div>
   );
 
@@ -215,32 +207,99 @@ const MiChequeo = () => {
   const [triageEvents] = useLocalStorage('vita-triage_events', []);
   const mainPanelRef = useRef();
 
-  // Exportar PDF profesional del panel principal
+  // Exportar PDF profesional con branding, tabla y gráfica de los últimos 7 días para cada tipo de medición
   const handleExportPDF = async () => {
     try {
-      const element = mainPanelRef.current;
-      if (!element) throw new Error('No se encontró el panel principal para exportar');
-      const canvas = await html2canvas(element, { backgroundColor: '#18181b', scale: 2 });
-      const imgData = canvas.toDataURL('image/png');
+      // Esperar a que el gráfico esté renderizado
+      await new Promise(resolve => setTimeout(resolve, 500));
       const pdf = new jsPDF({ orientation: 'p', unit: 'pt', format: 'a4' });
       const pageWidth = pdf.internal.pageSize.getWidth();
       const pageHeight = pdf.internal.pageSize.getHeight();
-      // Branding y título elegante
+      // Branding y portada
       pdf.setFillColor('#18181b');
-      pdf.rect(0, 0, pageWidth, 80, 'F');
+      pdf.rect(0, 0, pageWidth, 100, 'F');
       pdf.setFont('helvetica', 'bold');
       pdf.setTextColor('#60a5fa');
       pdf.setFontSize(28);
-      pdf.text('VitaCard365 - Resumen de Salud', pageWidth/2, 48, { align: 'center' });
-      pdf.setFontSize(14);
+      pdf.text('VitaCard365', pageWidth/2, 54, { align: 'center' });
+      pdf.setFontSize(16);
       pdf.setTextColor('#fff');
-      pdf.text('Reporte generado: ' + new Date().toLocaleString('es-ES'), pageWidth/2, 68, { align: 'center' });
-      // Imagen del panel
-      const marginTop = 90;
-      const ratio = Math.min(pageWidth / canvas.width, (pageHeight - marginTop - 24) / canvas.height);
-      const imgWidth = canvas.width * ratio;
-      const imgHeight = canvas.height * ratio;
-      pdf.addImage(imgData, 'PNG', (pageWidth - imgWidth) / 2, marginTop, imgWidth, imgHeight);
+      pdf.text('Reporte profesional de salud', pageWidth/2, 80, { align: 'center' });
+      pdf.setFontSize(12);
+      pdf.setTextColor('#aaa');
+      pdf.text('Generado: ' + new Date().toLocaleString('es-ES'), pageWidth/2, 98, { align: 'center' });
+
+      let y = 120;
+      // Tabla de resultados de los últimos 7 días para cada tipo
+      const tipos = [
+        { key: 'pressure', label: 'Presión arterial (mmHg)' },
+        { key: 'glucose', label: 'Glucosa (mg/dL)' },
+        { key: 'spo2', label: 'SpO₂ (%)' },
+        { key: 'heartRate', label: 'Pulso (BPM)' },
+        { key: 'weight', label: 'Peso (kg)' },
+        { key: 'sleep_score', label: 'Calidad de sueño' },
+      ];
+      const dias = Array.from({length: 7}, (_,i) => {
+        const d = new Date(); d.setDate(d.getDate()-i);
+        return d.toLocaleDateString('es-ES', { day:'2-digit', month:'short' });
+      }).reverse();
+      pdf.setFontSize(14);
+      pdf.setTextColor('#f06340');
+      pdf.text('Resultados de los últimos 7 días', pageWidth/2, y, { align: 'center' });
+      y += 18;
+      pdf.setFontSize(11);
+      pdf.setTextColor('#fff');
+      // Encabezado de tabla
+      let x = 60;
+      pdf.text('Tipo', x, y);
+      dias.forEach((d, i) => pdf.text(d, x+90+i*60, y));
+      y += 14;
+      // Filas de tabla
+      tipos.forEach(tipo => {
+        pdf.setTextColor('#f06340');
+        pdf.text(tipo.label, x, y);
+        pdf.setTextColor('#fff');
+        dias.forEach((d, i) => {
+          let val = '';
+          // Buscar medición de ese día
+          const fecha = new Date(); fecha.setDate(fecha.getDate()-(6-i)); fecha.setHours(0,0,0,0);
+          const entry = allEntries.find(e => {
+            const ed = new Date(e.date || e.created_at); ed.setHours(0,0,0,0);
+            return ed.getTime() === fecha.getTime();
+          });
+          if (entry) {
+            if (tipo.key === 'pressure' && entry.vitals?.pressure) val = entry.vitals.pressure;
+            if (tipo.key === 'glucose' && entry.vitals?.glucose) val = String(entry.vitals.glucose);
+            if (tipo.key === 'spo2' && entry.vitals?.spo2) val = String(entry.vitals.spo2);
+            if (tipo.key === 'heartRate' && entry.vitals?.heartRate) val = String(entry.vitals.heartRate);
+            if (tipo.key === 'weight' && entry.vitals?.weight) val = String(entry.vitals.weight);
+            if (tipo.key === 'sleep_score' && entry.sleep_score) val = String(entry.sleep_score);
+          }
+          pdf.text(val || '--', x+90+i*60, y);
+        });
+        y += 14;
+      });
+
+      y += 18;
+      // Gráfica de evolución (captura del panel principal)
+      const element = mainPanelRef.current;
+      if (element) {
+        // Esperar a que el canvas de Chart.js esté presente
+        const chartCanvas = element.querySelector('canvas');
+        if (!chartCanvas) throw new Error('No se encontró el gráfico para exportar.');
+        // Forzar re-render y esperar
+        await new Promise(resolve => setTimeout(resolve, 300));
+        const canvas = await html2canvas(element, { backgroundColor: '#18181b', scale: 2 });
+        const imgData = canvas.toDataURL('image/png');
+        if (!imgData.startsWith('data:image/png')) throw new Error('No se pudo generar la imagen del gráfico.');
+        const imgWidth = pageWidth-120;
+        const imgHeight = (canvas.height/canvas.width)*imgWidth;
+        pdf.addImage(imgData, 'PNG', 60, y, imgWidth, imgHeight);
+        y += imgHeight+10;
+      } else {
+        throw new Error('No se encontró el panel principal para exportar.');
+      }
+
       // Footer institucional
       pdf.setFontSize(10);
       pdf.setTextColor('#aaa');
@@ -474,14 +533,85 @@ const MiChequeo = () => {
         </div>
 
 
-        {/* Panel principal de calidad de sueño y gráfica, exportable */}
+        {/* Panel principal de calidad de sueño y gráfica, exportable, con botón PDF */}
         <div ref={mainPanelRef} className="mb-8">
           {lastSleep && (
             <Card className="glass-card mb-8">
-              <CardContent className="p-6 flex flex-col md:flex-row gap-6 items-center">
-                <div className="flex-1 min-w-[220px]">
-                  <h3 className="text-lg font-bold text-vita-white mb-1">Calidad de Sueño (última noche)</h3>
-                  <div className="flex flex-wrap gap-4 items-center mb-2">
+              <CardContent className="p-4 flex flex-col sm:flex-row gap-4 items-center sm:items-stretch">
+                <div className="flex-1 min-w-[180px] max-w-full flex flex-col justify-center items-center sm:items-start">
+                  <div className="flex justify-between w-full mb-1">
+                    <h3 className="text-lg font-bold text-vita-white">Calidad de Sueño (última noche)</h3>
+                    <button
+                      className="rounded-lg px-3 py-1 bg-[#f06340] text-white text-xs font-bold flex items-center gap-1"
+                      onClick={async () => {
+                        try {
+                          await new Promise(res => setTimeout(res, 400));
+                          const pdf = new jsPDF({ orientation: 'p', unit: 'pt', format: 'a4' });
+                          const pageWidth = pdf.internal.pageSize.getWidth();
+                          const pageHeight = pdf.internal.pageSize.getHeight();
+                          pdf.setFillColor('#18181b');
+                          pdf.rect(0, 0, pageWidth, 100, 'F');
+                          pdf.setFont('helvetica', 'bold');
+                          pdf.setTextColor('#60a5fa');
+                          pdf.setFontSize(28);
+                          pdf.text('VitaCard365', pageWidth/2, 54, { align: 'center' });
+                          pdf.setFontSize(16);
+                          pdf.setTextColor('#fff');
+                          pdf.text('Reporte de Calidad de Sueño', pageWidth/2, 80, { align: 'center' });
+                          pdf.setFontSize(12);
+                          pdf.setTextColor('#aaa');
+                          pdf.text('Generado: ' + new Date().toLocaleString('es-ES'), pageWidth/2, 98, { align: 'center' });
+                          let y = 120;
+                          // Tabla de los últimos 7 días
+                          const dias = Array.from({length: 7}, (_,i) => {
+                            const d = new Date(); d.setDate(d.getDate()-i);
+                            return d.toLocaleDateString('es-ES', { day:'2-digit', month:'short' });
+                          }).reverse();
+                          pdf.setFontSize(14);
+                          pdf.setTextColor('#f06340');
+                          pdf.text('Calidad de sueño últimos 7 días', pageWidth/2, y, { align: 'center' });
+                          y += 18;
+                          pdf.setFontSize(11);
+                          pdf.setTextColor('#fff');
+                          pdf.text('Día', 60, y);
+                          dias.forEach((d, i) => pdf.text(d, 110+i*60, y));
+                          y += 14;
+                          pdf.setTextColor('#f06340');
+                          pdf.text('Score', 60, y);
+                          pdf.setTextColor('#fff');
+                          dias.forEach((d, i) => {
+                            const fecha = new Date(); fecha.setDate(fecha.getDate()-(6-i)); fecha.setHours(0,0,0,0);
+                            const entry = sleepHistory.find(e => {
+                              const ed = new Date(e.date); ed.setHours(0,0,0,0);
+                              return ed.getTime() === fecha.getTime();
+                            });
+                            pdf.text(entry?.sleep_score ? String(entry.sleep_score) : '--', 110+i*60, y);
+                          });
+                          y += 18;
+                          // Gráfica (captura de la tarjeta)
+                          const cardDiv = mainPanelRef.current?.querySelector('.glass-card');
+                          if (cardDiv) {
+                            const canvas = await html2canvas(cardDiv, { backgroundColor: '#18181b', scale: 2 });
+                            const imgData = canvas.toDataURL('image/png');
+                            if (!imgData.startsWith('data:image/png')) throw new Error('No se pudo generar la imagen del gráfico.');
+                            const imgWidth = pageWidth-120;
+                            const imgHeight = (canvas.height/canvas.width)*imgWidth;
+                            pdf.addImage(imgData, 'PNG', 60, y, imgWidth, imgHeight);
+                            y += imgHeight+10;
+                          }
+                          pdf.setFontSize(10);
+                          pdf.setTextColor('#aaa');
+                          pdf.text('VitaCard365 · Salud y Bienestar · confidencial', pageWidth/2, pageHeight - 16, { align: 'center' });
+                          pdf.save('sueno-vitacard365.pdf');
+                        } catch (e) {
+                          alert('Error al exportar PDF: ' + e.message);
+                        }
+                      }}
+                    >
+                      <Download className="h-4 w-4" /> Descargar PDF
+                    </button>
+                  </div>
+                  <div className="flex flex-wrap gap-4 items-center justify-center sm:justify-start mb-2">
                     <div className="flex flex-col items-center">
                       <span className="text-3xl font-extrabold text-vita-blue-light drop-shadow">{lastSleep.sleep_score ?? '--'}</span>
                       <span className="text-xs text-vita-muted-foreground">Sleep Score</span>
@@ -503,11 +633,11 @@ const MiChequeo = () => {
                     <span className="text-xs text-vita-muted-foreground">Última sesión: {lastSleep.date ? new Date(lastSleep.date).toLocaleString('es-ES', { dateStyle: 'medium', timeStyle: 'short' }) : '--'}</span>
                   </div>
                 </div>
-                <div className="flex-1 min-w-[260px] h-40">
+                <div className="flex-1 min-w-[200px] max-w-full h-40 flex items-center justify-center">
                   {sleepChartData ? (
-                    <Bar data={sleepChartData} options={sleepChartOptions} height={160} />
+                    <Bar data={sleepChartData} options={sleepChartOptions} height={140} />
                   ) : (
-                    <div className="flex items-center justify-center h-full text-vita-muted-foreground">Sin datos de gráfica</div>
+                    <div className="flex items-center justify-center h-full text-vita-muted-foreground text-center text-xs">Sin datos de gráfica</div>
                   )}
                 </div>
               </CardContent>
@@ -515,8 +645,8 @@ const MiChequeo = () => {
           )}
         </div>
 
-        {/* Panel de limpieza de audios locales y privacidad */}
-        <AudioCleanupPanel />
+  {/* Panel de limpieza de audios locales y privacidad (solo visible en calidad de sueño) */}
+  {/* <AudioCleanupPanel /> */}
 
         {/* Panel de tarjetas NASA glass, 100% responsive */}
         <NASAHistoryCardsPanel />

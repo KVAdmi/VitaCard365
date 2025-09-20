@@ -9,6 +9,7 @@ import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
 import { triageTests, evaluateTest, getLevelCopy, levelCopy } from '../../lib/triageEngine';
 import { useLocalStorage } from '../../hooks/useLocalStorage';
+import { supabase } from '../../lib/supabaseClient';
 import { useAuth } from '../../contexts/AuthContext';
 import { Siren, Building, Stethoscope, Sparkles, AlertTriangle, ChevronDown, Play, Save } from 'lucide-react';
 import { useToast } from '../../components/ui/use-toast';
@@ -255,11 +256,15 @@ const TestAlerts = () => {
     setActiveTest(null);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!result) return;
+    if (!user?.id) {
+      toast({ title: 'No autenticado', description: 'Debes iniciar sesión.', variant: 'destructive' });
+      return;
+    }
     const newEvent = {
       id: uuidv4(),
-      user_id: user?.id,
+      user_id: user.id,
       test_id: result.testId,
       answers,
       level: result.level,
@@ -267,6 +272,23 @@ const TestAlerts = () => {
       advice: getLevelCopy(result.level).title,
       created_at: new Date().toISOString(),
     };
+    // Guardar en Supabase
+    const { error } = await supabase.from('incidencias').insert([
+      {
+        id: newEvent.id,
+        user_id: newEvent.user_id,
+        test_id: newEvent.test_id,
+        level: newEvent.level,
+        rationale: JSON.stringify(newEvent.rationale),
+        answers: JSON.stringify(newEvent.answers),
+        advice: newEvent.advice,
+        created_at: newEvent.created_at,
+      }
+    ]);
+    if (error) {
+      toast({ title: 'Error al guardar', description: error.message, variant: 'destructive' });
+      return;
+    }
     setTriageEvents(prev => [...prev, newEvent]);
     toast({
       title: "Test Guardado",
