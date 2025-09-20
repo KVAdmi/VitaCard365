@@ -1,4 +1,5 @@
 import React from 'react';
+import { askIVita } from '../../askIVita';
 import { useNavigate } from 'react-router-dom';
 import Layout from '../../components/Layout';
 
@@ -73,6 +74,17 @@ const NewMeasurement = () => {
               </motion.div>
             );
           })}
+          {/* Botón de ejemplo para llamar a askIVita */}
+          <button
+            className="mt-6 px-4 py-2 bg-vita-orange text-white rounded hover:bg-orange-600 transition"
+            onClick={() => {
+              askIVita("Quiero pagar mi plan")
+                .then(console.log)
+                .catch(console.error);
+            }}
+          >
+            Probar askIVita
+          </button>
         </div>
       </div>
     </Layout>
