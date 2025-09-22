@@ -10,15 +10,18 @@ import VitaCard365Logo from '../components/Vita365Logo';
 import { 
   Shield, 
   Heart, 
-  Leaf
+  Leaf,
+  Dumbbell
 } from 'lucide-react';
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
 
+  // Accesos rápidos: cards en orden (Coberturas, FIT, Mi Chequeo, Bienestar)
   const quickActions = [
     { title: 'Coberturas', icon: Shield, path: '/coberturas' },
+    { title: 'Fitness', icon: Dumbbell, path: '/fit' },
     { title: 'Mi Chequeo', icon: Heart, path: '/mi-chequeo' },
     { title: 'Bienestar', icon: Leaf, path: '/bienestar' }
   ];
@@ -86,35 +89,36 @@ const Dashboard = () => {
 
           <div className="space-y-4">
             <h3 className="text-lg font-semibold text-vita-white px-2">Accesos Rápidos</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
               {quickActions.map((action, index) => (
                 <motion.div
                   key={index}
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={() => navigate(action.path)}
-                  className="flex flex-col items-center justify-center space-y-3 p-6 sm:p-4 rounded-2xl glass-card cursor-pointer transition-all shadow-lg border border-white/10"
-                  style={{ minHeight: '110px', minWidth: '100px', boxShadow: '0 4px 24px 0 rgba(96,165,250,0.10)' }}
+                  className="flex flex-col items-center justify-center space-y-3 p-6 sm:p-6 rounded-2xl glass-card cursor-pointer transition-all shadow-lg border border-white/10"
+                  style={{ minHeight: '120px', minWidth: '110px', boxShadow: '0 4px 24px 0 rgba(96,165,250,0.10)' }}
                 >
-                  <div className="w-16 h-16 sm:w-12 sm:h-12 flex items-center justify-center rounded-full shadow-lg" style={{ backgroundColor: '#f06340' }}>
-                    <action.icon className="h-8 w-8 sm:h-7 sm:w-7 text-white" />
+                  <div className="w-16 h-16 sm:w-16 sm:h-16 flex items-center justify-center rounded-full shadow-lg" style={{ backgroundColor: '#f06340' }}>
+                    <action.icon className="h-10 w-10 sm:h-10 sm:w-10 text-white" />
                   </div>
-                  <p className="text-base sm:text-xs font-semibold text-center text-vita-white">{action.title}</p>
+                  <p className="text-base sm:text-base font-semibold text-center text-vita-white">{action.title}</p>
                 </motion.div>
               ))}
             </div>
+            {/* Eliminado botón extra, FIT ahora es card */}
           </div>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Nuestros Resultados</CardTitle>
-            </CardHeader>
-            <CardContent className="p-2 pt-0">
-              <div className="p-2 rounded-lg">
+          <div className="mt-2 flex justify-center w-full">
+            <Card className="bg-white/10 border border-white/10 shadow-lg flex flex-col items-center w-auto">
+              <CardHeader className="py-2 px-4 w-full">
+                <CardTitle className="text-base sm:text-xl font-bold text-vita-white/90 text-center w-full mb-2 mt-4">Nuestros Resultados</CardTitle>
+              </CardHeader>
+              <CardContent className="p-2 pt-0 flex justify-center items-center w-full">
                 <AnimatedStats />
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </div>
 
         </div>
       </Layout>

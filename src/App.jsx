@@ -1,5 +1,11 @@
+import FitIndex from './pages/fit/index';
+import FitSync from './pages/fit/sync';
+import FitCreate from './pages/fit/create';
+import FitPlan from './pages/fit/plan';
+import FitNutricion from './pages/fit/nutricion';
+import FitProgreso from './pages/fit/progreso';
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Helmet, HelmetProvider } from 'react-helmet-async';
 import { Toaster } from './components/ui/toaster';
 import { AuthProvider } from './contexts/AuthContext';
@@ -54,7 +60,22 @@ function App() {
             <Router>
               <div className="min-h-screen bg-vita-background">
                 <Routes>
-                    <Route path="/" element={<Landing />} />
+          {/* Rutas FIT (Fitness) */}
+          <Route path="/fit" element={<ProtectedRoute><FitIndex /></ProtectedRoute>}>
+            <Route index element={<FitPlan />} />
+            <Route path="sync" element={<FitSync />} />
+            <Route path="create" element={<FitCreate />} />
+            <Route path="plan" element={<FitPlan />} />
+            <Route path="nutricion" element={<FitNutricion />} />
+            <Route path="progreso" element={<FitProgreso />} />
+          </Route>
+          {/* Redirects obligatorios */}
+          <Route path="/mi-chequeo/peso" element={<Navigate to="/fit/nutricion" replace />} />
+          <Route path="/mi-chequeo/talla" element={<Navigate to="/fit/nutricion" replace />} />
+          <Route path="/bienestar/nutricion" element={<Navigate to="/fit/nutricion" replace />} />
+          <Route path="/bienestar/nutricion/:slug" element={<Navigate to="/fit/nutricion" replace />} />
+          <Route path="/home" element={<Navigate to="/dashboard" replace />} />
+          <Route path="/" element={<Landing />} />
                     <Route path="/login" element={<Login />} />
                     <Route path="/register" element={<Register />} />
                     <Route path="/legal" element={<Legal />} />
@@ -79,6 +100,9 @@ function App() {
                     <Route path="/bienestar/nutricion/:slug" element={<ProtectedRoute><NutritionDetailPage /></ProtectedRoute>} />
                     <Route path="/bienestar/:category" element={<ProtectedRoute><WellnessCategoryPage /></ProtectedRoute>} />
                     <Route path="/bienestar/:category/:slug" element={<ProtectedRoute><WellnessDetailPage /></ProtectedRoute>} />
+
+                      {/* Catch-all para rutas no encontradas: redirige a dashboard */}
+                      <Route path="*" element={<Navigate to="/dashboard" replace />} />
 
                     <Route path="/mi-plan" element={<ProtectedRoute><Pagos /></ProtectedRoute>} />
                     <Route path="/payment-gateway" element={<ProtectedRoute><PaymentGateway /></ProtectedRoute>} />
