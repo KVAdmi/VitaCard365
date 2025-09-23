@@ -1,0 +1,23 @@
+/* NASA Glow Animation for Running Card */
+.nasa-glow {
+  box-shadow: 0 0 24px 4px #5CE9E1cc, 0 0 80px 0 #0ff2  inset;
+  position: relative;
+}
+.animate-nasa-glow {
+  border-radius: 16px;
+  box-shadow:
+    0 0 32px 8px #5CE9E1cc,
+    0 0 80px 0 #0ff2  inset;
+  animation: nasa-glow-pulse 2.2s infinite alternate cubic-bezier(.4,0,.6,1);
+}
+@keyframes nasa-glow-pulse {
+  0% { box-shadow: 0 0 24px 4px #5CE9E1cc, 0 0 80px 0 #0ff2  inset; }
+  100% { box-shadow: 0 0 48px 12px #5CE9E1, 0 0 120px 0 #0ff4  inset; }
+}
+/* Space gradient + subtle stars */
+:root { --space1:#060e1c; --space2:#0b1428; --space3:#0e1c3a; }
+body {
+  background:
+    radial-gradient(1200px 800px at 70% -10%, rgba(92,233,225,.12), transparent 60%),
+    linear-gradient(180deg, var(--space1), var(--space2) 40%, var(--space3));
+}

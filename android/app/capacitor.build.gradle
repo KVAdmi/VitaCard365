@@ -13,6 +13,7 @@ dependencies {
     implementation project(':capacitor-community-camera-preview')
     implementation project(':capacitor-device')
     implementation project(':capacitor-filesystem')
+    implementation project(':capacitor-geolocation')
     implementation project(':capacitor-share')
     implementation "androidx.health.connect:connect-client:1.1.0-alpha10"
 }

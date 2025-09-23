@@ -1,5 +1,5 @@
 import FitIndex from './pages/fit/index';
-import FitSync from './pages/fit/sync';
+import FitSyncPage from './pages/fit/FitSyncPage.jsx';
 import FitCreate from './pages/fit/create';
 import FitPlan from './pages/fit/plan';
 import FitNutricion from './pages/fit/nutricion';
@@ -63,7 +63,7 @@ function App() {
           {/* Rutas FIT (Fitness) */}
           <Route path="/fit" element={<ProtectedRoute><FitIndex /></ProtectedRoute>}>
             <Route index element={<FitPlan />} />
-            <Route path="sync" element={<FitSync />} />
+            <Route path="sync" element={<FitSyncPage />} />
             <Route path="create" element={<FitCreate />} />
             <Route path="plan" element={<FitPlan />} />
             <Route path="nutricion" element={<FitNutricion />} />

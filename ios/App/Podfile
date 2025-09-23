@@ -15,6 +15,7 @@ def capacitor_pods
   pod 'CapacitorCommunityCameraPreview', :path => '../../node_modules/@capacitor-community/camera-preview'
   pod 'CapacitorDevice', :path => '../../node_modules/@capacitor/device'
   pod 'CapacitorFilesystem', :path => '../../node_modules/@capacitor/filesystem'
+  pod 'CapacitorGeolocation', :path => '../../node_modules/@capacitor/geolocation'
   pod 'CapacitorShare', :path => '../../node_modules/@capacitor/share'
   pod 'CordovaPlugins', :path => '../capacitor-cordova-ios-plugins'
 end

@@ -43,28 +43,57 @@ function HistoryCard({ title, subtitle, children, onDownloadPDF }) {
 }
 
 export default function NASAHistoryCardsPanel() {
-  const { user } = useAuth();
-  const [mediciones, setMediciones] = useState([]);
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (!user?.id) return;
-    setLoading(true);
-    fetchUserChartsData(user.id).then((res) => {
-      setMediciones(res.mediciones || []);
-      setLoading(false);
-    });
-  }, [user]);
+  // DEMO: Datos dummy para demo rápida
+  const [loading, setLoading] = useState(false);
+  const [mediciones, setMediciones] = useState([
+    // 7 días de presión arterial, pulso, SpO2, temperatura, peso
+    ...Array.from({length:7}).map((_,i) => {
+      const d = new Date(); d.setDate(d.getDate()-i);
+      return {
+        ts: d.toISOString(),
+        sistolica: 110+Math.floor(Math.random()*20),
+        diastolica: 70+Math.floor(Math.random()*10),
+        pulso_bpm: 65+Math.floor(Math.random()*15),
+        spo2: 95+Math.floor(Math.random()*4),
+        temperatura: 36+Math.random(),
+        peso: 70+Math.random()*2-1,
+      };
+    })
+  ]);
 
-  // Formatear datos para la gráfica de presión arterial
-  const bpData = mediciones
-    .filter(m => m.sistolica && m.diastolica)
-    .map(m => ({
-      fecha: new Date(m.ts).toLocaleDateString('es-MX', { day: '2-digit', month: 'short' }),
-      sistolica: m.sistolica,
-      diastolica: m.diastolica,
-      pulso: m.pulso_bpm
-    }));
+  // Formatear datos para las gráficas
+  const bpData = mediciones.map(m => ({
+    fecha: new Date(m.ts).toLocaleDateString('es-MX', { day: '2-digit', month: 'short' }),
+    sistolica: m.sistolica,
+    diastolica: m.diastolica,
+    pulso: m.pulso_bpm
+  }));
+
+  const glucosaData = mediciones.map(m => ({
+    fecha: new Date(m.ts).toLocaleDateString('es-MX', { day: '2-digit', month: 'short' }),
+    glucosa: 80+Math.floor(Math.random()*40)
+  }));
+
+  const spo2Data = mediciones.map(m => ({
+    fecha: new Date(m.ts).toLocaleDateString('es-MX', { day: '2-digit', month: 'short' }),
+    spo2: m.spo2
+  }));
+
+  const hrData = mediciones.map(m => ({
+    fecha: new Date(m.ts).toLocaleDateString('es-MX', { day: '2-digit', month: 'short' }),
+    pulso: m.pulso_bpm
+  }));
+
+  const tempData = mediciones.map(m => ({
+    fecha: new Date(m.ts).toLocaleDateString('es-MX', { day: '2-digit', month: 'short' }),
+    temperatura: m.temperatura
+  }));
+
+  const pesoData = mediciones.map(m => ({
+    fecha: new Date(m.ts).toLocaleDateString('es-MX', { day: '2-digit', month: 'short' }),
+    peso: m.peso
+  }));
 
   const onPdfPresion = () =>
     generateVitalsPDF({
@@ -82,52 +111,90 @@ export default function NASAHistoryCardsPanel() {
         onDownloadPDF={onPdfPresion}
       >
         <div style={{ height: 200, width: '100%' }}>
-          {loading ? (
-            <div style={{color:'#fff',textAlign:'center',paddingTop:60}}>Cargando...</div>
-          ) : bpData.length === 0 ? (
-            <div style={{color:'#fff',textAlign:'center',paddingTop:60}}>Sin datos</div>
-          ) : (
-            <ResponsiveContainer width="100%" height={180}>
-              <LineChart data={bpData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#23325b" />
-                <XAxis dataKey="fecha" stroke="#fff" fontSize={12} tick={{ fill: '#fff' }} />
-                <YAxis yAxisId="left" stroke="#f06340" fontSize={12} tick={{ fill: '#f06340' }} />
-                <YAxis yAxisId="right" orientation="right" stroke="#60a5fa" fontSize={12} tick={{ fill: '#60a5fa' }} />
-                <Tooltip contentStyle={{ background: '#18181b', border: 'none', color: '#fff' }} />
-                <Legend wrapperStyle={{ color: '#fff' }} />
-                <Line yAxisId="left" type="monotone" dataKey="sistolica" stroke="#f06340" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} animationDuration={900} name="Sistólica" />
-                <Line yAxisId="left" type="monotone" dataKey="diastolica" stroke="#60a5fa" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} animationDuration={900} name="Diastólica" />
-                <Line yAxisId="right" type="monotone" dataKey="pulso" stroke="#fbbf24" strokeWidth={2} dot={{ r: 3 }} activeDot={{ r: 5 }} animationDuration={900} name="Pulso" />
-              </LineChart>
-            </ResponsiveContainer>
-          )}
+          <ResponsiveContainer width="100%" height={180}>
+            <LineChart data={bpData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#23325b" />
+              <XAxis dataKey="fecha" stroke="#fff" fontSize={12} tick={{ fill: '#fff' }} />
+              <YAxis yAxisId="left" stroke="#f06340" fontSize={12} tick={{ fill: '#f06340' }} />
+              <YAxis yAxisId="right" orientation="right" stroke="#60a5fa" fontSize={12} tick={{ fill: '#60a5fa' }} />
+              <Tooltip contentStyle={{ background: '#18181b', border: 'none', color: '#fff' }} />
+              <Legend wrapperStyle={{ color: '#fff' }} />
+              <Line yAxisId="left" type="monotone" dataKey="sistolica" stroke="#f06340" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} animationDuration={900} name="Sistólica" />
+              <Line yAxisId="left" type="monotone" dataKey="diastolica" stroke="#60a5fa" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} animationDuration={900} name="Diastólica" />
+              <Line yAxisId="right" type="monotone" dataKey="pulso" stroke="#fbbf24" strokeWidth={2} dot={{ r: 3 }} activeDot={{ r: 5 }} animationDuration={900} name="Pulso" />
+            </LineChart>
+          </ResponsiveContainer>
         </div>
       </HistoryCard>
 
-      {/* El resto de tarjetas se llenarán después de validar este ejemplo visual */}
       <HistoryCard title="Glucosa" subtitle="Últimos 7 días" onDownloadPDF={()=>{}}>
-        <div style={{ height: 160, background: "rgba(255,255,255,0.06)", borderRadius: 8, display:'flex',alignItems:'center',justifyContent:'center',color:'#fff' }}>
-          Próximamente gráfica real...
+        <div style={{ height: 180, width: '100%' }}>
+          <ResponsiveContainer width="100%" height={160}>
+            <LineChart data={glucosaData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#23325b" />
+              <XAxis dataKey="fecha" stroke="#fff" fontSize={12} tick={{ fill: '#fff' }} />
+              <YAxis stroke="#f06340" fontSize={12} tick={{ fill: '#f06340' }} />
+              <Tooltip contentStyle={{ background: '#18181b', border: 'none', color: '#fff' }} />
+              <Legend wrapperStyle={{ color: '#fff' }} />
+              <Line type="monotone" dataKey="glucosa" stroke="#f06340" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} animationDuration={900} name="Glucosa" />
+            </LineChart>
+          </ResponsiveContainer>
         </div>
       </HistoryCard>
       <HistoryCard title="SpO₂" subtitle="Últimos 7 días" onDownloadPDF={()=>{}}>
-        <div style={{ height: 160, background: "rgba(255,255,255,0.06)", borderRadius: 8, display:'flex',alignItems:'center',justifyContent:'center',color:'#fff' }}>
-          Próximamente gráfica real...
+        <div style={{ height: 180, width: '100%' }}>
+          <ResponsiveContainer width="100%" height={160}>
+            <LineChart data={spo2Data} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#23325b" />
+              <XAxis dataKey="fecha" stroke="#fff" fontSize={12} tick={{ fill: '#fff' }} />
+              <YAxis stroke="#60a5fa" fontSize={12} tick={{ fill: '#60a5fa' }} />
+              <Tooltip contentStyle={{ background: '#18181b', border: 'none', color: '#fff' }} />
+              <Legend wrapperStyle={{ color: '#fff' }} />
+              <Line type="monotone" dataKey="spo2" stroke="#60a5fa" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} animationDuration={900} name="SpO₂" />
+            </LineChart>
+          </ResponsiveContainer>
         </div>
       </HistoryCard>
       <HistoryCard title="Frecuencia cardíaca" subtitle="Últimos 7 días" onDownloadPDF={()=>{}}>
-        <div style={{ height: 160, background: "rgba(255,255,255,0.06)", borderRadius: 8, display:'flex',alignItems:'center',justifyContent:'center',color:'#fff' }}>
-          Próximamente gráfica real...
+        <div style={{ height: 180, width: '100%' }}>
+          <ResponsiveContainer width="100%" height={160}>
+            <LineChart data={hrData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#23325b" />
+              <XAxis dataKey="fecha" stroke="#fff" fontSize={12} tick={{ fill: '#fff' }} />
+              <YAxis stroke="#fbbf24" fontSize={12} tick={{ fill: '#fbbf24' }} />
+              <Tooltip contentStyle={{ background: '#18181b', border: 'none', color: '#fff' }} />
+              <Legend wrapperStyle={{ color: '#fff' }} />
+              <Line type="monotone" dataKey="pulso" stroke="#fbbf24" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} animationDuration={900} name="Pulso" />
+            </LineChart>
+          </ResponsiveContainer>
         </div>
       </HistoryCard>
       <HistoryCard title="Temperatura" subtitle="Últimos 7 días" onDownloadPDF={()=>{}}>
-        <div style={{ height: 160, background: "rgba(255,255,255,0.06)", borderRadius: 8, display:'flex',alignItems:'center',justifyContent:'center',color:'#fff' }}>
-          Próximamente gráfica real...
+        <div style={{ height: 180, width: '100%' }}>
+          <ResponsiveContainer width="100%" height={160}>
+            <LineChart data={tempData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#23325b" />
+              <XAxis dataKey="fecha" stroke="#fff" fontSize={12} tick={{ fill: '#fff' }} />
+              <YAxis stroke="#f87171" fontSize={12} tick={{ fill: '#f87171' }} />
+              <Tooltip contentStyle={{ background: '#18181b', border: 'none', color: '#fff' }} />
+              <Legend wrapperStyle={{ color: '#fff' }} />
+              <Line type="monotone" dataKey="temperatura" stroke="#f87171" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} animationDuration={900} name="Temperatura" />
+            </LineChart>
+          </ResponsiveContainer>
         </div>
       </HistoryCard>
       <HistoryCard title="Peso" subtitle="Últimos 7 días" onDownloadPDF={()=>{}}>
-        <div style={{ height: 160, background: "rgba(255,255,255,0.06)", borderRadius: 8, display:'flex',alignItems:'center',justifyContent:'center',color:'#fff' }}>
-          Próximamente gráfica real...
+        <div style={{ height: 180, width: '100%' }}>
+          <ResponsiveContainer width="100%" height={160}>
+            <LineChart data={pesoData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#23325b" />
+              <XAxis dataKey="fecha" stroke="#fff" fontSize={12} tick={{ fill: '#fff' }} />
+              <YAxis stroke="#4ade80" fontSize={12} tick={{ fill: '#4ade80' }} />
+              <Tooltip contentStyle={{ background: '#18181b', border: 'none', color: '#fff' }} />
+              <Legend wrapperStyle={{ color: '#fff' }} />
+              <Line type="monotone" dataKey="peso" stroke="#4ade80" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} animationDuration={900} name="Peso" />
+            </LineChart>
+          </ResponsiveContainer>
         </div>
       </HistoryCard>
     </div>
