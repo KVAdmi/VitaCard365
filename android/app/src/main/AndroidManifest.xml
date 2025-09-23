@@ -1,50 +1,54 @@
-<uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
-<uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
-<uses-feature android:name="android.hardware.location.gps" android:required="false" />
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.vitacard.app">
 
-        <!-- Health Connect en Android 14+ -->
-        <queries>
-            <package android:name="com.google.android.apps.healthdata"/>
-        </queries>
+    <!-- Geolocalización (siempre declarar sin maxSdkVersion) -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
 
-        <!-- Health Connect: pide solo lo necesario -->
-        <uses-permission android:name="android.permission.health.READ_HEART_RATE"/>
-        <uses-permission android:name="android.permission.health.READ_SLEEP"/>
-        <uses-permission android:name="android.permission.health.READ_STEPS"/>
-        <!-- Opcional: SpO2 si tu población lo tiene disponible -->
-        <uses-permission android:name="android.permission.health.READ_OXYGEN_SATURATION"/>
-
-
-    <!-- Permisos mínimos para app web + OAuth + pasarela -->
+    <!-- Internet/WebView -->
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
     <uses-permission android:name="android.permission.WAKE_LOCK"/>
 
-
+    <!-- Bluetooth -->
     <!-- <= Android 12 (API 31-) -->
     <uses-permission android:name="android.permission.BLUETOOTH" android:maxSdkVersion="30"/>
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" android:maxSdkVersion="30"/>
-    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" android:maxSdkVersion="30"/>
 
     <!-- Android 12+ (API 31+) -->
-    <uses-permission android:name="android.permission.BLUETOOTH_SCAN"/>
+    <uses-permission
+        android:name="android.permission.BLUETOOTH_SCAN"
+        android:usesPermissionFlags="neverForLocation"/>
     <uses-permission android:name="android.permission.BLUETOOTH_CONNECT"/>
 
-    <!-- Opcional, mejora filtros -->
+    <!-- Opcional: declara que soporta BLE, pero no obligatorio -->
     <uses-feature android:name="android.hardware.bluetooth_le" android:required="false"/>
 
-    <!-- Cámara y flash (rPPG) -->
+    <!-- GPS (opcional declarar feature) -->
+    <uses-feature android:name="android.hardware.location.gps" android:required="false" />
+
+    <!-- Cámara / micrófono / media -->
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-feature android:name="android.hardware.camera.flash" android:required="false" />
-
-    <!-- Micrófono (módulo sueño) -->
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
-
-    <!-- Archivos (guardar/compartir PDF) -->
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
 
+    <!-- Health Connect (comentado por ahora si no lo usas) -->
+    <!--
+    <queries>
+        <package android:name="com.google.android.apps.healthdata"/>
+    </queries>
+    <uses-permission android:name="android.permission.health.READ_HEART_RATE"/>
+    <uses-permission android:name="android.permission.health.READ_SLEEP"/>
+    <uses-permission android:name="android.permission.health.READ_STEPS"/>
+    <uses-permission android:name="android.permission.health.READ_OXYGEN_SATURATION"/>
+    -->
+
+    <!-- Si vas a hacer tracking en segundo plano más adelante:
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
+    -->
 
     <application
         android:allowBackup="true"
@@ -54,26 +58,24 @@
         android:supportsRtl="true"
         android:usesCleartextTraffic="false">
 
-        <meta-data
-            android:name="com.google.android.geo.API_KEY"
-            android:value="${MAPS_API_KEY}" />
+        <!-- OJO: Quitamos la meta de com.google.android.geo.API_KEY
+             porque usamos Google Maps JS vía loadMaps.ts y las keys de Vite. -->
 
         <!-- WebView SafeBrowsing -->
         <meta-data android:name="android.webkit.WebView.EnableSafeBrowsing" android:value="true"/>
 
-        <!-- Activity principal de Capacitor -->
         <activity
             android:name="com.vitacard.app.MainActivity"
             android:exported="true"
             android:launchMode="singleTask"
             android:windowSoftInputMode="adjustResize">
+
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
 
-            <!-- Deep link para el callback OAuth/Google Fit (si usas redirect HTTPS) -->
-            <!-- Ajusta pathPrefix si usas otra ruta, p.ej. /login o /callback -->
+            <!-- Deep link OAuth (ajusta si cambia tu ruta) -->
             <intent-filter android:autoVerify="true">
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
@@ -84,7 +86,6 @@
                     android:pathPrefix="/fit-auth-callback" />
             </intent-filter>
 
-            <!-- (Opcional) también aceptar www. -->
             <intent-filter android:autoVerify="true">
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
@@ -96,7 +97,6 @@
             </intent-filter>
         </activity>
 
-        <!-- Requerido por Capacitor para files/URIs (lo proveen libs de Capacitor) -->
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.fileprovider"
@@ -106,6 +106,5 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file_paths" />
         </provider>
-
     </application>
 </manifest>
