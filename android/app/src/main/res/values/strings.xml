@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">VitaCard365</string>
-    <string name="title_activity_main">VitaCard365</string>
+    <string name="app_name">VitaCard 365</string>
+    <string name="title_activity_main">VitaCard 365</string>
     <string name="package_name">com.vitacard.app</string>
     <string name="custom_url_scheme">com.vitacard.app</string>
 </resources>

@@ -1,44 +1,26 @@
-// Ejemplo de hook React para escanear y conectar BLE nativo (Capacitor)
-import { useState, useCallback } from 'react';
-import { BluetoothLe } from '@/native/bluetoothLe';
+// Hook React para HR nativo: solo usa el bridge '@/lib/bleNative'
+import { useState, useCallback, useRef } from 'react';
+import { connect, disconnect, startHeartRate, stopHeartRate } from '../lib/bleNative';
 
 export function useNativeHeartRate() {
   const [status, setStatus] = useState('Listo');
   const [error, setError] = useState('');
-  const [device, setDevice] = useState(null);
   const [hr, setHr] = useState(null);
+  const startedRef = useRef(false);
 
-  // Escanear y conectar
+  // Escanear y conectar usando el bridge
   const scanAndConnect = useCallback(async () => {
     setError('');
     setStatus('Escaneando...');
     setHr(null);
     try {
-      // Solicita dispositivo con servicio de HR
-      const result = await BluetoothLe.requestDevice({
-        services: ['180D'],
-        name: undefined,
-        allowDuplicates: false,
-      });
-      setDevice(result.device);
-      setStatus('Conectando...');
-      // Conectar
-      await BluetoothLe.connect({ deviceId: result.device.deviceId });
+      console.log('[BLE] Using bridge only');
+      await connect();
       setStatus('Conectado');
-      // Suscribirse a notificaciones de HR
-      await BluetoothLe.startNotifications({
-        deviceId: result.device.deviceId,
-        service: '180D',
-        characteristic: '2A37',
-      }, (notif) => {
-        if (notif && notif.value) {
-          // Decodifica el valor (Uint8Array)
-          const v = new Uint8Array(notif.value);
-          const flags = v[0];
-          const hr = (flags & 0x01) ? (v[1] | (v[2] << 8)) : v[1];
-          setHr(hr);
-        }
+      await startHeartRate((bpm) => {
+        setHr(bpm);
       });
+      startedRef.current = true;
       setStatus('Recibiendo frecuencia cardiaca...');
     } catch (err) {
       setError(err.message || String(err));
@@ -46,18 +28,20 @@ export function useNativeHeartRate() {
     }
   }, []);
 
-  // Desconectar
-  const disconnect = useCallback(async () => {
+  // Desconectar y limpiar HR
+  const disconnectAll = useCallback(async () => {
     setError('');
-    if (device) {
-      try {
-        await BluetoothLe.disconnect({ deviceId: device.deviceId });
-        setStatus('Desconectado');
-      } catch (err) {
-        setError(err.message || String(err));
+    try {
+      if (startedRef.current) {
+        await stopHeartRate();
+        startedRef.current = false;
       }
+      await disconnect();
+      setStatus('Desconectado');
+    } catch (err) {
+      setError(err.message || String(err));
     }
-  }, [device]);
+  }, []);
 
-  return { status, error, hr, scanAndConnect, disconnect };
+  return { status, error, hr, scanAndConnect, disconnect: disconnectAll };
 }

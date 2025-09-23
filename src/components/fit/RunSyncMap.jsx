@@ -1,22 +1,11 @@
 
+
 import React, { useEffect, useRef } from "react";
+import { Capacitor } from '@capacitor/core';
 
 import { startRun, pushPoint, stopRun } from "@/services/fitApi";
 
-let mapsLoader;
-function loadGoogleMaps(key) {
-  if (window.google?.maps) return Promise.resolve();
-  if (!mapsLoader) {
-    mapsLoader = new Promise((resolve, reject) => {
-      const s = document.createElement("script");
-      s.src = `https://maps.googleapis.com/maps/api/js?key=${key}`;
-      s.async = true; s.defer = true;
-      s.onload = resolve; s.onerror = () => reject(new Error("No se pudo cargar Google Maps"));
-      document.head.appendChild(s);
-    });
-  }
-  return mapsLoader;
-}
+import { loadMaps } from "../../utils/loadMaps";
 const toRad = d => d*Math.PI/180;
 function haversine(a, b) {
   const R = 6371000;
@@ -98,11 +87,16 @@ export default function RunSyncMap({ apiRef, onHud }) {
     };
   }, [apiRef]);
 
+
   React.useEffect(() => {
-    const key = import.meta.env.VITE_MAPS_WEB_KEY || import.meta.env.VITE_MAPS_API_KEY || import.meta.env.VITE_GOOGLE_MAPS_KEY;
+    // Selecciona la key según plataforma
+    const isNative = Capacitor.isNativePlatform && Capacitor.isNativePlatform();
+    const key = isNative
+      ? import.meta.env.VITE_MAPS_APP_KEY || import.meta.env.VITE_MAPS_API_KEY || import.meta.env.VITE_GOOGLE_MAPS_KEY
+      : import.meta.env.VITE_MAPS_WEB_KEY || import.meta.env.VITE_MAPS_API_KEY || import.meta.env.VITE_GOOGLE_MAPS_KEY;
     let cancelled = false;
 
-    loadGoogleMaps(key).then(() => {
+  loadMaps().then(() => {
       if (cancelled) return;
       const g = window.google.maps;
       mapRef.current = new g.Map(containerRef.current, {

@@ -1,7 +1,8 @@
 import React, { useMemo, useState } from "react";
 import { Capacitor } from "@capacitor/core";
 
-import { BleClient } from "@capacitor-community/bluetooth-le";
+// [BLE] Using bridge only
+import { connect, disconnect, startHeartRate, stopHeartRate } from '../lib/bleNative';
 import { Device } from '@capacitor/device';
 
 /**
@@ -48,32 +49,12 @@ export function useBLEVitals() {
     try {
       setIsConnecting(true);
       await ensureBlePermissions();
-      await BleClient.initialize();
-
-      // UUIDs correctos para Heart Rate BLE
-      const HEART_RATE_SERVICE = '0000180d-0000-1000-8000-00805f9b34fb';
-      const HEART_RATE_MEAS_CHAR = '00002a37-0000-1000-8000-00805f9b34fb';
-
-      const dev = await BleClient.requestDevice({
-        services: [HEART_RATE_SERVICE],
-        optionalServices: [HEART_RATE_SERVICE],
-        namePrefix: ''
+      console.log('[BLE] Using bridge only');
+      await connect();
+      await startHeartRate((bpm) => {
+        setStatus(`BPM: ${bpm}`);
       });
-      await BleClient.connect(dev.deviceId);
-
-      setStatus(`Conectado: ${dev.name ?? dev.deviceId}`);
-
-      // Notificaciones de BPM
-      await BleClient.startNotifications(
-        dev.deviceId,
-        HEART_RATE_SERVICE,
-        HEART_RATE_MEAS_CHAR,
-        (data: DataView) => {
-          const flags = data.getUint8(0);
-          const hr = (flags & 0x01) ? data.getUint16(1, true) : data.getUint8(1);
-          setStatus(`BPM: ${hr}`);
-        }
-      );
+      setStatus('Conectado y recibiendo HR...');
     } catch (e: any) {
       setStatus(`Error BLE: ${e?.message ?? String(e)}`);
       if (e?.message?.includes('permisos')) {
@@ -86,7 +67,7 @@ export function useBLEVitals() {
 
   // Funciones de compatibilidad (por si tu pantalla las llama)
   const conectarBleNativo = connectBle;
-  const connectBloodPressure = connectBle;
+  const connectBloodPressure = connectBle; // Si BP se migra al bridge, actualizar aquí
   const connectHeartRate = connectBle;
 
   return {

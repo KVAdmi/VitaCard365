@@ -1,10 +1,9 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Capacitor } from '@capacitor/core';
 import KeepAliveAccordion from '@/components/ui/KeepAliveAccordion';
+import * as BLE from '../../lib/bleNative';
 
-// GATT UUIDs
-const HR_SERVICE = 0x180d;         // Heart Rate
-const HR_MEASUREMENT = 0x2a37;
+// [BLE] Using bridge only (rama nativa)
 const FITNESS_MACHINE = 0x1826;    // Fitness Machine (treadmill, bike, etc.)
 const DEVICE_INFO = 0x180a;
 
@@ -44,28 +43,18 @@ export default function GymBlePanel({ onHr }) {
   const serverRef = useRef(null);
   const hrCharRef = useRef(null);
 
-  // Ref Nativo (módulo dinámico opcional)
-  const nativeRef = useRef(null);
+  // Import estático: BLE bridge siempre disponible, solo se usa en nativo
 
-  // Carga perezosa del adaptador nativo si estamos en APK
-  useEffect(() => {
-    let mounted = true;
-    if (isNative) {
-      import('@/lib/bleNative')
-        .then((mod) => { if (mounted) nativeRef.current = mod; })
-        .catch(() => { /* si no existe, simplemente no hay integración nativa aún */ });
-    }
-    return () => { mounted = false; };
-  }, [isNative]);
-
-  // Limpieza al desmontar (Web)
+  // Limpieza al desmontar (Web y nativo)
   useEffect(() => {
     return () => {
       try { hrCharRef.current?.removeEventListener('characteristicvaluechanged', onHrValue); } catch {}
       try { deviceRef.current?.gatt?.disconnect(); } catch {}
       // Limpieza nativa si aplica
-      try { nativeRef.current?.stopHeartRate?.(); } catch {}
-      try { nativeRef.current?.disconnect?.(); } catch {}
+      if (isNative) {
+        try { BLE.stopHeartRate(); } catch {}
+        try { BLE.disconnect(); } catch {}
+      }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -85,6 +74,9 @@ export default function GymBlePanel({ onHr }) {
 
   const connectHeartRateIfPresent = useCallback(async (server) => {
     try {
+      // HR_SERVICE y HR_MEASUREMENT solo en web
+      const HR_SERVICE = '0000180d-0000-1000-8000-00805f9b34fb';
+      const HR_MEASUREMENT = '00002a37-0000-1000-8000-00805f9b34fb';
       const svc = await server.getPrimaryService(HR_SERVICE);
       const ch = await svc.getCharacteristic(HR_MEASUREMENT);
       hrCharRef.current = ch;
@@ -112,6 +104,8 @@ export default function GymBlePanel({ onHr }) {
     setSamples(0);
 
     try {
+      // HR_SERVICE solo en web
+      const HR_SERVICE = '0000180d-0000-1000-8000-00805f9b34fb';
       const device = await navigator.bluetooth.requestDevice({
         acceptAllDevices: true,
         optionalServices: [HR_SERVICE, FITNESS_MACHINE, DEVICE_INFO],
@@ -167,24 +161,18 @@ export default function GymBlePanel({ onHr }) {
     setSamples(0);
 
     try {
-      if (!nativeRef.current?.connect) {
+      if (!BLE.connect) {
         setStatus('No disponible');
         setError('BLE nativo no integrado. Agrega "@/lib/bleNative" con connect/disconnect/startHeartRate/stopHeartRate.');
         return;
       }
-
-      const dev = await nativeRef.current.connect(); // debería pedir permisos y enlazar
-      setDeviceName(dev?.name || 'Dispositivo');
-
-      // suscripción de HR si existe
-      if (nativeRef.current?.startHeartRate) {
-        await nativeRef.current.startHeartRate((bpm) => {
-          setHr(bpm);
-          setSamples((n) => n + 1);
-          if (typeof onHr === 'function') onHr(bpm);
-        });
-      }
-
+      console.log('[BLE] Using bridge only');
+      await BLE.connect();
+      await BLE.startHeartRate((bpm) => {
+        setHr(bpm);
+        setSamples((n) => n + 1);
+        if (typeof onHr === 'function') onHr(bpm);
+      });
       setConnected(true);
       setStatus('Conectado');
     } catch (err) {
@@ -196,8 +184,8 @@ export default function GymBlePanel({ onHr }) {
   const handleDisconnectNative = useCallback(async () => {
     setError('');
     try {
-      await nativeRef.current?.stopHeartRate?.();
-      await nativeRef.current?.disconnect?.();
+      await BLE.stopHeartRate();
+      await BLE.disconnect();
       setConnected(false);
       setStatus('Desconectado');
       setDeviceName('');
@@ -304,7 +292,7 @@ export default function GymBlePanel({ onHr }) {
 
                 <div className="text-xs opacity-70 mt-2">
                   <p>
-                    Si tu banda/cinta expone el servicio de <em>Frecuencia Cardíaca</em> (0x180D), verás el pulso en vivo.<br/>
+                    Si tu banda/cinta expone el servicio de <em>Frecuencia Cardíaca</em> (UUID HR), verás el pulso en vivo.<br/>
                     Las máquinas FTMS (caminadora/bicicleta) pueden anunciarse pero no siempre permiten lectura sin control propietario.
                   </p>
                   {error && <p className="mt-2 text-red-300">Error: {error}</p>}
