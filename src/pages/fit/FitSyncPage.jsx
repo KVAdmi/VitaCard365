@@ -6,6 +6,8 @@ import RunSyncMap from '../../components/fit/RunSyncMap';
 import GymBlePanel from '../../components/fit/GymBlePanel';
 import WearablesPanel from '../../components/fit/WearablesPanel';
 
+import Layout from '../../components/Layout';
+
 export default function FitSyncPage() {
   const runMapApi = useRef({ resize: () => {} });
   const [hud, setHud] = useState({ distance_km: 0, duration_s: 0, pace_min_km: 0, kcal: 0 });
@@ -57,59 +59,57 @@ const fmtPace = (pace, dist) => {
   const pulsoFuente = webHr ? 'web' : (nativeHr ? 'nativo' : null);
 
   return (
-    <div className="min-h-screen w-full flex justify-center items-start">
-      <div className="w-full max-w-4xl px-2 sm:px-6 py-6 sm:py-10">
-        <h1 className="text-2xl sm:text-4xl font-bold text-[#ff9100] text-center mb-6 sm:mb-8">
-          Sincronizar mi rutina
-        </h1>
+    <Layout title="Sincronizar mi rutina" showBackButton>
+      <div className="min-h-screen w-full flex justify-center items-start">
+        <div className="w-full max-w-4xl px-2 sm:px-6 py-6 sm:py-10">
+          {/* Tarjeta única contenedora modo NASA */}
+          <div className="rounded-2xl border border-teal-400/30 bg-white/5 backdrop-blur-xl shadow-[0_0_40px_rgba(92,233,225,.15)] ring-1 ring-teal-300/10 p-2 sm:p-6 space-y-3 sm:space-y-4">
+            {/* 1) Running */}
+            <KeepAliveAccordion
+              title="Running — Ruta libre"
+              defaultOpen
+              onExpand={() => runMapApi.current?.resize?.()}
+            >
+              <div className="relative nasa-glow rounded-xl border border-cyan-300/40 bg-white/5 shadow-[0_0_24px_rgba(92,233,225,.18)] ring-2 ring-cyan-300/30 p-2 sm:p-3 overflow-hidden">
+                <div className="absolute inset-0 pointer-events-none animate-nasa-glow z-10" />
+                {/* Mapa: wrapper responsivo */}
+                <div className="relative h-[200px] xs:h-[260px] sm:h-[320px] overflow-visible">
+                  <RunSyncMap apiRef={runMapApi} onHud={setHud} />
+                </div>
 
-        {/* Tarjeta única contenedora modo NASA */}
-        <div className="rounded-2xl border border-teal-400/30 bg-white/5 backdrop-blur-xl shadow-[0_0_40px_rgba(92,233,225,.15)] ring-1 ring-teal-300/10 p-2 sm:p-6 space-y-3 sm:space-y-4">
-          {/* 1) Running */}
-          <KeepAliveAccordion
-            title="Running — Ruta libre"
-            defaultOpen
-            onExpand={() => runMapApi.current?.resize?.()}
-          >
-            <div className="relative nasa-glow rounded-xl border border-cyan-300/40 bg-white/5 shadow-[0_0_24px_rgba(92,233,225,.18)] ring-2 ring-cyan-300/30 p-2 sm:p-3 overflow-hidden">
-              <div className="absolute inset-0 pointer-events-none animate-nasa-glow z-10" />
-              {/* Mapa: wrapper responsivo */}
-              <div className="relative h-[200px] xs:h-[260px] sm:h-[320px] overflow-visible">
-                <RunSyncMap apiRef={runMapApi} onHud={setHud} />
+                {/* HUD 3x2/2x3 */}
+                <div className="mt-3 grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
+                  <HUD label="Distancia" value={hud.distance_km.toFixed(2) + ' km'} />
+                  <HUD label="Tiempo" value={fmtTime(hud.duration_s)} />
+                  <HUD label="Ritmo" value={fmtPace(hud.pace_min_km, hud.distance_km)} />
+                  <HUD label="Calorías" value={Math.round(hud.kcal)} />
+                  <HUD label="Pulso actual" value={pulsoActual ? pulsoActual + ' bpm' : '—'} fuente={pulsoFuente} />
+                  <HUD label="Pulso promedio" value={hrAvg ? hrAvg + ' bpm' : '—'} />
+                </div>
+
+                {/* Controles */}
+                <div className="mt-3 grid grid-cols-2 sm:flex gap-2 sm:gap-3 justify-center">
+                  <Btn variant="start" onClick={() => {
+                    console.log('Llamando start con userId:', userId);
+                    runMapApi.current?.start(userId);
+                  }} disabled={!userId}>Iniciar</Btn>
+                  <Btn variant="pause" onClick={() => runMapApi.current?.pause()} disabled={!userId}>Pausar</Btn>
+                  <Btn variant="start" onClick={() => runMapApi.current?.resume()} disabled={!userId}>Continuar</Btn>
+                  <Btn variant="stop" onClick={() => runMapApi.current?.stop()} disabled={!userId}>Terminar</Btn>
+                </div>
               </div>
+            </KeepAliveAccordion>
 
-              {/* HUD 3x2/2x3 */}
-              <div className="mt-3 grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
-                <HUD label="Distancia" value={hud.distance_km.toFixed(2) + ' km'} />
-                <HUD label="Tiempo" value={fmtTime(hud.duration_s)} />
-                <HUD label="Ritmo" value={fmtPace(hud.pace_min_km, hud.distance_km)} />
-                <HUD label="Calorías" value={Math.round(hud.kcal)} />
-                <HUD label="Pulso actual" value={pulsoActual ? pulsoActual + ' bpm' : '—'} fuente={pulsoFuente} />
-                <HUD label="Pulso promedio" value={hrAvg ? hrAvg + ' bpm' : '—'} />
-              </div>
-
-              {/* Controles */}
-              <div className="mt-3 grid grid-cols-2 sm:flex gap-2 sm:gap-3 justify-center">
-                <Btn variant="start" onClick={() => {
-                  console.log('Llamando start con userId:', userId);
-                  runMapApi.current?.start(userId);
-                }} disabled={!userId}>Iniciar</Btn>
-                <Btn variant="pause" onClick={() => runMapApi.current?.pause()} disabled={!userId}>Pausar</Btn>
-                <Btn variant="start" onClick={() => runMapApi.current?.resume()} disabled={!userId}>Continuar</Btn>
-                <Btn variant="stop" onClick={() => runMapApi.current?.stop()} disabled={!userId}>Terminar</Btn>
-              </div>
-            </div>
-          </KeepAliveAccordion>
-
-         {/* 2) Gym BLE */}
-<GymBlePanel onHr={handleWebHr} />
-          {/* 3) Wearables */}
-          <KeepAliveAccordion title="Conectar mi dispositivo" defaultOpen>
-            <WearablesPanel />
-          </KeepAliveAccordion>
+           {/* 2) Gym BLE */}
+          <GymBlePanel onHr={handleWebHr} />
+            {/* 3) Wearables */}
+            <KeepAliveAccordion title="Conectar mi dispositivo" defaultOpen>
+              <WearablesPanel />
+            </KeepAliveAccordion>
+          </div>
         </div>
       </div>
-    </div>
+    </Layout>
   );
 }
 

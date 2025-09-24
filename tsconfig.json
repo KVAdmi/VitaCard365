@@ -18,6 +18,8 @@
     "paths": {
       "@/*": ["src/*"]
     }
+    ,
+    "types": ["vite/client", "@types/google.maps"]
   },
   "include": ["src"],
   "exclude": ["node_modules", "dist"]

@@ -10,9 +10,9 @@ export function loadMaps(): Promise<typeof google> {
 
   // Ya cargado
   // @ts-ignore
-  if (window.google?.maps) {
+    if (window.google?.maps) {
     // @ts-ignore
-    return Promise.resolve(window.google);
+      return Promise.resolve(window.google);
   }
 
   // En curso
@@ -30,7 +30,7 @@ export function loadMaps(): Promise<typeof google> {
     gmapsPromise = new Promise((resolve, reject) => {
       existing.addEventListener('load', () => {
         // @ts-ignore
-        window.google?.maps ? resolve(window.google) : reject(new Error('Google Maps failed to initialize'));
+          window.google?.maps ? resolve(window.google) : reject(new Error('Google Maps failed to initialize'));
       });
       existing.addEventListener('error', () => reject(new Error('Google Maps script error')));
     });
@@ -50,7 +50,7 @@ export function loadMaps(): Promise<typeof google> {
   gmapsPromise = new Promise((resolve, reject) => {
     s.onload = () => {
       // @ts-ignore
-      window.google?.maps ? resolve(window.google) : reject(new Error('Google Maps failed to initialize'));
+        window.google?.maps ? resolve(window.google) : reject(new Error('Google Maps failed to initialize'));
     };
     s.onerror = () => reject(new Error('Google Maps script error'));
   });
