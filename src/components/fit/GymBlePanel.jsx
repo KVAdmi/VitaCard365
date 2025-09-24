@@ -237,8 +237,7 @@ export default function GymBlePanel({ onHr }) {
 
             <div className="text-xs opacity-70 mt-2">
               <p>
-                Este flujo usa el <strong>plugin nativo</strong> de BLE vía Capacitor. Si no ves conexión,
-                valida que exista <code>@/lib/bleNative</code> y permisos en runtime.
+                Si tienes problemas de conexión Bluetooth, revisa que el Bluetooth esté activado y que la app tenga permisos. Si el problema persiste, reinicia el dispositivo o consulta soporte.
               </p>
               {error && <p className="mt-2 text-red-300">Error: {error}</p>}
             </div>
