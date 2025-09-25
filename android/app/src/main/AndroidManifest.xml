@@ -2,9 +2,16 @@
 
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <!-- PERMISOS: SOLO AQUÍ, una vez cada uno -->
-    <uses-permission android:name="android.permission.INTERNET"/>
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+    <!-- PERMISOS -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+
+    <!-- Recomendado por Maps: OpenGL ES 2.0 -->
+    <uses-feature
+        android:glEsVersion="0x00020000"
+        android:required="true" />
 
     <application
         android:allowBackup="true"
@@ -13,12 +20,13 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
-        android:hardwareAccelerated="true">
+        android:hardwareAccelerated="true"
+        android:enableOnBackInvokedCallback="true">
 
-        <!-- Google Maps SDK (nativo) -->
+        <!-- Google Maps SDK (debe coincidir con la que pasas desde JS) -->
         <meta-data
             android:name="com.google.android.geo.API_KEY"
-            android:value="AIzaSyBg5PGOY4R91A2u9BW_eu6021p7gNJR7pk"/>
+            android:value="AIzaSyBg5PGOY4R91A2u9BW_eu6021p7gNJR7pk" />
 
         <!-- Activity principal -->
         <activity
@@ -34,7 +42,7 @@
             </intent-filter>
         </activity>
 
-        <!-- FileProvider (común en Capacitor) -->
+        <!-- FileProvider (Capacitor) -->
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.fileprovider"

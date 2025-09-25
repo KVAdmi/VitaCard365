@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;500;700&display=swap');
+
 @keyframes nasa-blue-glow {
   0% {
     box-shadow: 0 0 0px 0 #5CE9E1, 0 0 0px 0 #5CE9E1;
@@ -20,7 +22,6 @@
 .animate-nasa-blue-glow {
   animation: nasa-blue-glow 2.2s infinite cubic-bezier(.4,0,.6,1);
 }
-@import url('https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;500;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -104,6 +105,7 @@
 .text-gradient {
   background: linear-gradient(90deg, #FF5A3C, #f15b31);
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 

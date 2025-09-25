@@ -1,5 +1,4 @@
 /// <reference types="vite/client" />
-/// <reference types="@types/google.maps" />
 
 // Claves de Vite disponibles en runtime
 interface ImportMetaEnv {

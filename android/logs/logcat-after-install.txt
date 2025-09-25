@@ -1,0 +1,130 @@
+﻿--------- beginning of main
+09-25 14:25:46.762 28411 28411 I om.vitacard.app: Late-enabling -Xcheck:jni
+09-25 14:25:46.810 28411 28411 I om.vitacard.app: Using CollectorTypeCC GC.
+09-25 14:25:46.854 28411 28411 W ziparchive: Unable to open '/data/app/~~nR2nXxYOZEu35HybPGn3xw==/com.vitacard.app-eKYbB1jhra_ApLFQEks1Lg==/base.dm': No such file or directory
+09-25 14:25:46.854 28411 28411 W ziparchive: Unable to open '/data/app/~~nR2nXxYOZEu35HybPGn3xw==/com.vitacard.app-eKYbB1jhra_ApLFQEks1Lg==/base.dm': No such file or directory
+09-25 14:25:47.012 28411 28437 I AdrenoGLES-0: QUALCOMM build                   : 193b2ee, I593c16c433
+09-25 14:25:47.012 28411 28437 I AdrenoGLES-0: Build Date                       : 10/07/21
+09-25 14:25:47.012 28411 28437 I AdrenoGLES-0: OpenGL ES Shader Compiler Version: EV031.32.02.10
+09-25 14:25:47.012 28411 28437 I AdrenoGLES-0: Local Branch                     : Test-lib-SR05432264
+09-25 14:25:47.012 28411 28437 I AdrenoGLES-0: Remote Branch                    : 
+09-25 14:25:47.012 28411 28437 I AdrenoGLES-0: Remote Branch                    : 
+09-25 14:25:47.012 28411 28437 I AdrenoGLES-0: Reconstruct Branch               : 
+09-25 14:25:47.013 28411 28437 I AdrenoGLES-0: Build Config                     : S P 10.0.5 AArch64
+09-25 14:25:47.013 28411 28437 I AdrenoGLES-0: Driver Path                      : /vendor/lib64/egl/libGLESv2_adreno.so
+09-25 14:25:47.017 28411 28437 I AdrenoGLES-0: PFP: 0x016dd093, ME: 0x00000000
+09-25 14:25:47.069 28411 28411 I DecorView: [INFO] isPopOver=false config=true
+09-25 14:25:47.069 28411 28411 I DecorView: updateCaptionType: isFloating=false isApplication=true hasWindowDecorCaption=false this=DecorView@f2cd11f[]
+09-25 14:25:47.073 28411 28411 I DecorView: getCurrentDensityDpi: from real metrics. densityDpi=420 msg=resources_loaded
+09-25 14:25:47.073 28411 28411 I DecorView: setWindowBackground: isPopOver=false color=ff303030 d=android.graphics.drawable.ColorDrawable@6a88235
+09-25 14:25:47.077 28411 28411 W om.vitacard.app: Accessing hidden method Landroid/view/ViewGroup;->makeOptionalFitsSystemWindows()V (unsupported, reflection, allowed)
+09-25 14:25:47.087 28411 28411 I WebViewFactory: Loading com.google.android.webview version 140.0.7339.155 (code 733915533)
+09-25 14:25:47.089 28411 28411 W ziparchive: Unable to open '/data/app/~~9Btcpp5L6EicB6eFKyoLNg==/com.google.android.trichromelibrary_733915533-l8zEMPIgmIK4s6kQqB2ugg==/base.dm': No such file or directory
+09-25 14:25:47.089 28411 28411 W ziparchive: Unable to open '/data/app/~~9Btcpp5L6EicB6eFKyoLNg==/com.google.android.trichromelibrary_733915533-l8zEMPIgmIK4s6kQqB2ugg==/base.dm': No such file or directory
+09-25 14:25:47.089 28411 28411 W om.vitacard.app: Entry not found
+09-25 14:25:47.112 28411 28411 I cr_WVCFactoryProvider: version=140.0.7339.155 (733915533) minSdkVersion=29 multiprocess=true packageId=2 splits=<none>
+09-25 14:25:47.117 28411 28446 I chromium: [0925/142547.117056:INFO:android_webview/browser/variations/variations_seed_loader.cc:67] Failed to open file for reading.: No such file or directory (2)
+09-25 14:25:47.117 28411 28446 I chromium: [0925/142547.117521:INFO:android_webview/browser/variations/variations_seed_loader.cc:67] Failed to open file for reading.: No such file or directory (2)
+09-25 14:25:47.127 28411 28411 I cr_LibraryLoader: Successfully loaded native library
+09-25 14:25:47.128 28411 28411 I cr_CachingUmaRecorder: Flushed 14 samples from 14 histograms, 0 samples were dropped.
+09-25 14:25:47.130 28411 28411 I cr_CombinedPProvider: #registerProvider() provider:WV.zj@728d0cc isPolicyCacheEnabled:false policyProvidersSize:0
+09-25 14:25:47.135 28411 28411 I cr_PolicyProvider: #setManagerAndSource() 0
+09-25 14:25:47.160 28411 28411 I cr_CombinedPProvider: #linkNativeInternal() 1
+09-25 14:25:47.161 28411 28411 I cr_AppResProvider: #getApplicationRestrictionsFromUserManager() Bundle[EMPTY_PARCEL]
+09-25 14:25:47.161 28411 28411 I cr_PolicyProvider: #notifySettingsAvailable() 0
+09-25 14:25:47.161 28411 28411 I cr_CombinedPProvider: #onSettingsAvailable() 0
+09-25 14:25:47.161 28411 28411 I cr_CombinedPProvider: #flushPolicies()
+09-25 14:25:47.226 28411 28411 W chromium: [WARNING:android_webview/browser/network_service/net_helpers.cc:143] HTTP Cache size is: 20971520
+09-25 14:25:47.395 28411 28411 I zzcc    : Making Creator dynamically
+09-25 14:25:47.402 28411 28411 W om.vitacard.app: ClassLoaderContext classpath size mismatch. expected=14, found=0 (DLC[];PCL[base.apk*8873987:base.apk!classes2.dex*2870904898:base.apk!classes3.dex*4147288666:base.apk!classes4.dex*2532755557:base.apk!classes5.dex*3574909560:base.apk!classes6.dex*3273453206:base.apk!classes7.dex*1600164939:base.apk!classes8.dex*1192411263:base.apk!classes9.dex*1755689381:base.apk!classes10.dex*1856054911:base.apk!classes11.dex*2435367907:base.apk!classes12.dex*2462420451:base.apk!classes13.dex*2269321422:base.apk!classes14.dex*3859999824]{PCL[/system/framework/org.apache.http.legacy.jar*3951777098]#PCL[/system/framework/com.android.media.remotedisplay.jar*3743104115]#PCL[/system/framework/com.android.location.provider.jar*3175360615]#PCL[/system/system_ext/framework/org.carconnectivity.android.digitalkey.rangingintent.jar*560278202]#PCL[/system/system_ext/framework/org.carconnectivity.android.digitalkey.secureelement.jar*3277496666]#PCL[/system_ext/framework/org.carconnectivity.android.digitalkey.timesync.jar*1887653036]#PCL[/system/framework/org.apache.http.legacy.jar*3951777098]} | DLC[];PCL[])
+09-25 14:25:47.403 28411 28411 I DynamiteModule: Considering local module com.google.android.gms.maps_core_dynamite:0 and remote module com.google.android.gms.maps_core_dynamite:253425402
+09-25 14:25:47.403 28411 28411 I DynamiteModule: Selected remote version of com.google.android.gms.maps_core_dynamite, version >= 253425402
+09-25 14:25:47.412 28411 28411 W System  : ClassLoader referenced unknown path: 
+09-25 14:25:47.444 28411 28411 W om.vitacard.app: Accessing hidden method Ldalvik/system/VMStack;->getStackClass2()Ljava/lang/Class; (unsupported, reflection, allowed)
+09-25 14:25:47.453 28411 28411 I native  : I0000 00:00:1758831947.453014   28411 jni_init.cc:30] Initializing JNI...
+09-25 14:25:47.454 28411 28411 I Google Android Maps SDK: Google Play services client version: 19000000
+09-25 14:25:47.507 28411 28492 W cr_media: BLUETOOTH_CONNECT permission is missing.
+09-25 14:25:47.507 28411 28492 W cr_media: getBluetoothAdapter() requires BLUETOOTH permission
+09-25 14:25:47.507 28411 28492 W cr_media: registerBluetoothIntentsIfNeeded: Requires BLUETOOTH permission
+09-25 14:25:47.531 28411 28520 I AdrenoVK-0: ===== BEGIN DUMP OF OVERRIDDEN SETTINGS =====
+09-25 14:25:47.531 28411 28520 I AdrenoVK-0: ===== END DUMP OF OVERRIDDEN SETTINGS =====
+09-25 14:25:47.531 28411 28520 I AdrenoVK-0: QUALCOMM build          : 193b2ee, I593c16c433
+09-25 14:25:47.531 28411 28520 I AdrenoVK-0: Build Date              : 10/07/21
+09-25 14:25:47.531 28411 28520 I AdrenoVK-0: Shader Compiler Version : EV031.32.02.10
+09-25 14:25:47.531 28411 28520 I AdrenoVK-0: Local Branch            : Test-lib-SR05432264
+09-25 14:25:47.531 28411 28520 I AdrenoVK-0: Remote Branch           : 
+09-25 14:25:47.531 28411 28520 I AdrenoVK-0: Remote Branch           : 
+09-25 14:25:47.531 28411 28520 I AdrenoVK-0: Reconstruct Branch      : 
+09-25 14:25:47.531 28411 28520 I AdrenoVK-0: Build Config            : S P 10.0.5 AArch64
+09-25 14:25:47.531 28411 28520 I AdrenoVK-0: Driver Path             : /vendor/lib64/hw/vulkan.adreno.so
+09-25 14:25:47.533 28411 28411 I MSHandlerLifeCycle: check: return. pkg=com.vitacard.app parent=null callers=com.android.internal.policy.DecorView.setVisibility:4412 android.app.ActivityThread.handleResumeActivity:5476 android.app.servertransaction.ResumeActivityItem.execute:54 android.app.servertransaction.ActivityTransactionItem.execute:45 android.app.servertransaction.TransactionExecutor.executeLifecycleState:176 
+09-25 14:25:47.533 28411 28411 I MSHandlerLifeCycle: removeMultiSplitHandler: no exist. decor=DecorView@f2cd11f[]
+09-25 14:25:47.574 28411 28411 I ViewRootImpl@b68bf4e[MainActivity]: setView = com.android.internal.policy.DecorView@f2cd11f TM=true
+09-25 14:25:47.575 28411 28411 I MSHandlerLifeCycle: removeMultiSplitHandler: no exist. decor=DecorView@f2cd11f[MainActivity]
+09-25 14:25:47.599 28411 28533 I CameraManagerGlobal: Connecting to camera service
+09-25 14:25:47.604 28411 28411 I Choreographer: Skipped 34 frames!  The application may be doing too much work on its main thread.
+09-25 14:25:47.605 28411 28429 I CameraManagerGlobal: Camera 0 facing CAMERA_FACING_BACK state now CAMERA_STATE_CLOSED for client com.whatsapp API Level 1User Id 0
+09-25 14:25:47.605 28411 28429 I CameraManagerGlobal: Camera 1 facing CAMERA_FACING_FRONT state now CAMERA_STATE_CLOSED for client com.samsung.android.smartface API Level 2User Id 0
+09-25 14:25:47.605 28411 28429 I CameraManagerGlobal: Camera 2 facing CAMERA_FACING_BACK state now CAMERA_STATE_CLOSED for client com.vitacard.app API Level 2User Id 0
+09-25 14:25:47.605 28411 28533 I CameraManager: registerAvailabilityCallback: Is device callback = false
+09-25 14:25:47.608 28411 28429 I CameraManagerGlobal: Camera 20 facing CAMERA_FACING_BACK state now CAMERA_STATE_CLOSED for client com.sec.android.app.camera API Level 2User Id 0
+09-25 14:25:47.608 28411 28429 I CameraManagerGlobal: Camera 21 facing CAMERA_FACING_BACK state now CAMERA_STATE_CLOSED for client android.system API Level 2User Id 0
+09-25 14:25:47.608 28411 28429 I CameraManagerGlobal: Camera 23 facing CAMERA_FACING_BACK state now CAMERA_STATE_CLOSED for client android.system API Level 2User Id 0
+09-25 14:25:47.608 28411 28429 I CameraManagerGlobal: Camera 3 facing CAMERA_FACING_FRONT state now CAMERA_STATE_CLOSED for client android.system API Level 2User Id 0
+09-25 14:25:47.608 28411 28429 I CameraManagerGlobal: Camera 4 facing CAMERA_FACING_BACK state now CAMERA_STATE_CLOSED for client android.system API Level 2User Id 0
+09-25 14:25:47.608 28411 28429 I CameraManagerGlobal: Camera 40 facing CAMERA_FACING_BACK state now CAMERA_STATE_CLOSED for client android.system API Level 2User Id 0
+09-25 14:25:47.608 28411 28429 I CameraManagerGlobal: Camera 41 facing CAMERA_FACING_FRONT state now CAMERA_STATE_CLOSED for client android.system API Level 2User Id 0
+09-25 14:25:47.609 28411 28429 I CameraManagerGlobal: Camera 5 facing CAMERA_FACING_FRONT state now CAMERA_STATE_CLOSED for client client.pid<1362> API Level 2User Id 0
+09-25 14:25:47.609 28411 28429 I CameraManagerGlobal: Camera 50 facing CAMERA_FACING_BACK state now CAMERA_STATE_CLOSED for client android.system API Level 2User Id 0
+09-25 14:25:47.609 28411 28429 I CameraManagerGlobal: Camera 52 facing CAMERA_FACING_BACK state now CAMERA_STATE_CLOSED for client android.system API Level 2User Id 0
+09-25 14:25:47.609 28411 28429 I CameraManagerGlobal: Camera 80 facing CAMERA_FACING_BACK state now CAMERA_STATE_CLOSED for client android.system API Level 2User Id 0
+09-25 14:25:47.610 28411 28533 I CameraManagerGlobal: postSingleUpdate device: camera id 0 status STATUS_PRESENT
+09-25 14:25:47.611 28411 28533 I CameraManagerGlobal: postSingleUpdate device: camera id 1 status STATUS_PRESENT
+09-25 14:25:47.611 28411 28533 I CameraManagerGlobal: postSingleUpdate device: camera id 2 status STATUS_PRESENT
+09-25 14:25:47.612 28411 28533 I CameraManagerGlobal: postSingleUpdate device: camera id 3 status STATUS_PRESENT
+09-25 14:25:47.612 28411 28533 I CameraManagerGlobal: postSingleUpdate device: camera id 4 status STATUS_PRESENT
+09-25 14:25:47.617 28411 28504 W VideoCapabilities: Unsupported mime image/vnd.android.heic
+09-25 14:25:47.622 28411 28411 I ViewRootImpl@b68bf4e[MainActivity]: performTraversals params={(0,0)(fillxfill) sim={adjust=resize forwardNavigation} layoutInDisplayCutoutMode=shortEdges ty=BASE_APPLICATION wanim=0x1030309
+09-25 14:25:47.622 28411 28411 I ViewRootImpl@b68bf4e[MainActivity]:   fl=81810100
+09-25 14:25:47.622 28411 28411 I ViewRootImpl@b68bf4e[MainActivity]:   pfl=12020040
+09-25 14:25:47.622 28411 28411 I ViewRootImpl@b68bf4e[MainActivity]:   bhv=DEFAULT
+09-25 14:25:47.622 28411 28411 I ViewRootImpl@b68bf4e[MainActivity]:   fitSides= naviIconColor=0}
+09-25 14:25:47.622 28411 28411 I ViewRootImpl@b68bf4e[MainActivity]: performTraversals mFirst=true windowShouldResize=true viewVisibilityChanged=false mForceNextWindowRelayout=false params={(0,0)(fillxfill) sim={adjust=resize forwardNavigation} layoutInDisplayCutoutMode=shortEdges ty=BASE_APPLICATION wanim=0x1030309
+09-25 14:25:47.622 28411 28411 I ViewRootImpl@b68bf4e[MainActivity]:   fl=81810100
+09-25 14:25:47.622 28411 28411 I ViewRootImpl@b68bf4e[MainActivity]:   pfl=12020040
+09-25 14:25:47.622 28411 28411 I ViewRootImpl@b68bf4e[MainActivity]:   bhv=DEFAULT
+09-25 14:25:47.622 28411 28411 I ViewRootImpl@b68bf4e[MainActivity]:   fitSides= naviIconColor=0}
+09-25 14:25:47.626 28411 28504 W AudioCapabilities: Unsupported mime audio/x-ape
+09-25 14:25:47.626 28411 28504 W AudioCapabilities: Unsupported mime audio/evrc
+09-25 14:25:47.626 28411 28504 W AudioCapabilities: Unsupported mime audio/evrc
+09-25 14:25:47.627 28411 28504 W AudioCapabilities: Unsupported mime audio/x-ima
+09-25 14:25:47.627 28411 28504 W AudioCapabilities: Unsupported mime audio/mpeg-L1
+09-25 14:25:47.627 28411 28504 W AudioCapabilities: Unsupported mime audio/mpeg-L2
+09-25 14:25:47.627 28411 28504 W VideoCapabilities: Unsupported mime video/mp43
+09-25 14:25:47.628 28411 28504 W AudioCapabilities: Unsupported mime audio/qcelp
+09-25 14:25:47.628 28411 28504 W AudioCapabilities: Unsupported mime audio/qcelp
+09-25 14:25:47.628 28411 28411 I ViewRootImpl@b68bf4e[MainActivity]: Relayout returned: old=(0,0,1080,2400) new=(0,0,1080,2400) req=(1080,2400)8 dur=5 res=0x0 s={false 0x0} ch=false seqId=0
+09-25 14:25:47.628 28411 28504 W VideoCapabilities: Unsupported mime video/wvc1
+09-25 14:25:47.628 28411 28504 W VideoCapabilities: Unsupported mime video/x-ms-wmv
+09-25 14:25:47.629 28411 28504 W AudioCapabilities: Unsupported mime audio/x-ms-wma
+09-25 14:25:47.629 28411 28504 W VideoCapabilities: Unsupported mime video/x-ms-wmv7
+09-25 14:25:47.629 28411 28504 W VideoCapabilities: Unsupported mime video/x-ms-wmv8
+09-25 14:25:47.650 28411 28411 I ViewRootImpl@b68bf4e[MainActivity]: stopped(true) old = false
+09-25 14:25:47.650 28411 28411 I ViewRootImpl@b68bf4e[MainActivity]: WindowStopped on com.vitacard.app/com.vitacard.app.MainActivity set to true
+09-25 14:25:47.652 28411 28411 I MSHandlerLifeCycle: removeMultiSplitHandler: no exist. decor=DecorView@f2cd11f[MainActivity]
+09-25 14:25:47.662 28411 28411 I ViewRootImpl@b68bf4e[MainActivity]: performTraversals mFirst=false windowShouldResize=false viewVisibilityChanged=false mForceNextWindowRelayout=false params={(0,0)(fillxfill) sim={adjust=pan forwardNavigation} layoutInDisplayCutoutMode=shortEdges ty=BASE_APPLICATION wanim=0x1030309
+09-25 14:25:47.662 28411 28411 I ViewRootImpl@b68bf4e[MainActivity]:   fl=81810100
+09-25 14:25:47.662 28411 28411 I ViewRootImpl@b68bf4e[MainActivity]:   pfl=12020040
+09-25 14:25:47.662 28411 28411 I ViewRootImpl@b68bf4e[MainActivity]:   bhv=DEFAULT
+09-25 14:25:47.662 28411 28411 I ViewRootImpl@b68bf4e[MainActivity]:   fitSides= naviIconColor=0}
+09-25 14:25:47.667 28411 28411 I ViewRootImpl@b68bf4e[MainActivity]: Relayout returned: old=(0,0,1080,2400) new=(0,0,1080,2400) req=(1080,2400)8 dur=3 res=0x0 s={false 0x0} ch=false seqId=0
+09-25 14:25:47.752 28411 28411 I Capacitor/Console: File:  - Line 2904 - Msg: onscript loading complete
+09-25 14:25:48.070 28411 28411 W om.vitacard.app: Accessing hidden field Landroid/content/pm/ApplicationInfo;->primaryCpuAbi:Ljava/lang/String; (unsupported, reflection, allowed)
+09-25 14:25:48.437 28411 28411 I Capacitor/Console: File: https://localhost/assets/index-1ZAD97-E.js - Line 203 - Msg: %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold
+09-25 14:25:48.619 28411 28411 W Capacitor/Console: File: https://localhost/assets/index-1ZAD97-E.js - Line 682 - Msg: Multiple GoTrueClient instances detected in the same browser context. It is not an error, but this should be avoided as it may produce undefined behavior when used concurrently under the same storage key.
+09-25 14:25:49.481 28411 28518 W DynamiteModule: Local module descriptor class for com.google.android.gms.googlecertificates not found.
+09-25 14:25:49.490 28411 28518 I DynamiteModule: Considering local module com.google.android.gms.googlecertificates:0 and remote module com.google.android.gms.googlecertificates:7
+09-25 14:25:49.492 28411 28518 I DynamiteModule: Selected remote version of com.google.android.gms.googlecertificates, version >= 7
+09-25 14:25:49.500 28411 28518 W om.vitacard.app: ClassLoaderContext classpath size mismatch. expected=14, found=11 (DLC[];PCL[base.apk*8873987:base.apk!classes2.dex*2870904898:base.apk!classes3.dex*4147288666:base.apk!classes4.dex*2532755557:base.apk!classes5.dex*3574909560:base.apk!classes6.dex*3273453206:base.apk!classes7.dex*1600164939:base.apk!classes8.dex*1192411263:base.apk!classes9.dex*1755689381:base.apk!classes10.dex*1856054911:base.apk!classes11.dex*2435367907:base.apk!classes12.dex*2462420451:base.apk!classes13.dex*2269321422:base.apk!classes14.dex*3859999824]{PCL[/system/framework/org.apache.http.legacy.jar*3951777098]#PCL[/system/framework/com.android.media.remotedisplay.jar*3743104115]#PCL[/system/framework/com.android.location.provider.jar*3175360615]#PCL[/system/system_ext/framework/org.carconnectivity.android.digitalkey.rangingintent.jar*560278202]#PCL[/system/system_ext/framework/org.carconnectivity.android.digitalkey.secureelement.jar*3277496666]#PCL[/system_ext/framework/org.carconnectivity.android.digitalkey.timesync.jar*1887653036]#PCL[/system/framework/org.apache.http.legacy.jar*3951777098]} | DLC[];PCL[/data/app/~~nR2nXxYOZEu35HybPGn3xw==/com.vitacard.app-eKYbB1jhra_ApLFQEks1Lg==/base.apk*3914027610:/data/app/~~nR2nXxYOZEu35HybPGn3xw==/com.vitacard.app-eKYbB1jhra_ApLFQEks1Lg==/base.apk!classes2.dex*2204239268:/data/app/~~nR2nXxYOZEu35HybPGn3xw==/com.vitacard.app-eKYbB1jhra_ApLFQEks1Lg==/base.apk!classes3.dex*1575089174:/data/app/~~nR2nXxYOZEu35HybPGn3xw==/com.vitacard.app-eKYbB1jhra_ApLFQEks1Lg==/base.apk!classes4.dex*3140159974:/data/app/~~nR2nXxYOZEu35HybPGn3xw==/com.vitacard.app-eKYbB1jhra_ApLFQEks1Lg==/base.apk!classes5.dex*4255659684:/data/app/~~nR2nXxYOZEu35HybPGn3xw==/com.vitacard.app-eKYbB1jhra_ApLFQEks1Lg==/base.apk!classes6.dex*4115714333:/data/app/~~nR2nXxYOZEu35HybPGn3xw==/com.vitacard.app-eKYbB1jhra_ApLFQEks1Lg==/base.apk!classes7.dex*84025748:/data/app/~~nR2nXxYOZEu35HybPGn3xw==/com.vitacard.app-eKYbB1jhra_ApLFQEks1Lg==/base.apk!classes8.dex*881393301:/data/app/~~nR2nXxYOZEu35HybPGn3xw==/com.vitacard.app-eKYbB1jhra_ApLFQEks1Lg==/base.apk!classes9.dex*582971942:/data/app/~~nR2nXxYOZEu35HybPGn3xw==/com.vitacard.app-eKYbB1jhra_ApLFQEks1Lg==/base.apk!classes10.dex*297896777:/data/app/~~nR2nXxYOZEu35HybPGn3xw==/com.vitacard.app-eKYbB1jhra_ApLFQEks1Lg==/base.apk!classes11.dex*1201315353]{PCL[/system/framework/org.apache.http.legacy.jar*3951777098]})
+09-25 14:25:49.535 28411 28411 I hp      : Opted in for usage reporting
+09-25 14:25:49.535 28411 28411 I hp      : Opted in for usage reporting

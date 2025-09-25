@@ -21,3 +21,16 @@ body {
     radial-gradient(1200px 800px at 70% -10%, rgba(92,233,225,.12), transparent 60%),
     linear-gradient(180deg, var(--space1), var(--space2) 40%, var(--space3));
 }
+
+/* Desactiva filtros/vidrios en el contenedor del mapa */
+.no-blur-children [data-map-glass],
+.no-blur-children .map-wrapper,
+.no-blur-children .map-wrapper::before,
+.no-blur-children .map-wrapper::after {
+  background: transparent !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  box-shadow: none !important;
+  filter: none !important;
+  opacity: 1 !important;
+}
