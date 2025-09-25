@@ -3,10 +3,11 @@ import { GoogleMap } from '@capacitor/google-maps';
 
 const mapId = 'native-map';
 
-export default function NativeMap({ apiKey }: { apiKey: string }) {
+function NativeMap({ apiKey }: { apiKey: string }) {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstance = useRef<GoogleMap | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [mapReady, setMapReady] = useState(false);
 
   useEffect(() => {
     let map: GoogleMap | null = null;
@@ -27,6 +28,15 @@ export default function NativeMap({ apiKey }: { apiKey: string }) {
           console.error('[Maps] Error: No se proporcionó la API key');
           return;
         }
+        // Log tamaño real del contenedor
+        const el = mapRef.current;
+        const r = el.getBoundingClientRect();
+        console.log('[Maps] rect:', r.width, r.height);
+        if (r.width <= 0 || r.height <= 0) {
+          console.warn('[Maps] Contenedor sin tamaño visible (width/height <= 0). El mapa no podrá renderizarse.');
+        }
+
+        console.log('[Maps] create:start');
         console.log('[Maps] Creando mapa con key:', apiKey.substring(0, 8) + '...');
         map = await GoogleMap.create({
           id: mapId,
@@ -40,11 +50,14 @@ export default function NativeMap({ apiKey }: { apiKey: string }) {
         });
         mapInstance.current = map;
         setError(null);
+  console.log('[Maps] create:ok');
         console.log('[Maps] Mapa creado exitosamente');
+  setMapReady(true);
       } catch (error) {
-  const msg = typeof error === 'object' && error && 'message' in error ? (error as any).message : String(error);
-  setError('Error al crear el mapa: ' + msg);
-        console.error('[Maps] Error al crear el mapa:', error);
+        const msg = typeof error === 'object' && error && 'message' in error ? (error as any).message : String(error);
+        setError('Error al crear el mapa: ' + msg);
+        console.error('[Maps] create:error', msg);
+        console.error('[Maps] Error al crear el mapa (stack):', error);
       }
     }
     createMap();
@@ -65,6 +78,8 @@ export default function NativeMap({ apiKey }: { apiKey: string }) {
         height: '100%',
         minHeight: 320,
         position: 'relative',
+        isolation: 'isolate',
+        zIndex: 0,
         borderRadius: 12,
         overflow: 'hidden',
         background: '#0b1626'
@@ -91,7 +106,7 @@ export default function NativeMap({ apiKey }: { apiKey: string }) {
         </div>
       )}
       {/* Si no hay error y no hay mapa, mostrar mensaje */}
-      {!error && (
+      {!error && !mapReady && (
         <div style={{
           position: 'absolute',
           top: 0,
@@ -112,3 +127,5 @@ export default function NativeMap({ apiKey }: { apiKey: string }) {
     </div>
   );
 }
+
+export default React.memo(NativeMap, (prev, next) => prev.apiKey === next.apiKey);

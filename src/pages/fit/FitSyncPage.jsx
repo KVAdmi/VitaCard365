@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { MAPS_ANDROID_KEY } from '@/config/maps';
+import { Capacitor } from '@capacitor/core';
 import { useRunTracking } from '@/hooks/useRunTracking';
 import NativeMap from '../../components/fit/NativeMap';
 import { useNativeHeartRate } from '@/hooks/useNativeHeartRate';
@@ -14,15 +14,30 @@ export default function FitSyncPage() {
   const { start, pause, resume, stop, isTracking, isPaused, stats } = useRunTracking();
   const [hud, setHud] = useState({ distance_km: 0, duration_s: 0, pace_min_km: 0, kcal: 0 });
 
-  // Actualizar HUD en tiempo real (cada segundo)
+  // Selección de API key por plataforma
+  const key = Capacitor.getPlatform() === 'ios'
+    ? import.meta.env.VITE_MAPS_IOS_KEY
+    : import.meta.env.VITE_MAPS_ANDROID_KEY;
+
+  // Log al render para confirmar la key recibida
+  useEffect(() => {
+    console.log('[FitSyncPage] Plataforma:', Capacitor.getPlatform());
+    console.log('[FitSyncPage] MAPS key (masked):', typeof key === 'string' ? key?.slice(0, 8) + '...' : key);
+  }, [key]);
+
+  // Sincroniza HUD cuando llegan nuevas stats desde el hook
   useEffect(() => {
     setHud(stats);
-    if (!isTracking) return;
-    const interval = setInterval(() => {
-      setHud((h) => ({ ...h, duration_s: stats.duration_s + Math.floor((Date.now() / 1000) - Math.floor(Date.now() / 1000)) }));
+  }, [stats]);
+
+  // Cronómetro en tiempo real (+1s cada segundo) mientras tracking y no en pausa
+  useEffect(() => {
+    if (!isTracking || isPaused) return;
+    const id = setInterval(() => {
+      setHud((h) => ({ ...h, duration_s: h.duration_s + 1 }));
     }, 1000);
-    return () => clearInterval(interval);
-  }, [isTracking, stats]);
+    return () => clearInterval(id);
+  }, [isTracking, isPaused]);
   // Pulso BLE/web
   const [webHr, setWebHr] = useState(null);
   const [hrSamples, setHrSamples] = useState([]); // Para promedio
@@ -82,14 +97,9 @@ const fmtPace = (pace, dist) => {
               defaultOpen
             >
               <div className="relative nasa-glow rounded-xl border border-cyan-300/40 bg-white/5 shadow-[0_0_24px_rgba(92,233,225,.18)] ring-2 ring-cyan-300/30 p-2 sm:p-3 overflow-hidden">
-                <div className="absolute inset-0 pointer-events-none animate-nasa-glow z-10" />
                 {/* Mapa nativo Google Maps */}
-                <div className="relative h-[200px] xs:h-[260px] sm:h-[320px] overflow-visible">
-                                    {/* Debug: Mostrar valor de API key */}
-                  <div style={{display: 'none'}}>
-                    {console.log('[Debug] VITE_MAPS_ANDROID_KEY:', import.meta.env.VITE_MAPS_ANDROID_KEY)}
-                  </div>
-                  <NativeMap apiKey={MAPS_ANDROID_KEY} />
+                <div className="relative isolate z-0 h-[200px] xs:h-[260px] sm:h-[320px] overflow-hidden">
+                  <NativeMap apiKey={key} />
 
                 </div>
 
