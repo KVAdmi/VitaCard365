@@ -1,16 +1,28 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
+import { MAPS_ANDROID_KEY } from '@/config/maps';
+import { useRunTracking } from '@/hooks/useRunTracking';
+import NativeMap from '../../components/fit/NativeMap';
 import { useNativeHeartRate } from '@/hooks/useNativeHeartRate';
 import { supabase } from '@/lib/supabaseClient';
 import KeepAliveAccordion from '../../components/ui/KeepAliveAccordion';
-import RunSyncMap from '../../components/fit/RunSyncMap';
 import GymBlePanel from '../../components/fit/GymBlePanel';
 import WearablesPanel from '../../components/fit/WearablesPanel';
 
 import Layout from '../../components/Layout';
 
 export default function FitSyncPage() {
-  const runMapApi = useRef({ resize: () => {} });
+  const { start, pause, resume, stop, isTracking, isPaused, stats } = useRunTracking();
   const [hud, setHud] = useState({ distance_km: 0, duration_s: 0, pace_min_km: 0, kcal: 0 });
+
+  // Actualizar HUD en tiempo real (cada segundo)
+  useEffect(() => {
+    setHud(stats);
+    if (!isTracking) return;
+    const interval = setInterval(() => {
+      setHud((h) => ({ ...h, duration_s: stats.duration_s + Math.floor((Date.now() / 1000) - Math.floor(Date.now() / 1000)) }));
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [isTracking, stats]);
   // Pulso BLE/web
   const [webHr, setWebHr] = useState(null);
   const [hrSamples, setHrSamples] = useState([]); // Para promedio
@@ -68,13 +80,17 @@ const fmtPace = (pace, dist) => {
             <KeepAliveAccordion
               title="Running — Ruta libre"
               defaultOpen
-              onExpand={() => runMapApi.current?.resize?.()}
             >
               <div className="relative nasa-glow rounded-xl border border-cyan-300/40 bg-white/5 shadow-[0_0_24px_rgba(92,233,225,.18)] ring-2 ring-cyan-300/30 p-2 sm:p-3 overflow-hidden">
                 <div className="absolute inset-0 pointer-events-none animate-nasa-glow z-10" />
-                {/* Mapa: wrapper responsivo */}
+                {/* Mapa nativo Google Maps */}
                 <div className="relative h-[200px] xs:h-[260px] sm:h-[320px] overflow-visible">
-                  <RunSyncMap apiRef={runMapApi} onHud={setHud} />
+                                    {/* Debug: Mostrar valor de API key */}
+                  <div style={{display: 'none'}}>
+                    {console.log('[Debug] VITE_MAPS_ANDROID_KEY:', import.meta.env.VITE_MAPS_ANDROID_KEY)}
+                  </div>
+                  <NativeMap apiKey={MAPS_ANDROID_KEY} />
+
                 </div>
 
                 {/* HUD 3x2/2x3 */}
@@ -89,13 +105,34 @@ const fmtPace = (pace, dist) => {
 
                 {/* Controles */}
                 <div className="mt-3 grid grid-cols-2 sm:flex gap-2 sm:gap-3 justify-center">
-                  <Btn variant="start" onClick={() => {
-                    console.log('Llamando start con userId:', userId);
-                    runMapApi.current?.start(userId);
-                  }} disabled={!userId}>Iniciar</Btn>
-                  <Btn variant="pause" onClick={() => runMapApi.current?.pause()} disabled={!userId}>Pausar</Btn>
-                  <Btn variant="start" onClick={() => runMapApi.current?.resume()} disabled={!userId}>Continuar</Btn>
-                  <Btn variant="stop" onClick={() => runMapApi.current?.stop()} disabled={!userId}>Terminar</Btn>
+                  <Btn 
+                    variant="start" 
+                    onClick={start} 
+                    disabled={!userId}
+                  >
+                    Iniciar
+                  </Btn>
+                  <Btn 
+                    variant="pause" 
+                    onClick={pause} 
+                    disabled={!userId}
+                  >
+                    Pausar
+                  </Btn>
+                  <Btn 
+                    variant="start" 
+                    onClick={resume} 
+                    disabled={!userId}
+                  >
+                    Continuar
+                  </Btn>
+                  <Btn 
+                    variant="stop" 
+                    onClick={stop} 
+                    disabled={!userId}
+                  >
+                    Terminar
+                  </Btn>
                 </div>
               </div>
             </KeepAliveAccordion>
