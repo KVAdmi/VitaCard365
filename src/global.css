@@ -34,3 +34,73 @@ body {
   filter: none !important;
   opacity: 1 !important;
 }
+
+/* ======= PARCHE MAPA NATIVO (Capacitor Google Maps) ======= */
+/*
+   Objetivo: el mapa nativo está correcto pero puede quedar "bajo un vidrio" (backdrop-blur,
+   filtros, transform/contain u overlays). Estas reglas neutralizan esos efectos SOLO en el
+   scope de la página de FitSync y el host del mapa, sin tocar el resto del sitio.
+*/
+
+/* Contenedor directo del mapa (ver wrapper en FitSyncPage.jsx) */
+#native-map-host,
+.native-map-host {
+  position: relative !important;
+  width: 100% !important;
+  min-height: 320px !important;   /* ajusta si quieres más alto */
+  height: 42vh !important;        /* alto razonable por defecto */
+  background: transparent !important;
+  isolation: isolate !important;  /* evita composiciones con ancestros */
+  overflow: visible !important;
+  z-index: 0 !important;          /* el nativo se gestiona propio z */
+  pointer-events: auto !important;
+}
+
+/* Nada de efectos visuales ni composiciones raras sobre el host */
+#native-map-host *,
+.native-map-host * {
+  transform: none !important;
+  filter: none !important;
+  opacity: 1 !important;
+  will-change: auto !important;
+  mix-blend-mode: normal !important;
+}
+
+/* Ancestros de la página FitSync: sin vidrio/blur encima del mapa */
+.fit-sync-page,
+.fit-sync-page * {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* Aplanar SOLO los wrappers base marcados, sin tocar contenido ni botones */
+.fit-sync-page [data-flat="true"] {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  -webkit-box-shadow: none !important;
+  outline: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  overflow: visible !important;
+}
+
+/* Mantener espaciamiento del layout sin tarjetas visuales */
+.fit-sync-page [data-flat="true"] > .mt-3 { margin-top: 0.75rem; }
+.fit-sync-page [data-flat="true"] > .sm\:mt-3 { margin-top: 0.75rem; }
+
+/* Quita fondos semitransparentes/vidrios típicos en cards/paneles dentro de la página */
+.fit-sync-page [class*="backdrop"],
+.fit-sync-page [class*="blur"],
+.fit-sync-page [class*="glass"],
+.fit-sync-page [class*="opacity-"],
+.fit-sync-page [class*="/" ] {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* (Opcional) IonContent / scroll container sin capas opacas si se usa Ionic */
+ion-content.fit-sync {
+  --background: transparent !important;
+  background: transparent !important;
+}

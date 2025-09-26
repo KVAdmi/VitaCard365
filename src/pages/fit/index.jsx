@@ -16,9 +16,12 @@ const iconGlow = {
 const Tile = ({ to, Icon, title, subtitle, glow }) => (
   <Link
     to={to}
+    role="button"
+    aria-label={title}
     className="group relative flex flex-col items-center justify-center h-[140px] w-[160px] sm:h-[160px] sm:w-[180px]
                rounded-2xl border border-cyan-400/20 bg-white/10 backdrop-blur-md shadow-[0_20px_40px_rgba(0,40,80,0.45)]
-               transition-all duration-200 hover:bg-cyan-400/10 hover:shadow-[0_0_32px_4px_rgba(0,255,255,0.18)] hover:-translate-y-1 active:scale-[0.97]"
+               transition-all duration-200 hover:bg-cyan-400/10 hover:shadow-[0_0_32px_4px_rgba(0,255,255,0.18)] hover:-translate-y-1 active:scale-[0.97]
+               focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#FF5A2A] focus:ring-offset-[#0B1F3A]"
     style={{ boxShadow: '0 0 0 1.5px #00ffe7, 0 20px 40px rgba(0,40,80,0.35)' }}
   >
     <div className="absolute -top-4 left-1/2 -translate-x-1/2 rounded-full border-2 border-cyan-300/30 bg-cyan-400/10 p-2 shadow-[0_0_16px_2px_rgba(0,255,255,0.18)] group-hover:scale-110 transition-transform">
@@ -64,7 +67,8 @@ export default function FitPage() {
             </div>
             {/* Continuar entrenamiento */}
             <Link to="/fit/plan"
-              className="hidden sm:flex items-center gap-2 rounded-full px-4 py-2 bg-cyan-400/10 border border-cyan-300/20 text-cyan-100/90 hover:bg-cyan-400/20 hover:shadow-[0_0_16px_2px_rgba(0,255,255,0.12)] transition">
+              role="button"
+              className="hidden sm:flex items-center gap-2 rounded-full px-4 py-2 bg-cyan-400/10 border border-cyan-300/20 text-cyan-100/90 hover:bg-cyan-400/20 hover:shadow-[0_0_16px_2px_rgba(0,255,255,0.12)] transition focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#FF5A2A] focus:ring-offset-[#0B1F3A]">
               <Play className="h-4 w-4" /> Continuar
             </Link>
           </div>

@@ -38,6 +38,7 @@ import Receipt from './pages/Receipt';
 import PaymentGateway from './pages/PaymentGateway';
 import FitCallback from './pages/FitCallback';
 import ResetPassword from './pages/ResetPassword';
+import CrearRutina from './pages/CrearRutina';
 
 
 
@@ -109,6 +110,7 @@ function App() {
                     <Route path="/perfil" element={<ProtectedRoute><Perfil /></ProtectedRoute>} />
                     <Route path="/recibo/:paymentId" element={<ProtectedRoute><Receipt /></ProtectedRoute>} />
                     <Route path="/fit-auth-callback" element={<FitCallback />} />
+                    <Route path="/crear-rutina" element={<ProtectedRoute><CrearRutina /></ProtectedRoute>} />
                   </Routes>
                 </div>
               </Router>

@@ -39,11 +39,9 @@ function NativeMap({ apiKey }: Props) {
           setError('No se proporcionó la API key de Google Maps.');
           return;
         }
-
-        // Esperar hasta tener tamaño (>0) para evitar crear el mapa fuera de pantalla
-        let tries = 0;
-        let r = mapRef.current.getBoundingClientRect();
-        while ((r.width <= 0 || r.height <= 0) && tries < 10) {
+  let tries = 0;
+  let r = mapRef.current.getBoundingClientRect();
+  while ((r.width <= 0 || r.height <= 0) && tries < 10) {
           tries++;
           await raf();
           await sleep(30);
@@ -109,14 +107,13 @@ function NativeMap({ apiKey }: Props) {
       id={idRef.current}
       style={{
         width: '100%',
-        height: 320,
-        minHeight: 320,
+        height: '100%',
         position: 'relative',
         isolation: 'isolate',
         // 🔑 Nada de fondos/vidrios aquí: debe ser transparente
         background: 'transparent',
-        overflow: 'hidden',
-        borderRadius: 12,
+        overflow: 'visible',
+        borderRadius: 0,
         zIndex: 0,
         pointerEvents: 'auto',
       }}

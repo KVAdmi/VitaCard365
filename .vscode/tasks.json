@@ -21,6 +21,65 @@
 			"command": "npm run build",
 			"isBackground": false,
 			"group": "build"
+		},
+		{
+			"label": "cap copy android",
+			"type": "shell",
+			"command": "npx cap copy android",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "gradle installDebug",
+			"type": "shell",
+			"command": "cd android; ./gradlew installDebug",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "gradlew.bat installDebug",
+			"type": "shell",
+			"command": "cd android; gradlew.bat installDebug",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "gradlew installDebug with path",
+			"type": "shell",
+			"command": "cd android; .\\gradlew.bat installDebug",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "npm run build (quick)",
+			"type": "shell",
+			"command": "npm run build",
+			"isBackground": false,
+			"problemMatcher": [
+				"$eslint-stylish"
+			],
+			"group": "build"
+		},
+		{
+			"label": "build web (wearables change)",
+			"type": "shell",
+			"command": "npm run build",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "build+copy+install",
+			"type": "shell",
+			"command": "npm run build",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "build copy assemble install launch (flatten)",
+			"type": "shell",
+			"command": "npm run build",
+			"isBackground": false,
+			"group": "build"
 		}
 	]
 }

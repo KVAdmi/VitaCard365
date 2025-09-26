@@ -1,14 +1,5 @@
-import React, { useCallback } from "react";
-import { toast } from '../ui/use-toast';
+import React from "react";
 
-
-const PROXIMAMENTE = [
-  'Garmin',
-  'Polar',
-  'COROS',
-  'Fitbit',
-  'Oura',
-];
 
 const Item = ({ title, subtitle, soon, onConnect, active }) => (
   <div className="rounded-lg border border-white/10 bg-[#0b1626] p-3 flex items-center justify-between">
@@ -31,26 +22,11 @@ const Item = ({ title, subtitle, soon, onConnect, active }) => (
 
 
 export default function WearablesPanel() {
-  // Modal bonito: solo toast, pero puedes cambiar a modal si tienes uno global
-  const handleSoon = useCallback((name) => {
-    toast({
-      title: 'Próximamente',
-      description: `La integración con ${name} estará disponible pronto. ¡Espérala!`,
-      variant: 'default',
-      duration: 3500,
-    });
-  }, []);
-
-  // Opciones
+  // Opciones soportadas actualmente
   const items = [
     { title: 'Android • Health Connect', subtitle: 'Sesiones, distancia, ritmo, HR' },
     { title: 'iOS • Apple Health', subtitle: 'Sesiones, distancia, ritmo, HR' },
     { title: 'Samsung Health', subtitle: 'A través de Health Connect' },
-    { title: 'Garmin', subtitle: 'Garmin Health SDK/REST' },
-    { title: 'Polar', subtitle: 'AccessLink API' },
-    { title: 'COROS', subtitle: 'Training Hub API' },
-    { title: 'Fitbit', subtitle: 'Web API' },
-    { title: 'Oura', subtitle: 'Cloud API' },
   ];
 
   return (
@@ -59,20 +35,14 @@ export default function WearablesPanel() {
         Conecta tu reloj, pulsera o app para traer tus sesiones.
       </p>
       <div className="grid sm:grid-cols-2 gap-3">
-        {items.map(({ title, subtitle }) => {
-          const soon = PROXIMAMENTE.includes(title.split(' ')[0]);
-          const active = !soon;
-          return (
-            <Item
-              key={title}
-              title={title}
-              subtitle={subtitle}
-              soon={soon}
-              active={active}
-              onConnect={soon ? () => handleSoon(title) : undefined}
-            />
-          );
-        })}
+        {items.map(({ title, subtitle }) => (
+          <Item
+            key={title}
+            title={title}
+            subtitle={subtitle}
+            active
+          />
+        ))}
       </div>
 
       <div className="rounded-lg border border-white/10 bg-white/5 p-3 flex items-center justify-between">
