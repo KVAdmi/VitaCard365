@@ -21,6 +21,13 @@
 			"command": "npm run build",
 			"isBackground": false,
 			"group": "build"
+		},
+		{
+			"label": "npm run build (quick)",
+			"type": "shell",
+			"command": "npm run build",
+			"isBackground": false,
+			"group": "build"
 		}
 	]
 }

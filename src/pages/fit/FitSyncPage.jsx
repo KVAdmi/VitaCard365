@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { useRunTracking } from '@/hooks/useRunTracking';
-import NativeMap from '../../components/fit/NativeMap';
+import MapView from '../../components/fit/MapView';
 import { useNativeHeartRate } from '@/hooks/useNativeHeartRate';
 import { supabase } from '@/lib/supabaseClient';
 import KeepAliveAccordion from '../../components/ui/KeepAliveAccordion';
@@ -14,15 +14,12 @@ export default function FitSyncPage() {
   const [hud, setHud] = useState({ distance_km: 0, duration_s: 0, pace_min_km: 0, kcal: 0 });
 
   // Selección de API key por plataforma
-  const key = Capacitor.getPlatform() === 'ios'
-    ? import.meta.env.VITE_MAPS_IOS_KEY
-    : import.meta.env.VITE_MAPS_ANDROID_KEY;
+  const isNative = Capacitor.isNativePlatform && Capacitor.isNativePlatform();
 
   // Log al render para confirmar la key recibida
   useEffect(() => {
     console.log('[FitSyncPage] Plataforma:', Capacitor.getPlatform());
-    console.log('[FitSyncPage] MAPS key (masked):', typeof key === 'string' ? key?.slice(0, 8) + '...' : key);
-  }, [key]);
+  }, []);
 
   // Sincroniza HUD cuando llegan nuevas stats desde el hook
   useEffect(() => {
@@ -89,13 +86,13 @@ export default function FitSyncPage() {
 
   return (
     <Layout title="Sincronizar mi rutina" showBackButton>
-      <div className="min-h-screen w-full flex justify-center items-start">
+      <div className="min-h-screen w-full flex justify-center items-start fit-sync-page">
         <div className="w-full max-w-4xl px-2 sm:px-6 py-6 sm:py-10">
           {/* Tarjeta única contenedora modo NASA */}
-          <div className="rounded-2xl border border-teal-400/30 bg-white/5 ring-1 ring-teal-300/10 p-2 sm:p-6 space-y-3 sm:space-y-4 no-blur-children">
+          <div data-flat="true" className="rounded-2xl border border-teal-400/30 bg-white/5 ring-1 ring-teal-300/10 p-2 sm:p-6 space-y-3 sm:space-y-4 no-blur-children">
             {/* 1) Running */}
             <KeepAliveAccordion title="Running — Ruta libre" defaultOpen>
-              <div className="relative rounded-xl border border-cyan-300/40 bg-white/5 p-2 sm:p-3 overflow-hidden">
+              <div data-flat="true" className="relative rounded-xl border border-cyan-300/40 bg-white/5 p-2 sm:p-3 overflow-hidden">
                 {/* HUD 3x2/2x3 */}
                 <div className="mt-3 grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
                   <HUD label="Distancia" value={hud.distance_km.toFixed(2) + ' km'} />
@@ -129,19 +126,11 @@ export default function FitSyncPage() {
             {/* Mapa nativo fuera del card para evitar cualquier overlay/fondo heredado */}
             <div
               data-map-glass
-              className="
-                map-wrapper
-                mt-3
-                relative
-                isolate z-0
-                rounded-xl overflow-hidden
-                bg-transparent !backdrop-blur-0
-                before:content-none after:content-none
-                h-[200px] xs:h-[260px] sm:h-[320px]
-              "
+              id="native-map-host"
+              className="map-wrapper native-map-host mt-3 relative isolate z-0 rounded-xl overflow-hidden bg-transparent !backdrop-blur-0 before:content-none after:content-none h-[200px] xs:h-[260px] sm:h-[320px]"
               style={{ WebkitBackdropFilter: 'none', backdropFilter: 'none' }}
             >
-              <NativeMap apiKey={key} />
+              <MapView className="w-full h-full" />
             </div>
 
             {/* 2) Gym BLE */}
