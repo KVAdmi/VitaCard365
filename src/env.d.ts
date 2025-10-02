@@ -3,7 +3,6 @@
 // Claves de Vite disponibles en runtime
 interface ImportMetaEnv {
   readonly VITE_MAPS_WEB_KEY: string;
-  readonly VITE_MAPS_APP_KEY: string;
 }
 
 interface ImportMeta {

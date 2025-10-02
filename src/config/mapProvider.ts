@@ -9,7 +9,9 @@ export function getMapProvider(platform: 'android' | 'ios' | 'web'): Provider {
   const IOS = (env.VITE_MAP_PROVIDER_IOS as string | undefined)?.toLowerCase();
 
   if (platform === 'android') {
-    return (ANDROID === 'native' || ANDROID === 'web') ? (ANDROID as Provider) : 'web';
+    // Hard-force web on Android to avoid any native SDK usage and related crashes
+    // regardless of build-time flags.
+    return 'web';
   }
   if (platform === 'ios') {
     return (IOS === 'native' || IOS === 'web') ? (IOS as Provider) : 'native';
@@ -18,14 +20,11 @@ export function getMapProvider(platform: 'android' | 'ios' | 'web'): Provider {
   return 'web';
 }
 
-export function getMapsApiKey(provider: Provider, platform: 'android' | 'ios' | 'web'): string | undefined {
-  const env = import.meta.env as any;
-  if (provider === 'web') {
-    return env.VITE_MAPS_WEB_KEY || env.VITE_MAPS_API_KEY || env.VITE_GOOGLE_MAPS_KEY;
+
+// Solo para Android: retorna la key de WebView Android
+export const getMapsWebKey = (platform: 'android') => {
+  if (platform === 'android') {
+    return (import.meta.env.VITE_MAPS_ANDROID_WEBVIEW_KEY || '').trim();
   }
-  // nativo (solo iOS por decisión ejecutiva)
-  if (platform === 'ios') {
-    return env.VITE_MAPS_IOS_KEY || env.VITE_MAPS_APP_KEY || env.VITE_MAPS_API_KEY || env.VITE_GOOGLE_MAPS_KEY;
-  }
-  return undefined;
-}
+  return '';
+};

@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { Capacitor } from '@capacitor/core';
 import { GoogleMap } from '@capacitor/google-maps';
 
 type Props = { apiKey: string };
@@ -14,6 +15,14 @@ function NativeMap({ apiKey }: Props) {
 	const [mapReady, setMapReady] = useState(false);
 
 	useEffect(() => {
+		// Runtime guard: en Android no creamos mapa nativo por decisión de producto.
+		const platform = Capacitor.isNativePlatform && Capacitor.isNativePlatform() ? Capacitor.getPlatform() : 'web';
+		if (platform === 'android') {
+			setError('');
+			setMapReady(false);
+			return;
+		}
+
 		// Evita doble init en StrictMode
 		if (didInit.current) return;
 		didInit.current = true;
@@ -30,7 +39,7 @@ function NativeMap({ apiKey }: Props) {
 
 		async function createMap() {
 			try {
-				console.log('[Maps] Iniciando creación del mapa...');
+				console.log('[Maps] Iniciando creación del mapa nativo (iOS)...');
 				if (!mapRef.current) {
 					setError('No se encontró el elemento contenedor');
 					return;
@@ -62,7 +71,7 @@ function NativeMap({ apiKey }: Props) {
 					config: {
 						center: { lat: 19.4326, lng: -99.1332 },
 						zoom: 14,
-						androidLiteMode: true, // Forzar modo Lite para máxima compatibilidad
+						androidLiteMode: true, // sin efecto en iOS, pero mantenemos por compatibilidad
 					},
 				});
 				if (destroyed) {

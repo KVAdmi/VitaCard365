@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Capacitor } from '@capacitor/core';
 import KeepAliveAccordion from '@/components/ui/KeepAliveAccordion';
-import * as BLE from '../../lib/bleNative';
+import { scanFtmsHr, connect, subscribeFtms, subscribeHr, stopNotifications, disconnect } from '@/ble/ble';
 
 // [BLE] Using bridge only (rama nativa)
 const FITNESS_MACHINE = 0x1826;    // Fitness Machine (treadmill, bike, etc.)
@@ -30,13 +30,17 @@ export default function GymBlePanel({ onHr }) {
   const isNative = Capacitor.isNativePlatform();
   const webBleOk = useMemo(() => isWebBluetoothSupported(), []);
 
-  // Estado UI
-  const [status, setStatus] = useState('Listo');
+  // Estado UI BLE nativo
+  const [status, setStatus] = useState('Idle'); // Idle|Scanning|Connecting|Streaming|Reconnecting|Error
   const [error, setError] = useState('');
-  const [deviceName, setDeviceName] = useState('');
-  const [connected, setConnected] = useState(false);
+  const [devices, setDevices] = useState([]); // {id,name,rssi,hasFTMS,hasHR}
+  const [sel, setSel] = useState(null); // device seleccionado
   const [hr, setHr] = useState(null);
   const [samples, setSamples] = useState(0);
+  const [metrics, setMetrics] = useState({}); // buffer FTMS/HR
+  // Estado BLE Web
+  const [deviceName, setDeviceName] = useState('');
+  const [connected, setConnected] = useState(false);
 
   // Refs Web Bluetooth
   const deviceRef = useRef(null);
@@ -48,15 +52,8 @@ export default function GymBlePanel({ onHr }) {
   // Limpieza al desmontar (Web y nativo)
   useEffect(() => {
     return () => {
-      try { hrCharRef.current?.removeEventListener('characteristicvaluechanged', onHrValue); } catch {}
-      try { deviceRef.current?.gatt?.disconnect(); } catch {}
-      // Limpieza nativa si aplica
-      if (isNative) {
-        try { BLE.stopHeartRate(); } catch {}
-        try { BLE.disconnect(); } catch {}
-      }
+      stopNotifications();
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // --- Handlers Web Bluetooth ---
@@ -153,93 +150,105 @@ export default function GymBlePanel({ onHr }) {
     }
   }, [onHrValue]);
 
-  // --- Handlers Nativos (opcionales, no truenan si no hay lib) ---
-  const handleConnectNative = useCallback(async () => {
-    setError('');
-    setStatus('Buscando dispositivos…');
-    setHr(null);
-    setSamples(0);
 
+  // --- Handlers BLE nativo (Capacitor BLE wrapper) ---
+  const onScan = useCallback(async () => {
+    setDevices([]); setStatus('Scanning');
+    await scanFtmsHr((r) => {
+      setDevices(prev => {
+        const already = prev.find(d => d.id === r.device.deviceId);
+        if (already) return prev;
+        return [...prev, {
+          id: r.device.deviceId,
+          name: r.device.name || 'Unknown',
+          rssi: r.device.rssi,
+          hasFTMS: r.device.uuids?.some(u => u?.toLowerCase().includes('1826')),
+          hasHR:   r.device.uuids?.some(u => u?.toLowerCase().includes('180d')),
+        }];
+      });
+    });
+  }, []);
+
+  const onConnect = useCallback(async (d) => {
+    setSel(d); setStatus('Connecting'); await stopNotifications();
+    setHr(null); setSamples(0); setMetrics({});
     try {
-      if (!BLE.connect) {
-        setStatus('No disponible');
-        setError('BLE nativo no integrado. Agrega "@/lib/bleNative" con connect/disconnect/startHeartRate/stopHeartRate.');
-        return;
-      }
-      console.log('[BLE] Using bridge only');
-      await BLE.connect();
-      await BLE.startHeartRate((bpm) => {
+      await subscribeFtms(d.id, ['2AD2','2ACD','2AD1','2ACE'], buf => {
+        // Aquí parsea FTMS y actualiza metrics
+        // Ejemplo: setMetrics(m => ({ ...m, ...parseFtms(buf) }));
+      });
+      await subscribeHr(d.id, bpm => {
         setHr(bpm);
-        setSamples((n) => n + 1);
+        setSamples(n => n + 1);
         if (typeof onHr === 'function') onHr(bpm);
       });
-      setConnected(true);
-      setStatus('Conectado');
-    } catch (err) {
+      setStatus('Streaming');
+    } catch (e) {
       setStatus('Error');
-      setError(err?.message || String(err));
     }
   }, [onHr]);
 
-  const handleDisconnectNative = useCallback(async () => {
-    setError('');
-    try {
-      await BLE.stopHeartRate();
-      await BLE.disconnect();
-      setConnected(false);
-      setStatus('Desconectado');
-      setDeviceName('');
-    } catch (err) {
-      setError(err?.message || String(err));
-    }
+  const onDisconnect = useCallback(async () => {
+    setSel(null); setStatus('Idle'); setHr(null); setSamples(0); setMetrics({});
+    await stopNotifications();
   }, []);
 
   // --- Render ---
   return (
-    <KeepAliveAccordion title="Equipos del gimnasio (Bluetooth)" defaultOpen>
+  <KeepAliveAccordion title="Dispositivos Bluetooth" defaultOpen>
       <div className="rounded-xl border border-white/10 bg-white/5 p-4">
         {/* Rama Nativa (APK) */}
         {isNative ? (
           <>
-            <div className="mb-3 flex items-center justify-between">
-              <div>
-                <p className="text-sm opacity-80">
-                  Estado: <span className="opacity-100">{status}</span>
-                  {deviceName ? <> — <span className="opacity-100">{deviceName}</span></> : null}
-                </p>
-                {connected && hr != null && (
+            <div className="mb-3 flex flex-col gap-2">
+              <div className="flex gap-2 mb-2">
+                <button onClick={onScan} className="px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 transition">Escanear 25s</button>
+                <button onClick={stopNotifications} className="px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 transition">Detener</button>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="min-w-full text-xs">
+                  <thead>
+                    <tr>
+                      <th className="px-2">Nombre</th>
+                      <th className="px-2">RSSI</th>
+                      <th className="px-2">Etiquetas</th>
+                      <th className="px-2">Acción</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {devices.map(d => (
+                      <tr key={d.id} className={sel?.id === d.id ? 'bg-white/10' : ''}>
+                        <td className="px-2">{d.name}</td>
+                        <td className="px-2">{d.rssi ?? '-'}</td>
+                        <td className="px-2">
+                          {d.hasFTMS && <span className="bg-blue-500 text-white px-1 rounded mr-1">FTMS</span>}
+                          {d.hasHR && <span className="bg-pink-500 text-white px-1 rounded">HR</span>}
+                        </td>
+                        <td className="px-2">
+                          <button onClick={() => onConnect(d)} className="px-2 py-1 rounded bg-green-600 text-white hover:bg-green-700 transition">Conectar</button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              {sel && (
+                <div className="mt-2">
+                  <button onClick={onDisconnect} className="px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 transition">Desconectar</button>
+                </div>
+              )}
+              <div className="mt-2">
+                <p className="text-sm opacity-80">Estado: <span className="opacity-100">{status}</span></p>
+                {hr != null && (
                   <p className="text-sm mt-1">
                     <span className="opacity-80">Frecuencia cardiaca: </span>
                     <span className="font-semibold">{hr} bpm</span>
                     <span className="opacity-60"> (muestras: {samples})</span>
                   </p>
                 )}
+                {/* Aquí puedes renderizar métricas FTMS del buffer */}
               </div>
-
-              <div className="flex gap-2">
-                {!connected ? (
-                  <button
-                    onClick={handleConnectNative}
-                    className="px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 transition"
-                  >
-                    Conectar BLE (nativo)
-                  </button>
-                ) : (
-                  <button
-                    onClick={handleDisconnectNative}
-                    className="px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 transition"
-                  >
-                    Desconectar
-                  </button>
-                )}
-              </div>
-            </div>
-
-            <div className="text-xs opacity-70 mt-2">
-              <p>
-                Si tienes problemas de conexión Bluetooth, revisa que el Bluetooth esté activado y que la app tenga permisos. Si el problema persiste, reinicia el dispositivo o consulta soporte.
-              </p>
-              {error && <p className="mt-2 text-red-300">Error: {error}</p>}
+              {error && <div className="mt-2 text-red-300 text-xs">Error: {error}</div>}
             </div>
           </>
         ) : (
@@ -304,4 +313,3 @@ export default function GymBlePanel({ onHr }) {
     </KeepAliveAccordion>
   );
 }
-//

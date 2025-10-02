@@ -10,6 +10,7 @@ import WearablesPanel from '../../components/fit/WearablesPanel';
 import Layout from '../../components/Layout';
 
 export default function FitSyncPage() {
+  const [fatalError, setFatalError] = useState(null);
   const { start, pause, resume, stop, isTracking, isPaused, stats } = useRunTracking();
   const [hud, setHud] = useState({ distance_km: 0, duration_s: 0, pace_min_km: 0, kcal: 0 });
 
@@ -84,6 +85,17 @@ export default function FitSyncPage() {
   const pulsoActual = webHr ?? nativeHr;
   const pulsoFuente = webHr ? 'web' : (nativeHr ? 'nativo' : null);
 
+  if (fatalError) {
+    return (
+      <Layout title="Sincronizar mi rutina" showBackButton>
+        <div className="min-h-screen w-full flex flex-col items-center justify-center bg-[#0b1626] text-white p-8">
+          <h2 className="text-2xl font-bold mb-4">Error crítico</h2>
+          <p className="mb-2">{fatalError}</p>
+          <button className="mt-4 px-4 py-2 bg-vita-orange rounded" onClick={()=>window.location.reload()}>Reintentar</button>
+        </div>
+      </Layout>
+    );
+  }
   return (
     <Layout title="Sincronizar mi rutina" showBackButton>
       <div className="min-h-screen w-full flex justify-center items-start fit-sync-page">
@@ -130,7 +142,7 @@ export default function FitSyncPage() {
               className="map-wrapper native-map-host mt-3 relative isolate z-0 rounded-xl overflow-hidden bg-transparent !backdrop-blur-0 before:content-none after:content-none h-[200px] xs:h-[260px] sm:h-[320px]"
               style={{ WebkitBackdropFilter: 'none', backdropFilter: 'none' }}
             >
-              <MapView className="w-full h-full" />
+              <MapView className="w-full h-full" onMapError={setFatalError} />
             </div>
 
             {/* 2) Gym BLE */}

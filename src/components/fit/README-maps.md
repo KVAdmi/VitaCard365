@@ -13,7 +13,7 @@ No se elimina el mapa nativo Android; solo se desactiva detrás de flags.
 - VITE_MAPS_WEB_KEY=...    (clave de Google Maps JavaScript)
 - VITE_MAPS_IOS_KEY=...    (clave de iOS nativo)
 
-Opcionales/backups: VITE_MAPS_APP_KEY, VITE_MAPS_API_KEY, VITE_GOOGLE_MAPS_KEY
+Opcionales/backups: VITE_MAPS_API_KEY, VITE_GOOGLE_MAPS_KEY
 
 ## Componentes
 

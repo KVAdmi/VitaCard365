@@ -5,7 +5,7 @@ import { Capacitor } from '@capacitor/core';
 
 import { startRun, pushPoint, stopRun } from "@/services/fitApi";
 
-import { loadMaps } from "../../utils/loadMaps";
+import { WebMapAdapter } from "./adapters/WebMapAdapter";
 const toRad = d => d*Math.PI/180;
 function haversine(a, b) {
   const R = 6371000;
@@ -89,59 +89,14 @@ export default function RunSyncMap({ apiRef, onHud }) {
 
 
   React.useEffect(() => {
-    // Selecciona la key según plataforma
-    const isNative = Capacitor.isNativePlatform && Capacitor.isNativePlatform();
-    const key = isNative
-      ? import.meta.env.VITE_MAPS_APP_KEY || import.meta.env.VITE_MAPS_API_KEY || import.meta.env.VITE_GOOGLE_MAPS_KEY
-      : import.meta.env.VITE_MAPS_WEB_KEY || import.meta.env.VITE_MAPS_API_KEY || import.meta.env.VITE_GOOGLE_MAPS_KEY;
     let cancelled = false;
-
-  loadMaps().then(() => {
-      if (cancelled) return;
-      const g = window.google.maps;
-      mapRef.current = new g.Map(containerRef.current, {
-        center: { lat: 20.6736, lng: -103.344 }, zoom: 15,
-        disableDefaultUI: true, clickableIcons: false,
-        styles: [
-          { elementType: 'geometry', stylers: [{ color: '#0b1626' }]},
-          { elementType: 'labels.text.stroke', stylers: [{ color: '#0b1626' }]},
-          { elementType: 'labels.text.fill', stylers: [{ color: '#9bdfe0' }]},
-          { featureType: 'poi', stylers: [{ visibility: 'off' }]},
-          { featureType: 'road', stylers: [{ color: '#1b2a44' }]},
-          { featureType: 'water', stylers: [{ color: '#10365a' }]},
-          { featureType: 'transit', stylers: [{ visibility: 'off' }]},
-        ]
-      });
-      markerRef.current = new g.Marker({ position: mapRef.current.getCenter(), map: mapRef.current });
-      polyRef.current = new g.Polyline({ map: mapRef.current, path: [], geodesic: true, strokeColor: "#5CE9E1", strokeWeight: 5, strokeOpacity: 0.95 });
-
-      if ("geolocation" in navigator) {
-        watchIdRef.current = navigator.geolocation.watchPosition(
-          (pos) => {
-            const { latitude, longitude, accuracy, speed } = pos.coords;
-            const p = { lat: latitude, lng: longitude };
-            markerRef.current?.setPosition(p);
-            const s = stateRef.current;
-            const path = polyRef.current.getPath();
-            if (path.getLength() === 0) mapRef.current?.setCenter(p);
-
-            if (s.running && !s.paused) {
-              path.push(p);
-              if (s.lastPoint) s.distanceM += haversine(s.lastPoint, p);
-              s.lastPoint = p;
-              emitHud();
-              if (s.runId) {
-                pushPoint(s.runId, { lat: p.lat, lng: p.lng, ts: new Date(pos.timestamp).toISOString(), accuracy, speed })
-                  .catch(console.warn);
-              }
-            }
-          },
-          (err) => console.warn("Geolocation error:", err),
-          { enableHighAccuracy: true, maximumAge: 0, timeout: 10000 }
-        );
-      }
+    const adapter = new WebMapAdapter();
+    adapter.init(containerRef.current).then(() => {
+      // Aquí puedes acceder a adapter.map si necesitas manipular el mapa
+      // TODO: migrar lógica de marker/polyline si es necesario
+    }).catch((e) => {
+      console.error('Error inicializando mapa:', e);
     });
-
     return () => {
       cancelled = true;
       if (watchIdRef.current) navigator.geolocation.clearWatch(watchIdRef.current);

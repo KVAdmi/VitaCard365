@@ -28,6 +28,41 @@
 			"command": "npm run build",
 			"isBackground": false,
 			"group": "build"
+		},
+		{
+			"label": "cap copy android",
+			"type": "shell",
+			"command": "npx cap copy android",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "gradlew.bat assembleDebug",
+			"type": "shell",
+			"command": "cd android; .\\gradlew.bat assembleDebug",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "build and copy after maps guard",
+			"type": "shell",
+			"command": "npm run build",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "npm run build (release)",
+			"type": "shell",
+			"command": "npm run build",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "npx cap copy android (release)",
+			"type": "shell",
+			"command": "npx cap copy android",
+			"isBackground": false,
+			"group": "build"
 		}
 	]
 }

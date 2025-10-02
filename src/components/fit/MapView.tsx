@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { Capacitor } from '@capacitor/core';
-import { getMapProvider, getMapsApiKey } from '@/config/mapProvider';
+import { getMapProvider, getMapsWebKey } from '@/config/mapProvider';
 import styleJson from '@/config/mapStyle.vita.json';
 import type { LatLng } from './adapters/MapAdapter';
 import { WebMapAdapter } from './adapters/WebMapAdapter';
@@ -12,16 +12,17 @@ type Props = {
   testPolyline?: LatLng[];
   className?: string;
   style?: React.CSSProperties;
+  onMapError?: (msg: string) => void;
 };
 
-export default function MapView({ initialCenter = { lat: 19.4326, lng: -99.1332 }, initialZoom = 15, testPolyline = [], className, style }: Props) {
+export default function MapView({ initialCenter = { lat: 19.4326, lng: -99.1332 }, initialZoom = 15, testPolyline = [], className, style, onMapError }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const adapterRef = useRef<WebMapAdapter | null>(null);
 
   const isNative = Capacitor.isNativePlatform && Capacitor.isNativePlatform();
   const platform: 'android' | 'ios' | 'web' = isNative ? (Capacitor.getPlatform() as any) : 'web';
   const provider = getMapProvider(platform);
-  const apiKey = getMapsApiKey(provider, platform);
+  const apiKey = getMapsWebKey('android');
 
   // iOS nativo: usamos el componente existente sin tocar su implementación
   if (provider === 'native' && platform === 'ios') {
@@ -33,29 +34,24 @@ export default function MapView({ initialCenter = { lat: 19.4326, lng: -99.1332 
   }
 
   // Web (Android plan B y Web)
+  // Montar el adapter solo una vez (no remounts)
   useEffect(() => {
     if (!containerRef.current) return;
-    if (!apiKey) return;
-    const adapter = new WebMapAdapter(apiKey);
+    if (!apiKey) {
+      onMapError?.('No se encontró la API key de Google Maps.');
+      return;
+    }
+    const adapter = new WebMapAdapter();
     adapterRef.current = adapter;
-    let cancelled = false;
-    (async () => {
-      try {
-        await adapter.init(containerRef.current!);
-        adapter.setStyle(styleJson as any);
-        adapter.setCenter(initialCenter.lat, initialCenter.lng, initialZoom);
-        if (testPolyline.length) adapter.setPolyline(testPolyline);
-      } catch (e) { console.warn('[MapView] init error', e); }
-    })();
-
+    adapter.init(containerRef.current).catch((e) => {
+      console.warn('[MapView] init error', e);
+      onMapError?.('Error al inicializar el mapa: ' + (typeof e === 'object' && e && 'message' in e ? (e as any).message : String(e)));
+    });
     return () => {
-      if (cancelled) return;
-      cancelled = true;
       adapterRef.current?.destroy();
       adapterRef.current = null;
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [apiKey]);
+  }, []);
 
   return (
     <div ref={containerRef} className={className} style={style} />

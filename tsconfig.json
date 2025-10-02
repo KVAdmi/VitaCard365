@@ -19,8 +19,8 @@
       "@/*": ["src/*"]
     }
     ,
-  "types": ["vite/client"]
+  // "types": ["vite/client"]
   },
-  "include": ["src", "src/types"],
+  "include": ["src", "src/types", "vite-env.d.ts"],
   "exclude": ["node_modules", "dist"]
 }
