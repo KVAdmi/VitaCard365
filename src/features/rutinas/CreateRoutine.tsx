@@ -161,9 +161,13 @@ export default function CreateRoutine() {
 
   return (
   <div className="p-4 space-y-4 text-[color:var(--vc-foreground,#e7e7ea)]">
+      {/* Logo superior */}
+      <div className="w-full flex justify-center mt-2">
+        <img src="/branding/Logo 2 Vita.png" alt="VitaCard 365" className="h-10 object-contain" />
+      </div>
       <div className="sticky top-0 z-10 backdrop-blur-sm">
         <h1 className="text-2xl font-extrabold tracking-tight">Crear mi rutina</h1>
-        <p className="text-sm opacity-70">Diseña tu plan. Minimal, elegante y rápido.</p>
+        <p className="text-sm opacity-70">Diseña tu plan. Confiable y rápido.</p>
       </div>
 
       <Card>
@@ -192,13 +196,21 @@ export default function CreateRoutine() {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
               <label className="text-xs opacity-70">Semanas</label>
-              <input type="number" min={1} max={24} value={semanas} onChange={e=>setSemanas(parseInt(e.target.value||'1'))}
-                     className="w-full mt-1 px-3 py-2 rounded-xl bg-black/30 border border-white/10 text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-[color:var(--vc-primary,#f06340)] focus:border-[color:var(--vc-primary,#f06340)]" />
+              <div className="mt-1 flex items-stretch gap-2">
+                <button type="button" onClick={()=>setSemanas(v=>Math.max(1, v-1))} className="px-3 rounded-xl bg-[color:var(--vc-primary,#f06340)]/20 border border-[color:var(--vc-primary,#f06340)] text-white">−</button>
+                <input type="number" min={1} max={24} value={semanas} onChange={e=>setSemanas(parseInt(e.target.value||'1'))}
+                       className="flex-1 px-3 py-2 rounded-xl bg-black/30 border border-white/10 text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-[color:var(--vc-primary,#f06340)] focus:border-[color:var(--vc-primary,#f06340)]" />
+                <button type="button" onClick={()=>setSemanas(v=>Math.min(24, v+1))} className="px-3 rounded-xl bg-[color:var(--vc-primary,#f06340)]/20 border border-[color:var(--vc-primary,#f06340)] text-white">＋</button>
+              </div>
             </div>
             <div>
               <label className="text-xs opacity-70">Días/semana</label>
-              <input type="number" min={2} max={7} value={diasSemana} onChange={e=>setDiasSemana(parseInt(e.target.value||'2'))}
-                     className="w-full mt-1 px-3 py-2 rounded-xl bg-black/30 border border-white/10 text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-[color:var(--vc-primary,#f06340)] focus:border-[color:var(--vc-primary,#f06340)]" />
+              <div className="mt-1 flex items-stretch gap-2">
+                <button type="button" onClick={()=>setDiasSemana(v=>Math.max(2, v-1))} className="px-3 rounded-xl bg-[color:var(--vc-primary,#f06340)]/20 border border-[color:var(--vc-primary,#f06340)] text-white">−</button>
+                <input type="number" min={2} max={7} value={diasSemana} onChange={e=>setDiasSemana(parseInt(e.target.value||'2'))}
+                       className="flex-1 px-3 py-2 rounded-xl bg-black/30 border border-white/10 text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-[color:var(--vc-primary,#f06340)] focus:border-[color:var(--vc-primary,#f06340)]" />
+                <button type="button" onClick={()=>setDiasSemana(v=>Math.min(7, v+1))} className="px-3 rounded-xl bg-[color:var(--vc-primary,#f06340)]/20 border border-[color:var(--vc-primary,#f06340)] text-white">＋</button>
+              </div>
             </div>
             <div>
               <label className="text-xs opacity-70">Min/Sesión</label>
@@ -414,6 +426,11 @@ export default function CreateRoutine() {
           <ReminderPanel />
         </>
       )}
+
+      {/* Banner inferior */}
+      <div className="w-full flex justify-center pb-8">
+        <img src="/branding/11.png" alt="VitaCard 365" className="w-full max-w-xl" />
+      </div>
 
       <div className={Capacitor.getPlatform()!=='web' ? 'h-12' : ''}/>
       {/* Modal de recordatorios semi-automático */}

@@ -82,11 +82,11 @@ export default function FitPage() {
               Kcal hoy: <span className="font-semibold text-cyan-50">{kcalHoy}</span>
             </div>
           </div>
-          {/* Grid reducido: solo 2 tarjetas, más grandes */}
-          <div className="max-w-[1100px] mx-auto grid grid-cols-2 gap-x-10 gap-y-12 place-items-center relative z-10">
+          {/* Grid reducido: solo 2 tarjetas; en móvil 1 columna para evitar que se peguen */}
+          <div className="max-w-[1100px] mx-auto grid grid-cols-1 sm:grid-cols-2 gap-x-6 sm:gap-x-10 gap-y-8 sm:gap-y-12 place-items-center relative z-10 px-2">
             <Link
               to="/fit/sync"
-              className="group relative flex flex-col items-center justify-center h-[180px] w-[220px] sm:h-[200px] sm:w-[260px] rounded-2xl border border-cyan-400/20 bg-white/10 backdrop-blur-md shadow-[0_20px_40px_rgba(0,40,80,0.45)] transition-all duration-200 hover:bg-cyan-400/10 hover:shadow-[0_0_32px_4px_rgba(0,255,255,0.18)] hover:-translate-y-1 active:scale-[0.97]"
+              className="group relative flex flex-col items-center justify-center h-[170px] w-full max-w-[320px] sm:h-[200px] sm:w-[260px] rounded-2xl border border-cyan-400/20 bg-white/10 backdrop-blur-md shadow-[0_20px_40px_rgba(0,40,80,0.45)] transition-all duration-200 hover:bg-cyan-400/10 hover:shadow-[0_0_32px_4px_rgba(0,255,255,0.18)] hover:-translate-y-1 active:scale-[0.97]"
               style={{ boxShadow: '0 0 0 1.5px #00ffe7, 0 20px 40px rgba(0,40,80,0.35)' }}
             >
               <div className="absolute -top-4 left-1/2 -translate-x-1/2 rounded-full border-2 border-cyan-300/30 bg-cyan-400/10 p-2 shadow-[0_0_16px_2px_rgba(0,255,255,0.18)] group-hover:scale-110 transition-transform">
@@ -99,7 +99,7 @@ export default function FitPage() {
 
             <Link
               to="/fit/create"
-              className="group relative flex flex-col items-center justify-center h-[180px] w-[220px] sm:h-[200px] sm:w-[260px] rounded-2xl border border-cyan-400/20 bg-white/10 backdrop-blur-md shadow-[0_20px_40px_rgba(0,40,80,0.45)] transition-all duration-200 hover:bg-cyan-400/10 hover:shadow-[0_0_32px_4px_rgba(0,255,255,0.18)] hover:-translate-y-1 active:scale-[0.97]"
+              className="group relative flex flex-col items-center justify-center h-[170px] w-full max-w-[320px] sm:h-[200px] sm:w-[260px] rounded-2xl border border-cyan-400/20 bg-white/10 backdrop-blur-md shadow-[0_20px_40px_rgba(0,40,80,0.45)] transition-all duration-200 hover:bg-cyan-400/10 hover:shadow-[0_0_32px_4px_rgba(0,255,255,0.18)] hover:-translate-y-1 active:scale-[0.97]"
               style={{ boxShadow: '0 0 0 1.5px #00ffe7, 0 20px 40px rgba(0,40,80,0.35)' }}
             >
               <div className="absolute -top-4 left-1/2 -translate-x-1/2 rounded-full border-2 border-cyan-300/30 bg-cyan-400/10 p-2 shadow-[0_0_16px_2px_rgba(0,255,255,0.18)] group-hover:scale-110 transition-transform">
