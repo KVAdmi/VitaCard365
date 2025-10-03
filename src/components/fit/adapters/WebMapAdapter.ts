@@ -35,6 +35,7 @@ export class WebMapAdapter implements MapAdapter {
   private markers: any[] = [];
   private style: any = styleJson;
   private liveMarker: any = null;
+  private startMarker: any = null;
   private livePath: { lat: number; lng: number }[] = [];
   private watchId: number | null = null;
 
@@ -89,24 +90,55 @@ export class WebMapAdapter implements MapAdapter {
       map: this.map, path: this.livePath, geodesic: true,
       strokeColor: '#5CE9E1', strokeWeight: 5, strokeOpacity: 0.95,
     });
-    // Geolocaliza en segundo plano, centra cuando esté lista
-    const t0 = Date.now();
-    navigator.geolocation.getCurrentPosition(
-      (p) => {
-        const latlng = { lat: p.coords.latitude, lng: p.coords.longitude };
-        this.map.setCenter(latlng);
-        this.liveMarker.setPosition(latlng);
-        this.livePath.push(latlng);
-        this.poly.setPath(this.livePath);
-        const dt = Date.now() - t0;
-        console.log(`[Maps] Geolocalización: ${dt}ms`);
-      },
-      (err) => {
-        const dt = Date.now() - t0;
-        console.log(`[Maps] Geolocalización error: ${dt}ms`);
-      },
-      { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
-    );
+    // Geolocaliza en segundo plano SOLO en web (no dentro de WebView nativo)
+    const cap = (window as any).Capacitor;
+    const isNative = !!cap && typeof cap.getPlatform === 'function' && cap.getPlatform() !== 'web';
+    if (!isNative) {
+      const t0 = Date.now();
+      navigator.geolocation.getCurrentPosition(
+        (p) => {
+          const latlng = { lat: p.coords.latitude, lng: p.coords.longitude };
+          this.map.setCenter(latlng);
+          this.liveMarker.setPosition(latlng);
+          // Crear marcador de inicio (triángulo cian)
+          if (!this.startMarker) {
+            const startIcon = {
+              path: g.maps.SymbolPath.BACKWARD_OPEN_ARROW,
+              scale: 5,
+              fillColor: '#34d3ee',
+              fillOpacity: 1,
+              strokeColor: '#003344',
+              strokeWeight: 2,
+            };
+            this.startMarker = new g.maps.Marker({ position: latlng, map: this.map, icon: startIcon, title: 'Inicio' });
+          }
+          this.livePath.push(latlng);
+          this.poly.setPath(this.livePath);
+          const dt = Date.now() - t0;
+          console.log(`[Maps] Geolocalización: ${dt}ms`);
+        },
+        () => {
+          const dt = Date.now() - t0;
+          console.log(`[Maps] Geolocalización error: ${dt}ms`);
+        },
+        { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
+      );
+      // Watch en web para actualizar "punto azul" y path
+      try {
+        this.watchId = navigator.geolocation.watchPosition(
+          (p) => {
+            const latlng = { lat: p.coords.latitude, lng: p.coords.longitude };
+            if (this.map && this.liveMarker) {
+              this.liveMarker.setPosition(latlng);
+              this.livePath.push(latlng);
+              this.poly?.setPath(this.livePath);
+            }
+          },
+          () => {},
+          { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
+        );
+      } catch {}
+    }
   }
 
   setStyle(styleJson: any): void {
@@ -118,6 +150,42 @@ export class WebMapAdapter implements MapAdapter {
   if (!this.map) return;
   this.map.setCenter({ lat, lng });
   if (zoom) this.map.setZoom(zoom);
+  }
+
+  // Actualiza el marcador vivo (punto naranja Vita) y opcionalmente el trazo
+  setLivePosition(lat: number, lng: number, appendPath: boolean = true): void {
+    if (!this.map) return;
+    const g = (window as any).google;
+    const pos = { lat, lng };
+    if (!this.liveMarker) {
+      const markerIcon = {
+        path: g.maps.SymbolPath.CIRCLE,
+        scale: 8,
+        fillColor: '#FF7A00',
+        fillOpacity: 1,
+        strokeColor: '#fff',
+        strokeWeight: 2,
+      };
+      this.liveMarker = new g.maps.Marker({ position: pos, map: this.map, icon: markerIcon, title: 'Ubicación actual' });
+    } else {
+      this.liveMarker.setPosition(pos);
+    }
+    // Asegura marcador de inicio si aún no existe
+    if (!this.startMarker) {
+      const startIcon = {
+        path: g.maps.SymbolPath.BACKWARD_OPEN_ARROW,
+        scale: 5,
+        fillColor: '#34d3ee',
+        fillOpacity: 1,
+        strokeColor: '#003344',
+        strokeWeight: 2,
+      };
+      this.startMarker = new g.maps.Marker({ position: pos, map: this.map, icon: startIcon, title: 'Inicio' });
+    }
+    if (appendPath) {
+      this.livePath.push(pos);
+      this.poly?.setPath(this.livePath);
+    }
   }
 
   setPolyline(path: LatLng[]): void {

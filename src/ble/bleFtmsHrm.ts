@@ -33,8 +33,8 @@ export type HrSample = {
  * Parsea valor FTMS (binario) y normaliza unidades.
  * Devuelve solo campos presentes.
  */
-export function parseFtms(buf: ArrayBuffer): FtmsSample {
-  const d = new DataView(buf);
+export function parseFtms(buf: ArrayBufferLike | DataView): FtmsSample {
+  const d = buf instanceof DataView ? buf : new DataView(buf);
   let i = 0;
   const flags = d.getUint16(i, true); i += 2;
   let vel_kmh: number | undefined;
@@ -85,8 +85,8 @@ export function parseFtms(buf: ArrayBuffer): FtmsSample {
 /**
  * Parsea valor HRM (binario) y extrae bpm.
  */
-export function parseHr(buf: ArrayBuffer): HrSample | null {
-  const d = new DataView(buf);
+export function parseHr(buf: ArrayBufferLike | DataView): HrSample | null {
+  const d = buf instanceof DataView ? buf : new DataView(buf);
   if (d.byteLength < 2) return null;
   const flags = d.getUint8(0);
   const hrUint16 = (flags & 0x01) !== 0;

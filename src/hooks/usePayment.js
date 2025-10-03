@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 
-const INDIVIDUAL_PRICE = 199; // Precio base individual
+const INDIVIDUAL_PRICE = 249; // Precio base individual actualizado
 
 const PAYMENT_FREQUENCIES = {
   monthly: { months: 1, discount: 0, label: 'Mensual' }, // Individual: 199, Familiar: titular + 1, Desc 10%
@@ -32,11 +32,11 @@ export const usePayment = () => {
     let currentFamilyDiscount = 0;
     if (planType === 'familiar') {
       if (currentFamilySize === 2) {
-        currentFamilyDiscount = 10;
+        currentFamilyDiscount = 5;
       } else if (currentFamilySize === 3 || currentFamilySize === 4) {
-        currentFamilyDiscount = 15;
+        currentFamilyDiscount = 10;
       } else if (currentFamilySize >= 5) {
-        currentFamilyDiscount = 20;
+        currentFamilyDiscount = 15;
       }
     }
     setFamilyDiscount(currentFamilyDiscount);

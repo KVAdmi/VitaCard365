@@ -37,13 +37,14 @@ export default function MapView({ initialCenter = { lat: 19.4326, lng: -99.1332 
   // Montar el adapter solo una vez (no remounts)
   useEffect(() => {
     if (!containerRef.current) return;
-    if (!apiKey) {
-      onMapError?.('No se encontró la API key de Google Maps.');
-      return;
-    }
     const adapter = new WebMapAdapter();
     adapterRef.current = adapter;
-    adapter.init(containerRef.current).catch((e) => {
+    adapter.init(containerRef.current).then(() => {
+      // Aplicar estilo si existe
+      if (styleJson) adapter.setStyle(styleJson as any);
+      // Aplicar centro/zoom iniciales
+      if (initialCenter) adapter.setCenter(initialCenter.lat, initialCenter.lng, initialZoom);
+    }).catch((e) => {
       console.warn('[MapView] init error', e);
       onMapError?.('Error al inicializar el mapa: ' + (typeof e === 'object' && e && 'message' in e ? (e as any).message : String(e)));
     });
@@ -52,6 +53,17 @@ export default function MapView({ initialCenter = { lat: 19.4326, lng: -99.1332 
       adapterRef.current = null;
     };
   }, []);
+
+  // Si cambia el initialCenter/Zoom desde props, actualizar mapa
+  useEffect(() => {
+    const a = adapterRef.current;
+    if (!a || !initialCenter) return;
+    // Centra la cámara y actualiza el marcador vivo + path
+    a.setCenter(initialCenter.lat, initialCenter.lng, initialZoom);
+    if (typeof (a as any).setLivePosition === 'function') {
+      (a as any).setLivePosition(initialCenter.lat, initialCenter.lng, true);
+    }
+  }, [initialCenter?.lat, initialCenter?.lng, initialZoom]);
 
   return (
     <div ref={containerRef} className={className} style={style} />

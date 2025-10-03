@@ -142,7 +142,8 @@ window.fetch = function(...args) {
 
 				<!-- Service Worker y Push Notification -->
 				<script>
-				if ('serviceWorker' in navigator) {
+				// Evita registrar Service Worker dentro de la app nativa (Capacitor) para no cachear assets viejos
+				if ('serviceWorker' in navigator && !(window && window.Capacitor)) {
 					window.addEventListener('load', function() {
 						navigator.serviceWorker.register('/service-worker.js').then(function(registration) {
 							console.log('ServiceWorker registrado:', registration);

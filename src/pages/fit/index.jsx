@@ -4,6 +4,7 @@ import Layout from '../../components/Layout';
 
 import { Link, Outlet, useLocation } from "react-router-dom";
 import { Bluetooth, Dumbbell, ListChecks, Salad, LineChart, Play } from "lucide-react";
+import { useRoutineSummary } from '@/hooks/useRoutineSummary';
 
 const iconGlow = {
   sync: 'text-cyan-300 drop-shadow-[0_0_8px_rgba(34,255,255,0.7)]',
@@ -33,6 +34,7 @@ const Tile = ({ to, Icon, title, subtitle, glow }) => (
 export default function FitPage() {
   const location = useLocation();
   const isRoot = location.pathname === "/fit";
+  const { streakDias, sesionesSemana, diasSemana, kcalHoy } = useRoutineSummary();
   if (!isRoot) return <Outlet />;
   return (
     <>
@@ -71,22 +73,47 @@ export default function FitPage() {
           {/* KPIs compactos */}
           <div className="max-w-[1100px] mx-auto grid grid-cols-3 gap-3 sm:gap-4 mb-12 relative z-10">
             <div className="rounded-xl bg-cyan-400/10 border border-cyan-300/20 px-3 py-2 text-cyan-100/90 text-xs shadow-[0_2px_8px_rgba(0,255,255,0.08)]">
-              Streak: <span className="font-semibold text-cyan-50">5 días</span>
+              Racha: <span className="font-semibold text-cyan-50">{streakDias} {streakDias===1?'día':'días'}</span>
             </div>
             <div className="rounded-xl bg-cyan-400/10 border border-cyan-300/20 px-3 py-2 text-cyan-100/90 text-xs shadow-[0_2px_8px_rgba(0,255,255,0.08)]">
-              Semana: <span className="font-semibold text-cyan-50">3/5 sesiones</span>
+              Semana: <span className="font-semibold text-cyan-50">{sesionesSemana}/{diasSemana} sesiones</span>
             </div>
             <div className="rounded-xl bg-cyan-400/10 border border-cyan-300/20 px-3 py-2 text-cyan-100/90 text-xs shadow-[0_2px_8px_rgba(0,255,255,0.08)]">
-              Kcal hoy: <span className="font-semibold text-cyan-50">420</span>
+              Kcal hoy: <span className="font-semibold text-cyan-50">{kcalHoy}</span>
             </div>
           </div>
-          {/* Grid 3-2 pro */}
-          <div className="max-w-[1100px] mx-auto grid grid-cols-2 md:grid-cols-3 gap-x-8 gap-y-12 place-items-center relative z-10">
-            <Tile to="/fit/sync"      Icon={Bluetooth} title="Sincronizar rutina" subtitle="FTMS / HRS / Wearables" glow={iconGlow.sync} />
-            <Tile to="/fit/create"    Icon={Dumbbell}  title="Crear rutina"      subtitle="Objetivo • Gym/Casa • Nivel" glow={iconGlow.create} />
-            <Tile to="/fit/plan"      Icon={ListChecks}title="Mi rutina"         subtitle="Semana • Día • Sets" glow={iconGlow.plan} />
-            <Tile to="/fit/nutricion" Icon={Salad}     title="Nutrición"         subtitle="Peso/IMC • Kcal • Súper" glow={iconGlow.nutricion} />
-            <Tile to="/fit/progreso"  Icon={LineChart} title="Progreso"          subtitle="Min • Kcal • HR • Tendencia" glow={iconGlow.progreso} />
+          {/* Grid reducido: solo 2 tarjetas, más grandes */}
+          <div className="max-w-[1100px] mx-auto grid grid-cols-2 gap-x-10 gap-y-12 place-items-center relative z-10">
+            <Link
+              to="/fit/sync"
+              className="group relative flex flex-col items-center justify-center h-[180px] w-[220px] sm:h-[200px] sm:w-[260px] rounded-2xl border border-cyan-400/20 bg-white/10 backdrop-blur-md shadow-[0_20px_40px_rgba(0,40,80,0.45)] transition-all duration-200 hover:bg-cyan-400/10 hover:shadow-[0_0_32px_4px_rgba(0,255,255,0.18)] hover:-translate-y-1 active:scale-[0.97]"
+              style={{ boxShadow: '0 0 0 1.5px #00ffe7, 0 20px 40px rgba(0,40,80,0.35)' }}
+            >
+              <div className="absolute -top-4 left-1/2 -translate-x-1/2 rounded-full border-2 border-cyan-300/30 bg-cyan-400/10 p-2 shadow-[0_0_16px_2px_rgba(0,255,255,0.18)] group-hover:scale-110 transition-transform">
+                <Bluetooth className={`h-6 w-6 ${iconGlow.sync} transition-all duration-200`} />
+              </div>
+              <div className="mt-4 text-base font-semibold text-white text-center tracking-tight drop-shadow-[0_1px_2px_rgba(0,0,0,0.25)]">Sincronizar rutina</div>
+              <div className="mt-1 text-[12px] text-cyan-100/80 text-center tracking-tight">FTMS • HRS • Wearables</div>
+              <div className="absolute inset-0 rounded-2xl pointer-events-none border border-white/5 group-hover:border-cyan-300/30 transition-all" />
+            </Link>
+
+            <Link
+              to="/fit/create"
+              className="group relative flex flex-col items-center justify-center h-[180px] w-[220px] sm:h-[200px] sm:w-[260px] rounded-2xl border border-cyan-400/20 bg-white/10 backdrop-blur-md shadow-[0_20px_40px_rgba(0,40,80,0.45)] transition-all duration-200 hover:bg-cyan-400/10 hover:shadow-[0_0_32px_4px_rgba(0,255,255,0.18)] hover:-translate-y-1 active:scale-[0.97]"
+              style={{ boxShadow: '0 0 0 1.5px #00ffe7, 0 20px 40px rgba(0,40,80,0.35)' }}
+            >
+              <div className="absolute -top-4 left-1/2 -translate-x-1/2 rounded-full border-2 border-cyan-300/30 bg-cyan-400/10 p-2 shadow-[0_0_16px_2px_rgba(0,255,255,0.18)] group-hover:scale-110 transition-transform">
+                <Dumbbell className={`h-6 w-6 ${iconGlow.create} transition-all duration-200`} />
+              </div>
+              <div className="mt-4 text-base font-semibold text-white text-center tracking-tight drop-shadow-[0_1px_2px_rgba(0,0,0,0.25)]">Crear rutina</div>
+              <div className="mt-1 text-[12px] text-cyan-100/80 text-center tracking-tight">Objetivo • Gym/Casa • Nivel</div>
+              <div className="absolute inset-0 rounded-2xl pointer-events-none border border-white/5 group-hover:border-cyan-300/30 transition-all" />
+            </Link>
+          </div>
+
+          {/* Imagen de marca al fondo */}
+          <div className="max-w-[1100px] mx-auto mt-10 pb-24 relative z-10 flex justify-center">
+            <img src="/branding/9.png" alt="VitaCard 365" className="w-full max-w-md opacity-90" loading="lazy" />
           </div>
         </div>
       </Layout>

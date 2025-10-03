@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 import { usePayment } from "../hooks/usePayment";
 import { createPreference } from "../lib/api";
+import Layout from "../components/Layout";
 // import MPWallet from "../components/payments/MPWallet.jsx";
 
 export default function PaymentGateway() {
@@ -80,8 +81,8 @@ export default function PaymentGateway() {
   };
 
   return (
-    <>
-      <div className="rounded-2xl bg-white/5 border border-white/10 p-6">
+    <Layout title="Pasarela de pago" showBackButton>
+  <div className="rounded-2xl bg-white/5 border border-white/10 p-4 sm:p-6 mx-2 sm:mx-4 my-3">
         {/* Plan */}
         <div className="flex items-center gap-4 mb-4">
           <button
@@ -115,7 +116,7 @@ export default function PaymentGateway() {
                   pattern="[0-9]*"
                   readOnly
                   value={Math.max(0, familySize - 1)}
-                  className="w-12 rounded-md bg-white/10 border border-white/10 px-2 py-1 text-sm focus:outline-none text-center"
+                  className="w-12 rounded-md bg-white/10 border border-white/10 px-2 py-1 text-sm focus:outline-none text-center text-white"
                 />
                 <div className="flex gap-1">
                   <button
@@ -221,6 +222,6 @@ export default function PaymentGateway() {
           </p>
         </div>
       </div>
-    </>
+    </Layout>
   );
 }

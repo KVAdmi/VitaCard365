@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { askIVita } from '@/api/evitaApi';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -11,6 +11,7 @@ import {
   ArrowLeft,
   Bell
 } from 'lucide-react';
+import { Capacitor } from '@capacitor/core';
 
 // Ícono de robot elegante SVG
 const RobotIcon = (props) => (
@@ -65,6 +66,24 @@ const Layout = ({ children, title, showBackButton = false }) => {
     { path: '/perfil', icon: User, label: 'Perfil' },
   { path: '/i-vita', icon: RobotIcon, label: 'i-Vita', isChat: true }
   ];
+
+  // Fallback: mostrar botón flotante de regreso si no se pidió explícitamente
+  const topLevel = ['/dashboard','/fit','/home','/','/agenda','/bienestar','/mi-plan','/perfil'];
+  const showFloatingBack = !showBackButton && !topLevel.includes(location.pathname);
+
+  // Manejar botón físico de Android para navegar atrás dentro de la app (solo nativo)
+  useEffect(() => {
+    let sub;
+    (async () => {
+      if (!Capacitor.isNativePlatform()) return;
+      const { App } = await import('@capacitor/app');
+      sub = App.addListener('backButton', ({ canGoBack }) => {
+        if (canGoBack) navigate(-1);
+        else if (App.minimize) App.minimize();
+      });
+    })();
+    return () => { try { sub && sub.remove(); } catch {} };
+  }, [navigate]);
 
   return (
     <div className="min-h-screen bg-vita-blue text-vita-white">
@@ -190,6 +209,17 @@ const Layout = ({ children, title, showBackButton = false }) => {
           })}
         </div>
       </nav>
+
+      {/* Botón flotante de regreso para páginas que no lo muestran en el header */}
+      {showFloatingBack && (
+        <button
+          className="fixed top-3 left-3 z-50 rounded-full bg-white/10 border border-white/15 p-2 text-white hover:bg-white/20 active:scale-95 transition"
+          onClick={() => navigate(-1)}
+          aria-label="Regresar"
+        >
+          <ArrowLeft className="h-5 w-5" />
+        </button>
+      )}
 
   {/* Modal/Sheet para el chat i-Vita */}
       {showChat && (

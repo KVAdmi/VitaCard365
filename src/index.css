@@ -58,6 +58,11 @@
     --ring: 240 99 64;
  
     --radius: 0.75rem;
+
+    /* VitaCard app-wide UI variables used by features (CreateRoutine, etc.) */
+    --vc-primary: #f06340; /* brand orange for focus/selected */
+    --vc-card: rgba(20,20,28,0.75); /* translucent dark cards */
+    --vc-foreground: #e7e7ea; /* light text on dark bg */
   }
 }
 

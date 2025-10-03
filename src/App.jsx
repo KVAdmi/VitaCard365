@@ -106,6 +106,7 @@ function App() {
 
                     <Route path="/mi-plan" element={<ProtectedRoute><Pagos /></ProtectedRoute>} />
                     <Route path="/payment-gateway" element={<ProtectedRoute><PaymentGateway /></ProtectedRoute>} />
+                    <Route path="/paymentgateway" element={<Navigate to="/payment-gateway" replace />} />
                     <Route path="/perfil" element={<ProtectedRoute><Perfil /></ProtectedRoute>} />
                     <Route path="/recibo/:paymentId" element={<ProtectedRoute><Receipt /></ProtectedRoute>} />
                     <Route path="/fit-auth-callback" element={<FitCallback />} />
