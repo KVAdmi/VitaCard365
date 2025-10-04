@@ -200,14 +200,24 @@ export default function CreateRoutine() {
             <h1 className="text-2xl font-extrabold tracking-tight">Crear mi rutina</h1>
             <p className="text-sm opacity-70">Diseña tu plan. Confiable y rápido.</p>
           </div>
-          <button
-            type="button"
-            onClick={()=>navigate('/fit/plan')}
-            className="px-3 py-2 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 text-sm"
-            aria-label="Ver mi plan"
-          >
-            Ver Plan
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={()=>navigate('/fit/progreso')}
+              className="px-3 py-2 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 text-sm"
+              aria-label="Ver mi progreso"
+            >
+              Ver Progreso
+            </button>
+            <button
+              type="button"
+              onClick={()=>navigate('/fit/plan')}
+              className="px-3 py-2 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 text-sm"
+              aria-label="Ver mi plan"
+            >
+              Ver Plan
+            </button>
+          </div>
         </div>
       </div>
 
@@ -486,7 +496,7 @@ export default function CreateRoutine() {
 
       {/* Banner inferior */}
       <div className="w-full flex justify-center pb-8">
-        <img src="/branding/11.png" alt="VitaCard 365" className="w-full max-w-xl" />
+        <img src="/branding/10.png" alt="VitaCard 365" className="w-full max-w-xl" />
       </div>
 
       <div className={Capacitor.getPlatform()!=='web' ? 'h-12' : ''}/>

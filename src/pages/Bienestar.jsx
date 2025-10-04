@@ -13,36 +13,35 @@ const wellnessCategories = [
     title: wellnessData.tips.name,
     description: 'Consejos diarios para una vida mejor.',
     icon: Brain,
-    color: 'text-blue-400',
+    color: 'text-vita-orange',
   },
   {
     slug: 'nutricion',
     title: wellnessData.nutricion.name,
     description: 'Guías y planes para una alimentación sana.',
     icon: Salad,
-    color: 'text-green-400',
+    color: 'text-vita-orange',
   },
   {
     slug: 'respiracion',
     title: wellnessData.respiracion.name,
     description: 'Ejercicios guiados para calmar tu mente.',
     icon: Wind,
-    color: 'text-teal-400',
+    color: 'text-vita-orange',
   },
-  // Ocultar temporalmente 'Meditaciones' según solicitud
   {
     slug: 'rutinas',
     title: wellnessData.rutinas.name,
     description: 'Actívate con ejercicios cortos y efectivos.',
     icon: Dumbbell,
-    color: 'text-orange-400',
+    color: 'text-vita-orange',
   },
   {
     slug: 'sueno',
     title: wellnessData.sueno.name,
     description: 'Mejora tu descanso y energía.',
     icon: Moon,
-    color: 'text-indigo-400',
+    color: 'text-vita-orange',
   },
 ];
 
@@ -64,7 +63,7 @@ const Bienestar = () => {
           >
             <CardContent className="p-4 flex items-center justify-between">
               <div className='flex items-center'>
-                <Star className="w-8 h-8 text-yellow-400 mr-4" />
+                <Star className="w-8 h-8 text-vita-orange mr-4" />
                 <div>
                   <h3 className="text-lg font-bold text-vita-white">Mis Favoritos</h3>
                   <p className="text-sm text-white/80">Tu contenido guardado para después.</p>

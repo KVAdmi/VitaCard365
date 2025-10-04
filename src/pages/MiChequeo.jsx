@@ -53,7 +53,7 @@ const MeasurementCard = ({ measurement }) => {
     <div className="grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
       {measurement.vitals.pressure && (
         <div className="flex items-center space-x-2">
-          <HeartPulse className="w-5 h-5 text-red-400" />
+          <HeartPulse className="w-5 h-5 text-vita-orange" />
           <div>
             <span className="font-bold text-white">{measurement.vitals.pressure}</span>
             <span className="text-white/80 ml-1">mmHg</span>
@@ -62,7 +62,7 @@ const MeasurementCard = ({ measurement }) => {
       )}
       {measurement.vitals.heartRate && (
         <div className="flex items-center space-x-2">
-          <Activity className="w-5 h-5 text-pink-400" />
+          <Activity className="w-5 h-5 text-vita-orange" />
           <div>
             <span className="font-bold text-white">{measurement.vitals.heartRate}</span>
             <span className="text-white/80 ml-1">BPM</span>
@@ -71,7 +71,7 @@ const MeasurementCard = ({ measurement }) => {
       )}
       {measurement.vitals.spo2 && (
         <div className="flex items-center space-x-2">
-          <Wind className="w-5 h-5 text-blue-400" />
+          <Wind className="w-5 h-5 text-vita-orange" />
           <div>
             <span className="font-bold text-white">{measurement.vitals.spo2}</span>
             <span className="text-white/80 ml-1">%</span>
@@ -84,7 +84,7 @@ const MeasurementCard = ({ measurement }) => {
 
   const WeightCard = ({ measurement }) => (
     <div className="flex items-center space-x-2">
-      <Weight className="w-5 h-5 text-green-400" />
+      <Weight className="w-5 h-5 text-vita-orange" />
       <div>
         <span className="font-bold text-white">{measurement.vitals.weight}</span>
         <span className="text-white/80 ml-1">kg</span>
@@ -107,7 +107,7 @@ const MeasurementCard = ({ measurement }) => {
         : 'text-red-400';
     return (
       <div className="flex items-center space-x-2">
-        <Moon className="w-5 h-5 text-indigo-400" />
+        <Moon className="w-5 h-5 text-vita-orange" />
         <div>
           <span className="font-bold text-white">Calidad del Sueño: </span>
           <span className={`font-bold ${scoreColor}`}>{measurement.score_sueno}</span>
@@ -122,7 +122,7 @@ const MeasurementCard = ({ measurement }) => {
     const advice = levelCopy[measurement.level]?.title || 'Recomendación';
     return (
       <div className="flex items-center space-x-2">
-        <AlertTriangle className="w-5 h-5 text-orange-400" />
+        <AlertTriangle className="w-5 h-5 text-vita-orange" />
         <div>
           <span className="font-bold text-white">Test {testTitle}: </span>
           <span className="text-white/90">{advice}</span>

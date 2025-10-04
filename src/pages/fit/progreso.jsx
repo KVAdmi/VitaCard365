@@ -1,5 +1,5 @@
 // Progreso: dashboard con marcos neón, tendencias, anillos y badges
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Line, Doughnut, Radar } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
@@ -15,6 +15,7 @@ import {
 } from 'chart.js';
 import { Flame, Activity, HeartPulse, Target, Trophy, Zap, Timer, Award } from 'lucide-react';
 import { useRoutineSummary } from '@/hooks/useRoutineSummary';
+import { supabase } from '@/lib/supabaseClient';
 
 ChartJS.register(
   CategoryScale,
@@ -42,12 +43,49 @@ const NeonCard = ({ children, className = '' }) => (
 );
 
 export default function FitProgreso() {
-  const { streakDias, sesionesSemana, diasSemana, kcalHoy } = useRoutineSummary();
+  const { diasSemana } = useRoutineSummary();
+  const [labels, setLabels] = useState(['L','M','X','J','V','S','D']);
+  const [minutos7, setMinutos7] = useState([0,0,0,0,0,0,0]);
+  const [kcal7, setKcal7] = useState([0,0,0,0,0,0,0]);
+  const [streakDias, setStreakDias] = useState(0);
+  const [sesionesSemana, setSesionesSemana] = useState(0);
+  const [kcalHoy, setKcalHoy] = useState(0);
 
-  // Mock de tendencias (últimos 7 días)
-  const labels = useMemo(() => ['L', 'M', 'X', 'J', 'V', 'S', 'D'], []);
-  const minutos7 = useMemo(() => [30, 42, 0, 25, 50, 60, 35], []);
-  const kcal7 = useMemo(() => [210, 320, 0, 180, 390, 480, 300], []);
+  useEffect(()=>{ (async()=>{
+    const { data: u } = await supabase.auth.getUser();
+    const uid = u?.user?.id;
+    if (!uid) return;
+    // Tomar últimos 7 días
+    const hoy = new Date();
+    const arrDias = Array.from({length:7}, (_,i)=>{
+      const d = new Date(hoy); d.setDate(hoy.getDate() - (6-i)); return d; });
+    const lab = ['D','L','M','X','J','V','S'];
+    setLabels(arrDias.map(d=>lab[d.getDay()]));
+
+    const desde = new Date(hoy); desde.setDate(hoy.getDate()-6);
+    const { data } = await supabase
+      .from('workouts')
+      .select('ts_inicio,minutos,kcal')
+      .eq('user_id', uid)
+      .gte('ts_inicio', desde.toISOString())
+      .lte('ts_inicio', hoy.toISOString());
+    const bucket = new Array(7).fill(0).map(()=>({min:0,kcal:0}));
+    (data||[]).forEach(w=>{
+      const d = new Date(w.ts_inicio);
+      const idx = 6 - Math.floor((hoy - d) / (1000*60*60*24));
+      if (idx>=0 && idx<7) { bucket[idx].min += w.minutos||0; bucket[idx].kcal += w.kcal||0; }
+    });
+    setMinutos7(bucket.map(b=>b.min));
+    setKcal7(bucket.map(b=>b.kcal));
+    // Kcal de hoy
+    setKcalHoy(bucket[6]?.kcal || 0);
+    // Sesiones en la semana (últimos 7 días)
+    setSesionesSemana((data||[]).filter(w=>{
+      const d = new Date(w.ts_inicio); return (hoy - d) <= 7*24*3600*1000; }).length);
+    // Racha: días consecutivos con minutos > 0 desde hoy hacia atrás
+    let streak = 0; for (let i=6;i>=0;i--){ if ((bucket[i]?.min||0)>0) streak++; else break; }
+    setStreakDias(streak);
+  })(); }, []);
 
   const lineData = useMemo(() => ({
     labels,

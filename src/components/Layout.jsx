@@ -37,11 +37,29 @@ import {
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
 
-const notifications = [
-    { title: "Recordatorio de Cita", description: "Consulta con Dr. A. López mañana a las 10:00 AM.", time: "hace 5m" },
-    { title: "Nuevo Tip de Bienestar", description: "Descubre los beneficios de la respiración cuadrada.", time: "hace 1h" },
-    { title: "Pago Recibido", description: "Tu pago de membresía ha sido procesado exitosamente.", time: "hace 3h" },
-];
+// Feed simple (agenda + pago) – se genera al vuelo en cliente
+function useNotificationsFeed(){
+  const [items, setItems] = React.useState([]);
+  React.useEffect(()=>{
+    (async()=>{
+      try{
+        const { fetchUpcomingAgenda } = await import('@/lib/agenda');
+        const agenda = await fetchUpcomingAgenda(7);
+        const list = agenda.slice(0,5).map(ev=>({
+          title: ev.type === 'medicamento' ? 'Medicamento' : ev.type === 'cita_medica' ? 'Cita médica' : 'Recordatorio',
+          description: ev.title,
+          time: new Date(ev.event_date+'T'+ev.event_time).toLocaleString(),
+        }));
+        // Placeholder: recordatorio de pago si falta <=7 días (se puede enriquecer con member_billing)
+        // Mantengo minimal para no bloquear el flujo
+        setItems(list);
+      }catch{
+        setItems([]);
+      }
+    })();
+  },[]);
+  return items;
+}
 
 const Layout = ({ children, title, showBackButton = false }) => {
   const navigate = useNavigate();
@@ -49,6 +67,7 @@ const Layout = ({ children, title, showBackButton = false }) => {
     const { user } = useAuth();
     const userAlias = user?.alias || user?.name || "Tú";
   const [hasNotifications, setHasNotifications] = useState(true);
+  const notifications = useNotificationsFeed();
   const [showChat, setShowChat] = useState(false);
   // Chat i-Vita
   const [chatInput, setChatInput] = useState("");
@@ -126,7 +145,9 @@ const Layout = ({ children, title, showBackButton = false }) => {
               >
                 <DropdownMenuLabel className="font-semibold">Notificaciones</DropdownMenuLabel>
                 <DropdownMenuSeparator className="bg-white/15" />
-                {notifications.map((notification, index) => (
+                {notifications.length === 0 ? (
+                  <div className="p-3 text-sm text-white/80">Sin notificaciones recientes</div>
+                ) : notifications.map((notification, index) => (
                   <DropdownMenuItem 
                     key={index} 
                     className="flex flex-col items-start gap-1 p-3 focus:bg-white/15"

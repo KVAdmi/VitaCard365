@@ -7,21 +7,69 @@ import VitaCard365Logo from '../components/Vita365Logo';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/card';
 import { useAuth } from '../contexts/AuthContext';
+import { supabase } from '@/lib/supabaseClient';
+import { fetchAccess, getCurrentUid } from '@/lib/access';
 import { ShieldCheck, ArrowRight, User, Users, CalendarDays, ShieldQuestion } from 'lucide-react';
+import { programarUna, asegurarPermisoNotificaciones } from '@/lib/notifications';
 
 const API_BASE = (import.meta.env.VITE_API_BASE ?? "https://api.vitacard365.com").replace(/\/+$/, "");
 
 const Pagos = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const [planType, setPlanType] = React.useState('individual');
+  const [nextPaymentDate, setNextPaymentDate] = React.useState('N/A');
+  const [planStatus, setPlanStatus] = React.useState('Pendiente');
+  const [familyMembers, setFamilyMembers] = React.useState([]);
+
+  React.useEffect(()=>{ (async()=>{
+    // Acceso/membresía real
+    const access = await fetchAccess();
+    if (access) {
+      const ep = (access.estado_pago || '').toLowerCase();
+      if (ep === 'cancelado') setPlanStatus('Cancelado');
+      else if (ep === 'vencido') setPlanStatus('Suspendido');
+      else setPlanStatus(access.acceso_activo ? 'Activo' : 'Pendiente');
+      setPlanType(access.membresia || 'individual');
+    }
+    // Próximo pago desde member_billing (si no es vitalicio)
+    const uid = await getCurrentUid();
+    if (uid) {
+      if ((access?.periodicidad || '').toLowerCase() === 'vitalicio') {
+        setNextPaymentDate('N/A');
+      } else {
+        const { data } = await supabase
+          .from('member_billing')
+          .select('pagado_desde,pagado_hasta,periodicidad,created_at')
+          .eq('user_id', uid)
+          .order('updated_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        if (data) {
+          const per = (data.periodicidad || '').toLowerCase();
+          if (per === 'vitalicio') {
+            setNextPaymentDate('N/A');
+          } else if (data.pagado_hasta) {
+            setNextPaymentDate(new Date(data.pagado_hasta).toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric'}));
+          } else {
+            // Calcular desde pagado_desde o created_at según periodicidad
+            const base = data.pagado_desde ? new Date(data.pagado_desde) : new Date(data.created_at);
+            const addMonths = (d, m) => { const nd = new Date(d); nd.setMonth(nd.getMonth() + m); return nd; };
+            const monthsMap = { mensual: 1, trimestral: 3, semestral: 6, anual: 12 };
+            const months = monthsMap[per] || 1;
+            const due = addMonths(base, months);
+            setNextPaymentDate(due.toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric'}));
+          }
+        }
+      }
+    }
+  })(); }, []);
   
   if (!user) {
     return <Layout title="Cargando..."><div className="p-6 text-center">Cargando datos de usuario...</div></Layout>;
   }
 
-  const { paymentDetails, planStatus, name, familyMembers } = user.user_metadata || {};
-  const planType = paymentDetails?.plan || 'individual';
-  const nextPaymentDate = paymentDetails?.nextPaymentDate ? new Date(paymentDetails.nextPaymentDate).toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric'}) : 'N/A';
+  const { name } = user.user_metadata || {};
 
   const MemberCard = ({ memberName, isHolder }) => (
     <Card className="bg-white/5">
@@ -44,27 +92,19 @@ const Pagos = () => {
   const notifyRef = useRef();
 
   // Función para registrar el subscription push y llamar al backend
-  async function handlePushNotification() {
-    if (!('serviceWorker' in navigator)) return;
-    const registration = await navigator.serviceWorker.ready;
-    let subscription = await registration.pushManager.getSubscription();
-    if (!subscription) {
-      const vapidPublicKey = window.VAPID_PUBLIC_KEY || '';
-      subscription = await registration.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: vapidPublicKey
-      });
-    }
-    // Llama al backend para programar la notificación
-    await fetch(`${API_BASE}/api/billing/notifications/schedule-renewal-push`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        userId: user.id,
-        nextPaymentDate: paymentDetails?.nextPaymentDate,
-        subscription
-      })
-    });
+  async function handleLocalReminder() {
+    // Programa una notificación local un día antes del próximo pago (si hay fecha)
+    if (!nextPaymentDate || nextPaymentDate === 'N/A') return;
+    const ok = await asegurarPermisoNotificaciones();
+    if (!ok) return;
+    try{
+      const due = new Date(nextPaymentDate);
+      const when = new Date(due);
+      when.setDate(due.getDate() - 1);
+      when.setHours(9,0,0,0);
+      const id = 987654; // id fijo para este recordatorio
+      await programarUna({ id, titulo: 'Recordatorio de pago', cuerpo: 'Tu plan está por vencer. ¡Mantén tu cobertura activa!', fecha: when });
+    }catch{}
   }
   return (
     <>
@@ -117,16 +157,7 @@ const Pagos = () => {
           {/* Notificación de vencimiento */}
           <div className="mt-6 p-4 rounded-xl bg-white/10 border border-white/20">
             <label className="flex items-center gap-2 cursor-pointer">
-              <input ref={notifyRef} type="checkbox" className="accent-orange-500 h-5 w-5" onChange={async e => {
-                if (e.target.checked) {
-                  if (window.solicitarPermisoPush) {
-                    window.solicitarPermisoPush();
-                  } else if ('Notification' in window) {
-                    await Notification.requestPermission();
-                  }
-                  await handlePushNotification();
-                }
-              }} />
+              <input ref={notifyRef} type="checkbox" className="accent-orange-500 h-5 w-5" onChange={async e => { if (e.target.checked) await handleLocalReminder(); }} />
               <span className="text-white text-sm">Notificarme antes del vencimiento de mi plan</span>
             </label>
             <p className="text-xs text-white/60 mt-2">Activa esta opción para recibir un aviso antes de que expire tu plan y no perder la cobertura.</p>

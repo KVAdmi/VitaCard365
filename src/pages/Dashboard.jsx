@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import AnimatedStats from '../components/dashboard/AnimatedStats';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -13,10 +13,14 @@ import {
   Leaf,
   Dumbbell
 } from 'lucide-react';
+import { fetchAccess } from '@/lib/access';
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const [access, setAccess] = useState(null);
+
+  useEffect(()=>{ (async()=>{ setAccess(await fetchAccess()); })(); },[]);
 
   // Accesos rápidos: cards en orden (Coberturas, FIT, Mi Chequeo, Bienestar)
   const quickActions = [
@@ -27,22 +31,13 @@ const Dashboard = () => {
   ];
 
   const planStatus = useMemo(() => {
-    if (!user || !user.user_metadata?.paymentDetails?.paymentDate) {
-      return { status: 'Pendiente', color: 'text-yellow-400', message: 'Activa tu plan para empezar.' };
-    }
-
-    const paymentDate = new Date(user.user_metadata.paymentDetails.paymentDate);
-    const now = new Date();
-    const daysDiff = (now - paymentDate) / (1000 * 60 * 60 * 24);
-
-    if (daysDiff > 15) {
-      return { status: 'Cancelado', color: 'text-red-500', message: 'Tu plan ha sido cancelado.' };
-    }
-    if (daysDiff > 3) {
-      return { status: 'Suspendido', color: 'text-orange-400', message: 'Tu pago está vencido.' };
-    }
-    return { status: 'Activo', color: 'text-green-400', message: 'Todo en orden con tu plan.' };
-  }, [user]);
+    if (!access) return { status: 'Pendiente', color: 'text-yellow-400', message: 'Verificando tu plan…' };
+    const ep = (access.estado_pago || '').toLowerCase();
+    if (ep === 'cancelado') return { status: 'Cancelado', color: 'text-red-500', message: 'Tu plan ha sido cancelado.' };
+    if (ep === 'vencido') return { status: 'Suspendido', color: 'text-orange-400', message: 'Tu pago está vencido.' };
+    if (access.acceso_activo) return { status: 'Activo', color: 'text-green-400', message: 'Todo en orden con tu plan.' };
+    return { status: 'Pendiente', color: 'text-yellow-400', message: 'Activa tu plan para empezar.' };
+  }, [access]);
 
   const alias = user?.user_metadata?.alias || user?.user_metadata?.name?.split(' ')[0] || 'Usuario';
 

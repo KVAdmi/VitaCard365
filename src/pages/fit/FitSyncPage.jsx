@@ -37,37 +37,50 @@ export default function FitSyncPage() {
   // Simulación de tracking (puedes conectar a hooks reales si lo deseas)
   const [isTracking, setIsTracking] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
+  const [inicioTs, setInicioTs] = useState(null);
 
   // Estado para el centro del mapa
   const [center, setCenter] = useState(null);
+  const [locLoading, setLocLoading] = useState(true);
+  const [locError, setLocError] = useState(null);
   const geoWatchIdRef = React.useRef(null);
 
-  useEffect(() => {
-    let alive = true;
-    (async () => {
+  // Localización con fallback y reintento
+  const requestCenter = async () => {
+    setLocLoading(true);
+    setLocError(null);
+    try {
+      await Geolocation.requestPermissions();
+      // Primer intento: más rápido, menor precisión
       try {
-        // Solicitar permisos de ubicación y Bluetooth (Android 12+)
-        await Geolocation.requestPermissions();
-    // Eliminado: lógica de Platform y PermissionsAndroid (solo Capacitor BLE)
-        const { coords } = await Geolocation.getCurrentPosition({ enableHighAccuracy: true, timeout: 8000 });
-        if (!alive) return;
+        const { coords } = await Geolocation.getCurrentPosition({ enableHighAccuracy: false, timeout: 3000 });
         setCenter({ lat: coords.latitude, lng: coords.longitude });
-        // Tracking vivo nativo: usar watchPosition solo en dispositivos nativos
-        const isNative = Capacitor.isNativePlatform && Capacitor.isNativePlatform();
-        if (isNative) {
-          try {
-            geoWatchIdRef.current = await Geolocation.watchPosition({ enableHighAccuracy: true }, (pos, err) => {
-              if (err || !pos || !pos.coords) return;
-              setCenter({ lat: pos.coords.latitude, lng: pos.coords.longitude });
-            });
-          } catch {}
-        }
       } catch {
-        setCenter(null);
+        // Segundo intento: alta precisión
+        const { coords } = await Geolocation.getCurrentPosition({ enableHighAccuracy: true, timeout: 8000 });
+        setCenter({ lat: coords.latitude, lng: coords.longitude });
       }
-    })();
+
+      // Iniciar watch en nativo
+      const isNative = Capacitor.isNativePlatform && Capacitor.isNativePlatform();
+      if (isNative && !geoWatchIdRef.current) {
+        try {
+          geoWatchIdRef.current = await Geolocation.watchPosition({ enableHighAccuracy: true }, (pos, err) => {
+            if (err || !pos || !pos.coords) return;
+            setCenter({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+          });
+        } catch {}
+      }
+    } catch (e) {
+      setLocError('No se pudo obtener tu ubicación.');
+    } finally {
+      setLocLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    requestCenter();
     return () => {
-      alive = false;
       if (geoWatchIdRef.current != null) {
         try { Geolocation.clearWatch({ id: geoWatchIdRef.current }); } catch {}
         geoWatchIdRef.current = null;
@@ -76,10 +89,32 @@ export default function FitSyncPage() {
   }, []);
 
   // Controles mínimos para que compile y funcione el HUD simulado
-  const start = () => { setIsTracking(true); setIsPaused(false); try { tStart(); } catch {} };
+  const start = () => { setIsTracking(true); setIsPaused(false); setInicioTs(new Date()); try { tStart(); } catch {} };
   const pause = () => { setIsPaused(true); try { tPause(); } catch {} };
   const resume = () => { setIsPaused(false); try { tResume(); } catch {} };
-  const stop = () => { setIsTracking(false); setIsPaused(false); setHud({ distance_km: 0, duration_s: 0, pace_min_km: 0, kcal: 0 }); setPulsoActual(null); setHrSamples([]); try { tStop(); } catch {} };
+  const stop = async () => {
+    const fin = new Date();
+    // Guardar entreno (workout) si hay sesión válida y usuario autenticado
+    try {
+      const { data: u } = await supabase.auth.getUser();
+      const uid = u?.user?.id;
+      if (uid && inicioTs) {
+        const minutos = Math.max(0, Math.round(hud.duration_s / 60));
+        const distancia_km = Number((hud.distance_km || 0).toFixed(3));
+        const kcal = Math.max(0, Math.round(hud.kcal || 0));
+        const hr_avg = hrSamples.length ? Math.round(hrSamples.reduce((a,b)=>a+b,0)/hrSamples.length) : null;
+        await supabase.from('workouts').insert({
+          user_id: uid,
+          ts_inicio: inicioTs.toISOString(),
+          ts_fin: fin.toISOString(),
+          minutos, distancia_km, kcal, hr_avg,
+        });
+      }
+    } catch {}
+    setIsTracking(false); setIsPaused(false); setInicioTs(null);
+    setHud({ distance_km: 0, duration_s: 0, pace_min_km: 0, kcal: 0 }); setPulsoActual(null); setHrSamples([]);
+    try { tStop(); } catch {}
+  };
 
   useEffect(() => {
     if (!isTracking || isPaused) return;
@@ -167,8 +202,17 @@ export default function FitSyncPage() {
                 </div>
               </div>
             </KeepAliveAccordion>
-            {!center && (
-              <div className="text-center text-red-400 py-4">No se pudo obtener tu ubicación. Activa GPS y permisos de ubicación.</div>
+            {(!center) && (
+              <div className="text-center py-4">
+                {locLoading ? (
+                  <div className="text-white/80">Obteniendo tu ubicación…</div>
+                ) : (
+                  <div className="flex flex-col items-center gap-2">
+                    <div className="text-red-400">{locError || 'No se pudo obtener tu ubicación.'}</div>
+                    <button onClick={requestCenter} className="px-3 py-1 rounded-lg border border-white/10 bg-white/5 hover:bg-white/10 text-sm">Reintentar</button>
+                  </div>
+                )}
+              </div>
             )}
             {center && (
               <div
@@ -183,20 +227,20 @@ export default function FitSyncPage() {
             <GymBlePanel />
 
             {/* Música integrada: Spotify y Apple Music (pendiente de conexión) */}
-            <div className="mt-4 flex items-center justify-center gap-6">
+            <div className="mt-4 flex items-center justify-center gap-8">
               <button
                 type="button"
-                className="h-14 w-14 rounded-full border border-white/15 bg-white/5 hover:bg-white/10 shadow-[0_0_18px_rgba(0,0,0,.25)] overflow-hidden flex items-center justify-center"
+                className="h-20 w-20 rounded-full border border-white/15 bg-white/5 hover:bg-white/10 shadow-[0_0_18px_rgba(0,0,0,.25)] overflow-hidden flex items-center justify-center"
                 title="Conectar Spotify"
               >
-                <img src="/branding/spoty.png" alt="Spotify" className="h-7 w-7 object-contain" />
+                <img src="/branding/spoty.png" alt="Spotify" className="h-10 w-10 object-contain" />
               </button>
               <button
                 type="button"
-                className="h-14 w-14 rounded-full border border-white/15 bg-white/5 hover:bg-white/10 shadow-[0_0_18px_rgba(0,0,0,.25)] overflow-hidden flex items-center justify-center"
+                className="h-20 w-20 rounded-full border border-white/15 bg-white/5 hover:bg-white/10 shadow-[0_0_18px_rgba(0,0,0,.25)] overflow-hidden flex items-center justify-center"
                 title="Conectar Apple Music"
               >
-                <img src="/branding/apple.png" alt="Apple Music" className="h-7 w-7 object-contain" />
+                <img src="/branding/apple.png" alt="Apple Music" className="h-10 w-10 object-contain" />
               </button>
             </div>
           </div>

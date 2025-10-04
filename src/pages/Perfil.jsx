@@ -7,6 +7,7 @@ import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '@/lib/supabaseClient';
+import { uploadUserAvatar, getAvatarUrl } from '@/lib/avatar';
 import { useToast } from '../components/ui/use-toast';
 import { LogOut, Save, Copy, Info, Camera, Edit } from 'lucide-react';
 
@@ -65,7 +66,7 @@ const Perfil = () => {
       if (!uid) { setLoadingAccess(false); return; }
       const { data, error } = await supabase
         .from('profiles_certificado_v2')
-        .select('acceso_activo,membresia,periodicidad,estado_pago,codigo_vita')
+        .select('acceso_activo,membresia,periodicidad,estado_pago,codigo_vita,avatar_url')
         .eq('user_id', uid)
         .limit(1)
         .single();
@@ -76,6 +77,13 @@ const Perfil = () => {
         estado_pago: data.estado_pago ?? null,
         codigo_vita: data.codigo_vita ?? null,
       });
+      // Traer avatar firmado si existe
+      if (!error && data?.avatar_url) {
+        try {
+          const signed = await getAvatarUrl(data.avatar_url);
+          if (signed) setProfileData(prev => ({ ...prev, avatarUrl: signed }));
+        } catch {}
+      }
     } finally {
       setLoadingAccess(false);
     }
@@ -102,24 +110,22 @@ const Perfil = () => {
     }
   };
 
-  const handleAvatarChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      if (file.size > 1050 * 1050 * 5) { // Approx 5MB limit
-        toast({
-          title: "Imagen muy grande",
-          description: "Por favor, elige una imagen de menos de 5MB.",
-          variant: "destructive",
-        });
-        return;
-      }
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setProfileData(prev => ({ ...prev, avatarUrl: reader.result }));
-        // Guardar en Supabase
-        updateUser({ ...profileData, avatarUrl: reader.result });
-      };
-      reader.readAsDataURL(file);
+  const handleAvatarChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 1024 * 1024) {
+      toast({ title: 'Imagen muy grande', description: 'Máximo 1MB.', variant: 'destructive' });
+      return;
+    }
+    try {
+      const res = await uploadUserAvatar(file, { table: 'profiles' });
+      const url = await getAvatarUrl(res.path);
+      setProfileData(prev => ({ ...prev, avatarUrl: url || prev.avatarUrl }));
+      toast({ title: 'Avatar actualizado' });
+      // Refrescar para que la vista y cache locales se sincronicen
+      fetchMembership();
+    } catch (err) {
+      toast({ title: 'Error al subir', description: err.message || 'Intenta de nuevo', variant: 'destructive' });
     }
   };
 
@@ -188,7 +194,7 @@ const Perfil = () => {
         type="file"
         ref={fileInputRef}
         onChange={handleAvatarChange}
-        accept="image/png, image/jpeg"
+        accept="image/png, image/jpeg, image/webp"
         className="hidden"
       />
     </div>

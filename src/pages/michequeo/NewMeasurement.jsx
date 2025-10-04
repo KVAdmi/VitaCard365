@@ -1,5 +1,4 @@
 import React from 'react';
-import { askIVita } from '../../askIVita';
 import { useNavigate } from 'react-router-dom';
 import Layout from '../../components/Layout';
 
@@ -12,32 +11,32 @@ const NewMeasurement = () => {
 
   const measurementOptions = [
     {
-      title: 'Signos Vitales',
+  title: 'Signos Vitales',
       description: 'Presión, pulso, SpO₂...',
       icon: HeartPulse,
       path: '/mi-chequeo/vitals',
-      color: 'text-red-400',
+  color: 'text-vita-orange',
     },
     {
       title: 'Test de Alertas',
       description: 'Evalúa síntomas específicos.',
       icon: AlertTriangle,
       path: '/mi-chequeo/test-alertas',
-      color: 'text-yellow-400',
+  color: 'text-vita-orange',
     },
     {
       title: 'Peso y Talla',
       description: 'Calcula tu IMC y ve tu historial.',
       icon: Weight,
       path: '/mi-chequeo/peso',
-      color: 'text-green-400',
+  color: 'text-vita-orange',
     },
     {
       title: 'Calidad del Sueño',
       description: 'Monitorea tus ronquidos.',
       icon: Moon,
       path: '/mi-chequeo/sueno',
-      color: 'text-indigo-400',
+  color: 'text-vita-orange',
     },
   ];
 
@@ -74,17 +73,7 @@ const NewMeasurement = () => {
               </motion.div>
             );
           })}
-          {/* Botón de ejemplo para llamar a askIVita */}
-          <button
-            className="mt-6 px-4 py-2 bg-vita-orange text-white rounded hover:bg-orange-600 transition"
-            onClick={() => {
-              askIVita("Quiero pagar mi plan")
-                .then(console.log)
-                .catch(console.error);
-            }}
-          >
-            Probar askIVita
-          </button>
+          {/* Botón de ejemplo retirado por solicitud */}
         </div>
       </div>
     </Layout>

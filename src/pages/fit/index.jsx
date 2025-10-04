@@ -111,6 +111,19 @@ export default function FitPage() {
             </Link>
           </div>
 
+          {/* Banner cristal neón de asistencia fitness 24/7 */}
+          <div className="max-w-[1100px] mx-auto mt-2 px-2 relative z-10">
+            <div className="rounded-2xl border border-cyan-300/25 bg-white/10 backdrop-blur-xl shadow-[0_8px_40px_rgba(0,200,255,0.18)] p-4 sm:p-5 flex items-center gap-4">
+              <div className="w-10 h-10 rounded-full bg-vita-orange/20 border border-vita-orange/40 grid place-content-center shadow-[0_0_18px_rgba(255,140,0,0.35)]">
+                <ListChecks className="w-5 h-5 text-vita-orange" />
+              </div>
+              <div className="text-cyan-50">
+                <p className="text-sm sm:text-base font-semibold tracking-tight">Tienes Asistencia Fitness 24/7</p>
+                <p className="text-xs sm:text-sm text-cyan-100/80 -mt-0.5">Nutrición y entrenamiento con expertos, siempre disponible en tus coberturas.</p>
+              </div>
+            </div>
+          </div>
+
           {/* Imagen de marca al fondo */}
           <div className="max-w-[1100px] mx-auto mt-10 pb-24 relative z-10 flex justify-center">
             <img src="/branding/9.png" alt="VitaCard 365" className="w-full max-w-md opacity-90" loading="lazy" />
