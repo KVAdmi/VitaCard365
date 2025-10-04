@@ -217,7 +217,15 @@ export default function PaymentGateway() {
 
           {error && <div className="text-red-500 text-sm mt-2">{error}</div>}
 
-          <p className="mt-6 text-xs text-white/60 text-center">
+          {/* Logo Vita y aviso elegante */}
+          <div className="mt-6 flex flex-col items-center gap-2">
+            <img src="/branding/Logo 2 Vita.png" alt="VitaCard 365" className="h-16 object-contain drop-shadow-[0_0_24px_rgba(240,99,64,0.55)]" />
+            <p className="text-xs text-white/80 text-center max-w-md">
+              Una vez realizado tu pago, tu póliza y coberturas quedarán activas en un plazo máximo de <span className="text-[#f06340] font-semibold">48 horas</span>. Aquí podrás consultar el estado de activación.
+            </p>
+          </div>
+
+          <p className="mt-4 text-xs text-white/60 text-center">
             Al confirmar el pago, aceptas los Términos de Servicio y la Política de Privacidad de VitaCard 365.
           </p>
         </div>

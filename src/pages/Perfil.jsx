@@ -6,6 +6,7 @@ import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { useAuth } from '../contexts/AuthContext';
+import { supabase } from '@/lib/supabaseClient';
 import { useToast } from '../components/ui/use-toast';
 import { LogOut, Save, Copy, Info, Camera, Edit } from 'lucide-react';
 
@@ -14,6 +15,14 @@ const Perfil = () => {
   const { toast } = useToast();
   
   const [isEditing, setIsEditing] = useState(false);
+  const [loadingAccess, setLoadingAccess] = useState(false);
+  const [membership, setMembership] = useState({
+    acceso_activo: null,
+    membresia: null,
+    periodicidad: null,
+    estado_pago: null,
+    codigo_vita: null,
+  });
   const [profileData, setProfileData] = useState({
     name: '',
     alias: '',
@@ -46,6 +55,33 @@ const Perfil = () => {
       }
     }
   }, [user, toast]);
+
+  // Cargar estado real de membresía desde Supabase (profiles_certificado_v2)
+  const fetchMembership = async () => {
+    try {
+      setLoadingAccess(true);
+      const { data: u } = await supabase.auth.getUser();
+      const uid = u?.user?.id;
+      if (!uid) { setLoadingAccess(false); return; }
+      const { data, error } = await supabase
+        .from('profiles_certificado_v2')
+        .select('acceso_activo,membresia,periodicidad,estado_pago,codigo_vita')
+        .eq('user_id', uid)
+        .limit(1)
+        .single();
+      if (!error && data) setMembership({
+        acceso_activo: data.acceso_activo ?? null,
+        membresia: data.membresia ?? null,
+        periodicidad: data.periodicidad ?? null,
+        estado_pago: data.estado_pago ?? null,
+        codigo_vita: data.codigo_vita ?? null,
+      });
+    } finally {
+      setLoadingAccess(false);
+    }
+  };
+
+  useEffect(()=>{ fetchMembership(); }, []);
 
   const validateField = (name, value) => {
     let error = '';
@@ -179,8 +215,34 @@ const Perfil = () => {
               <div>
                 <h2 className="text-xl font-bold text-vita-white">{profileData.name}</h2>
                 <p className="text-vita-muted-foreground">{profileData.email}</p>
-                <p className="text-sm text-vita-orange font-semibold mt-1">Folio VitaCard: {user.user_metadata?.vita_card_id}</p>
+                <p className="text-sm text-vita-orange font-semibold mt-1">
+                  Folio VitaCard: {membership.codigo_vita || user.user_metadata?.vita_card_id || '—'}
+                </p>
               </div>
+            </CardContent>
+          </Card>
+
+          {/* Estado de Membresía (datos reales de Supabase) */}
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between gap-3">
+              <div>
+                <CardTitle>Membresía</CardTitle>
+                <CardDescription>Estado real de tu acceso</CardDescription>
+              </div>
+              <Button variant="outline" size="sm" onClick={fetchMembership} disabled={loadingAccess}>
+                {loadingAccess ? 'Actualizando…' : 'Refrescar'}
+              </Button>
+            </CardHeader>
+            <CardContent className="space-y-2 text-sm text-white/90">
+              <p>
+                Acceso: {membership.acceso_activo === null ? '—' : membership.acceso_activo ? '✅ Activo' : '❌ Inactivo'}
+              </p>
+              <p>
+                Plan: {(membership.membresia || '—')} · {(membership.periodicidad || '—')} · {(membership.estado_pago || '—')}
+              </p>
+              <p>
+                Folio: <span className="font-semibold">{membership.codigo_vita || user.user_metadata?.vita_card_id || '—'}</span>
+              </p>
             </CardContent>
           </Card>
 

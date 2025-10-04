@@ -12,7 +12,7 @@ import {
   Legend,
   Filler,
 } from 'chart.js';
-import { v4 as uuidv4 } from 'uuid';
+// import { v4 as uuidv4 } from 'uuid';
 import { useLocalStorage } from '../../hooks/useLocalStorage';
 import { supabase } from '../../lib/supabaseClient';
 import { getOrCreateLocalUserId } from '../../lib/getOrCreateLocalUserId';
@@ -149,6 +149,8 @@ const MeasureWeight = () => {
       toast({ title: 'Error al guardar', description: error.message, variant: 'destructive' });
       return;
     }
+    // Refrescar estado local para ver el cambio inmediatamente
+    setWeightHistory(prev => [...prev, payload]);
     setCurrentWeight('');
     toast({
       title: '¡Guardado en la nube!',
@@ -180,11 +182,11 @@ const MeasureWeight = () => {
 
 
   const chartData = {
-    labels: weightHistory.map(entry => new Date(entry.date).toLocaleDateString('es-ES')),
+    labels: weightHistory.map(entry => new Date(entry.ts).toLocaleDateString('es-ES')),
     datasets: [
       {
         label: 'Peso (kg)',
-        data: weightHistory.map(entry => entry.vitals.weight),
+        data: weightHistory.map(entry => entry.peso_kg),
         borderColor: '#f06340',
         backgroundColor: 'rgba(240, 99, 64, 0.2)',
         tension: 0.4,

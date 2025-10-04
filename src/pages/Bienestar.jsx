@@ -29,13 +29,7 @@ const wellnessCategories = [
     icon: Wind,
     color: 'text-teal-400',
   },
-  {
-    slug: 'meditacion',
-    title: wellnessData.meditacion.name,
-    description: 'Encuentra tu paz interior con audios.',
-    icon: Waves,
-    color: 'text-purple-400',
-  },
+  // Ocultar temporalmente 'Meditaciones' según solicitud
   {
     slug: 'rutinas',
     title: wellnessData.rutinas.name,

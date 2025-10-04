@@ -5,7 +5,7 @@ import MeasureLayout from '../../components/michequeo/MeasureLayout';
 import { Button } from '../../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Alert, AlertDescription } from '../../components/ui/alert';
-import { Play, StopCircle, Mic, AlertCircle, Save, FileDown, Trash2 } from 'lucide-react';
+import { Play, StopCircle, Mic, AlertCircle, Save, Trash2 } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
@@ -113,12 +113,7 @@ const SleepSummary = ({ summary, clearSummary }) => {
     toast({ title: 'Resumen descartado', variant: 'destructive' });
   };
   
-  const handleNotImplemented = () => {
-    toast({
-      title: '🚧 Función no implementada',
-      description: 'La descarga de PDF estará disponible próximamente.',
-    });
-  };
+  // Botón PDF removido por solicitud
 
   const getStatus = (score) => {
     if (score > 85) return { text: 'Excelente', color: 'text-green-400' };
@@ -159,7 +154,6 @@ const SleepSummary = ({ summary, clearSummary }) => {
           </div>
           <div className="flex flex-col sm:flex-row gap-2 pt-4">
             <Button onClick={handleSave} className="flex-1 bg-green-500 hover:bg-green-600"><Save className="mr-2 h-4 w-4"/>Guardar</Button>
-            <Button onClick={handleNotImplemented} variant="outline" className="flex-1 border-vita-orange text-vita-orange hover:bg-vita-orange/10 hover:text-vita-orange"><FileDown className="mr-2 h-4 w-4"/>PDF</Button>
             <Button onClick={handleDelete} variant="destructive" className="flex-1"><Trash2 className="mr-2 h-4 w-4"/>Eliminar</Button>
           </div>
         </CardContent>
@@ -187,7 +181,7 @@ const MeasureSleep = () => {
         <Alert variant="default" className="bg-white/5 border-vita-orange/50 text-white">
           <AlertCircle className="h-4 w-4 text-vita-orange" />
           <AlertDescription>
-            Monitoreo de sueño: los datos se procesan en tu dispositivo. Te recomendamos descargar tus resúmenes con frecuencia. Este módulo no sustituye evaluación clínica.
+            Monitoreo de sueño: los datos se procesan en tu dispositivo. Este módulo no sustituye evaluación clínica.
           </AlertDescription>
         </Alert>
 

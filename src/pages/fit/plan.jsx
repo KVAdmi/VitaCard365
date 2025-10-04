@@ -1,11 +1,7 @@
-// Mi rutina (plan semanal con videos en Supabase)
+// Mi rutina: viewer del último plan guardado
 import React from 'react';
+import PlanView from '@/features/rutinas/PlanView';
 
-const FitPlan = () => (
-  <div>
-    <h1 className="text-xl font-bold mb-4">Mi rutina semanal</h1>
-    {/* Aquí irá el plan semanal con videos */}
-  </div>
-);
-
-export default FitPlan;
+export default function FitPlan() {
+  return <PlanView/>;
+}

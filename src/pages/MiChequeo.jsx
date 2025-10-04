@@ -4,7 +4,7 @@ import Layout from '../components/Layout';
 import { Button } from '../components/ui/button';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { motion } from 'framer-motion';
-import { Plus, Info, Download } from 'lucide-react';
+import { Plus, Info } from 'lucide-react';
 
 import NASAHistoryCardsPanel from '../components/mi-chequeo/NASAHistoryCardsPanel';
 import AudioCleanupPanel from '../components/mi-chequeo/AudioCleanupPanel';
@@ -47,27 +47,7 @@ const MeasurementCard = ({ measurement }) => {
   const { toast } = useToast();
   const cardRef = useRef();
 
-  const handleDownload = async () => {
-    try {
-      const element = cardRef.current;
-      if (!element) throw new Error('No se encontró el contenido para exportar');
-      const canvas = await html2canvas(element, { backgroundColor: '#18181b', scale: 2 });
-      const imgData = canvas.toDataURL('image/png');
-      const pdf = new jsPDF({ orientation: 'p', unit: 'pt', format: 'a4' });
-      const pageWidth = pdf.internal.pageSize.getWidth();
-      const pageHeight = pdf.internal.pageSize.getHeight();
-      // Ajustar tamaño manteniendo proporción
-      const imgProps = canvas;
-      const ratio = Math.min(pageWidth / imgProps.width, (pageHeight - 40) / imgProps.height);
-      const imgWidth = imgProps.width * ratio;
-      const imgHeight = imgProps.height * ratio;
-      pdf.addImage(imgData, 'PNG', (pageWidth - imgWidth) / 2, 20, imgWidth, imgHeight);
-      pdf.save('medicion-vitacard365.pdf');
-      toast({ title: 'PDF generado', description: 'La descarga ha comenzado.' });
-    } catch (e) {
-      toast({ title: 'Error al exportar PDF', description: e.message });
-    }
-  };
+  // Botón de descarga de PDF removido según solicitud
 
   const VitalsCard = ({ measurement }) => (
     <div className="grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
@@ -182,17 +162,7 @@ const MeasurementCard = ({ measurement }) => {
             <p className="text-sm font-medium text-white/80">{time}</p>
             <div className="mt-3">{renderContent()}</div>
           </div>
-          <div className="flex items-center gap-2">
-            {/* TODO: aquí se podrán mostrar badges de origen en el futuro */}
-            <Button
-              variant="ghost"
-              size="icon"
-              className="text-vita-muted-foreground hover:text-white"
-              onClick={handleDownload}
-            >
-              <Download className="h-4 w-4" />
-            </Button>
-          </div>
+          <div className="flex items-center gap-2">{/* badges de origen (futuro) */}</div>
         </div>
       </CardContent>
     </Card>
@@ -207,109 +177,7 @@ const MiChequeo = () => {
   const [triageEvents] = useLocalStorage('vita-triage_events', []);
   const mainPanelRef = useRef();
 
-  // Exportar PDF profesional con branding, tabla y gráfica de los últimos 7 días para cada tipo de medición
-  const handleExportPDF = async () => {
-    try {
-      // Esperar a que el gráfico esté renderizado
-      await new Promise(resolve => setTimeout(resolve, 500));
-      const pdf = new jsPDF({ orientation: 'p', unit: 'pt', format: 'a4' });
-      const pageWidth = pdf.internal.pageSize.getWidth();
-      const pageHeight = pdf.internal.pageSize.getHeight();
-      // Branding y portada
-      pdf.setFillColor('#18181b');
-      pdf.rect(0, 0, pageWidth, 100, 'F');
-      pdf.setFont('helvetica', 'bold');
-      pdf.setTextColor('#60a5fa');
-      pdf.setFontSize(28);
-      pdf.text('VitaCard365', pageWidth/2, 54, { align: 'center' });
-      pdf.setFontSize(16);
-      pdf.setTextColor('#fff');
-      pdf.text('Reporte profesional de salud', pageWidth/2, 80, { align: 'center' });
-      pdf.setFontSize(12);
-      pdf.setTextColor('#aaa');
-      pdf.text('Generado: ' + new Date().toLocaleString('es-ES'), pageWidth/2, 98, { align: 'center' });
-
-      let y = 120;
-      // Tabla de resultados de los últimos 7 días para cada tipo
-      const tipos = [
-        { key: 'pressure', label: 'Presión arterial (mmHg)' },
-        { key: 'glucose', label: 'Glucosa (mg/dL)' },
-        { key: 'spo2', label: 'SpO₂ (%)' },
-        { key: 'heartRate', label: 'Pulso (BPM)' },
-        { key: 'weight', label: 'Peso (kg)' },
-        { key: 'sleep_score', label: 'Calidad de sueño' },
-      ];
-      const dias = Array.from({length: 7}, (_,i) => {
-        const d = new Date(); d.setDate(d.getDate()-i);
-        return d.toLocaleDateString('es-ES', { day:'2-digit', month:'short' });
-      }).reverse();
-      pdf.setFontSize(14);
-      pdf.setTextColor('#f06340');
-      pdf.text('Resultados de los últimos 7 días', pageWidth/2, y, { align: 'center' });
-      y += 18;
-      pdf.setFontSize(11);
-      pdf.setTextColor('#fff');
-      // Encabezado de tabla
-      let x = 60;
-      pdf.text('Tipo', x, y);
-      dias.forEach((d, i) => pdf.text(d, x+90+i*60, y));
-      y += 14;
-      // Filas de tabla
-      tipos.forEach(tipo => {
-        pdf.setTextColor('#f06340');
-        pdf.text(tipo.label, x, y);
-        pdf.setTextColor('#fff');
-        dias.forEach((d, i) => {
-          let val = '';
-          // Buscar medición de ese día
-          const fecha = new Date(); fecha.setDate(fecha.getDate()-(6-i)); fecha.setHours(0,0,0,0);
-          const entry = allEntries.find(e => {
-            const ed = new Date(e.date || e.created_at); ed.setHours(0,0,0,0);
-            return ed.getTime() === fecha.getTime();
-          });
-          if (entry) {
-            if (tipo.key === 'pressure' && entry.vitals?.pressure) val = entry.vitals.pressure;
-            if (tipo.key === 'glucose' && entry.vitals?.glucose) val = String(entry.vitals.glucose);
-            if (tipo.key === 'spo2' && entry.vitals?.spo2) val = String(entry.vitals.spo2);
-            if (tipo.key === 'heartRate' && entry.vitals?.heartRate) val = String(entry.vitals.heartRate);
-            if (tipo.key === 'weight' && entry.vitals?.weight) val = String(entry.vitals.weight);
-            if (tipo.key === 'sleep_score' && entry.sleep_score) val = String(entry.sleep_score);
-          }
-          pdf.text(val || '--', x+90+i*60, y);
-        });
-        y += 14;
-      });
-
-      y += 18;
-      // Gráfica de evolución (captura del panel principal)
-      const element = mainPanelRef.current;
-      if (element) {
-        // Esperar a que el canvas de Chart.js esté presente
-        const chartCanvas = element.querySelector('canvas');
-        if (!chartCanvas) throw new Error('No se encontró el gráfico para exportar.');
-        // Forzar re-render y esperar
-        await new Promise(resolve => setTimeout(resolve, 300));
-        const canvas = await html2canvas(element, { backgroundColor: '#18181b', scale: 2 });
-        const imgData = canvas.toDataURL('image/png');
-        if (!imgData.startsWith('data:image/png')) throw new Error('No se pudo generar la imagen del gráfico.');
-        const imgWidth = pageWidth-120;
-        const imgHeight = (canvas.height/canvas.width)*imgWidth;
-        pdf.addImage(imgData, 'PNG', 60, y, imgWidth, imgHeight);
-        y += imgHeight+10;
-      } else {
-        throw new Error('No se encontró el panel principal para exportar.');
-      }
-
-      // Footer institucional
-      pdf.setFontSize(10);
-      pdf.setTextColor('#aaa');
-      pdf.text('VitaCard365 · Salud y Bienestar · confidencial', pageWidth/2, pageHeight - 16, { align: 'center' });
-      pdf.save('resumen-salud-vitacard365.pdf');
-      toast({ title: 'PDF generado', description: 'La descarga ha comenzado.' });
-    } catch (e) {
-      toast({ title: 'Error al exportar PDF', description: e.message });
-    }
-  };
+  // Exportación a PDF deshabilitada por solicitud
 
   // Limitar histórico de sueño a los últimos 7 días
   const sevenDaysAgo = React.useMemo(() => {
@@ -511,16 +379,7 @@ const MiChequeo = () => {
   return (
     <Layout title="Mi Chequeo">
       <div className="p-4 md:p-6">
-        <div className="flex justify-end mb-2">
-          <Button
-            size="sm"
-            className="bg-vita-blue-light text-white px-4 py-2 rounded-lg shadow hover:bg-vita-blue transition-all"
-            onClick={handleExportPDF}
-            title="Exportar PDF profesional del resumen"
-          >
-            <Download className="mr-2 h-4 w-4" /> Exportar PDF
-          </Button>
-        </div>
+        {/* Botón global de Exportar PDF removido */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-2">
           <h2 className="text-xl font-bold text-white">Historial de Salud</h2>
           <Button
@@ -541,75 +400,7 @@ const MiChequeo = () => {
                 <div className="flex-1 min-w-[180px] max-w-full flex flex-col justify-center items-center sm:items-start">
                   <div className="flex justify-between w-full mb-1">
                     <h3 className="text-lg font-bold text-vita-white">Calidad de Sueño (última noche)</h3>
-                    <button
-                      className="rounded-lg px-3 py-1 bg-[#f06340] text-white text-xs font-bold flex items-center gap-1"
-                      onClick={async () => {
-                        try {
-                          await new Promise(res => setTimeout(res, 400));
-                          const pdf = new jsPDF({ orientation: 'p', unit: 'pt', format: 'a4' });
-                          const pageWidth = pdf.internal.pageSize.getWidth();
-                          const pageHeight = pdf.internal.pageSize.getHeight();
-                          pdf.setFillColor('#18181b');
-                          pdf.rect(0, 0, pageWidth, 100, 'F');
-                          pdf.setFont('helvetica', 'bold');
-                          pdf.setTextColor('#60a5fa');
-                          pdf.setFontSize(28);
-                          pdf.text('VitaCard365', pageWidth/2, 54, { align: 'center' });
-                          pdf.setFontSize(16);
-                          pdf.setTextColor('#fff');
-                          pdf.text('Reporte de Calidad de Sueño', pageWidth/2, 80, { align: 'center' });
-                          pdf.setFontSize(12);
-                          pdf.setTextColor('#aaa');
-                          pdf.text('Generado: ' + new Date().toLocaleString('es-ES'), pageWidth/2, 98, { align: 'center' });
-                          let y = 120;
-                          // Tabla de los últimos 7 días
-                          const dias = Array.from({length: 7}, (_,i) => {
-                            const d = new Date(); d.setDate(d.getDate()-i);
-                            return d.toLocaleDateString('es-ES', { day:'2-digit', month:'short' });
-                          }).reverse();
-                          pdf.setFontSize(14);
-                          pdf.setTextColor('#f06340');
-                          pdf.text('Calidad de sueño últimos 7 días', pageWidth/2, y, { align: 'center' });
-                          y += 18;
-                          pdf.setFontSize(11);
-                          pdf.setTextColor('#fff');
-                          pdf.text('Día', 60, y);
-                          dias.forEach((d, i) => pdf.text(d, 110+i*60, y));
-                          y += 14;
-                          pdf.setTextColor('#f06340');
-                          pdf.text('Score', 60, y);
-                          pdf.setTextColor('#fff');
-                          dias.forEach((d, i) => {
-                            const fecha = new Date(); fecha.setDate(fecha.getDate()-(6-i)); fecha.setHours(0,0,0,0);
-                            const entry = sleepHistory.find(e => {
-                              const ed = new Date(e.date); ed.setHours(0,0,0,0);
-                              return ed.getTime() === fecha.getTime();
-                            });
-                            pdf.text(entry?.sleep_score ? String(entry.sleep_score) : '--', 110+i*60, y);
-                          });
-                          y += 18;
-                          // Gráfica (captura de la tarjeta)
-                          const cardDiv = mainPanelRef.current?.querySelector('.glass-card');
-                          if (cardDiv) {
-                            const canvas = await html2canvas(cardDiv, { backgroundColor: '#18181b', scale: 2 });
-                            const imgData = canvas.toDataURL('image/png');
-                            if (!imgData.startsWith('data:image/png')) throw new Error('No se pudo generar la imagen del gráfico.');
-                            const imgWidth = pageWidth-120;
-                            const imgHeight = (canvas.height/canvas.width)*imgWidth;
-                            pdf.addImage(imgData, 'PNG', 60, y, imgWidth, imgHeight);
-                            y += imgHeight+10;
-                          }
-                          pdf.setFontSize(10);
-                          pdf.setTextColor('#aaa');
-                          pdf.text('VitaCard365 · Salud y Bienestar · confidencial', pageWidth/2, pageHeight - 16, { align: 'center' });
-                          pdf.save('sueno-vitacard365.pdf');
-                        } catch (e) {
-                          alert('Error al exportar PDF: ' + e.message);
-                        }
-                      }}
-                    >
-                      <Download className="h-4 w-4" /> Descargar PDF
-                    </button>
+                    {/* Botón Descargar PDF (calidad de sueño) removido */}
                   </div>
                   <div className="flex flex-wrap gap-4 items-center justify-center sm:justify-start mb-2">
                     <div className="flex flex-col items-center">

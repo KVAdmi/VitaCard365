@@ -33,12 +33,15 @@ export type BuscarEjerciciosParams = {
 };
 
 // ===== Auth util =====
-export async function getUserId(): Promise<string> {
+// Permite trabajar con o sin sesión (RLS desactivado en tablas de rutinas)
+export async function getUserId(): Promise<string | null> {
   const { data, error } = await supabase.auth.getUser();
-  if (error) throw error;
-  const uid = data.user?.id;
-  if (!uid) throw new Error('No hay sesión activa');
-  return uid!;
+  if (error) {
+    // En escenarios de demo/testing preferimos no bloquear
+    return null;
+  }
+  const uid = data.user?.id ?? null;
+  return uid;
 }
 
 // ===== Buscador SOLO en public.ejercicios =====
@@ -74,7 +77,7 @@ export async function buscarEjercicios(params: BuscarEjerciciosParams = {}): Pro
 
 // ===== Plan =====
 export async function crearPlan(params: {
-  user_id: string;
+  user_id: string | null;
   objetivo: ObjetivoPlan;
   semanas: number;
   dias_semana: number;
@@ -85,7 +88,7 @@ export async function crearPlan(params: {
   const { data, error } = await supabase
     .from('planes')
     .insert([{
-      user_id,
+  user_id,
       objetivo: objetivo.toLowerCase(),
       semanas,
       dias_semana,
@@ -104,7 +107,7 @@ export async function crearPlan(params: {
 // ===== Rutina (día) =====
 export async function crearRutinaDia(params: {
   plan_id: string;
-  user_id: string;
+  user_id: string | null;
   semana: number;
   dia_semana: number;   // 1..7
   foco: FocoDia;
@@ -136,7 +139,7 @@ export type RutinaItemInput = {
 };
 
 // ===== Detalle (rutina_ejercicios) con retry si no existe progresion_json =====
-export async function agregarEjerciciosARutina(rutina_id: string, user_id: string, items: RutinaItemInput[]) {
+export async function agregarEjerciciosARutina(rutina_id: string, user_id: string | null, items: RutinaItemInput[]) {
   const payloadBase = items.map(it => ({
     rutina_id,
     user_id,
@@ -148,18 +151,6 @@ export async function agregarEjerciciosARutina(rutina_id: string, user_id: strin
     rpe: it.rpe ?? 7,
     variante: it.variante ?? null
   }));
-
-  // Intento 1: con progresion_json
-  const { error } = await supabase.from('rutina_ejercicios').insert(
-    payloadBase.map(p => ({ ...p, progresion_json: {} }))
-  );
-
-  if (error && /column .*progresion_json/i.test(error.message)) {
-    // Intento 2: sin la columna
-    const retry = await supabase.from('rutina_ejercicios').insert(payloadBase);
-    if (retry.error) throw retry.error;
-    return;
-  }
-
+  const { error } = await supabase.from('rutina_ejercicios').insert(payloadBase);
   if (error) throw error;
 }

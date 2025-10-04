@@ -5,7 +5,7 @@ import { fetchUserChartsData } from "../../lib/fetchUserChartsData";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { useAuth } from "../../contexts/AuthContext";
 
-function HistoryCard({ title, subtitle, children, onDownloadPDF }) {
+function HistoryCard({ title, subtitle, children }) {
   return (
     <div style={{
       background: "#0C1C3A",
@@ -20,20 +20,7 @@ function HistoryCard({ title, subtitle, children, onDownloadPDF }) {
           <h3 style={{ margin: 0, fontSize: 20, fontWeight: 700, letterSpacing: 0.5 }}>{title}</h3>
           {subtitle && <small style={{ opacity: 0.8 }}>{subtitle}</small>}
         </div>
-        <button
-          onClick={onDownloadPDF}
-          style={{
-            background: "#ED6A48",
-            color: "#fff",
-            border: "none",
-            borderRadius: 8,
-            padding: "8px 12px",
-            cursor: "pointer",
-            fontWeight: 600
-          }}
-        >
-          Descargar PDF
-        </button>
+        {/* Botón 'Descargar PDF' removido por solicitud */}
       </div>
       <div style={{ marginTop: 12 }}>
         {children}
@@ -95,20 +82,13 @@ export default function NASAHistoryCardsPanel() {
     peso: m.peso
   }));
 
-  const onPdfPresion = () =>
-    generateVitalsPDF({
-      title: "Presión Arterial",
-      headers: ["FECHA MEDICIÓN", "SISTÓLICA", "DIASTÓLICA", "PULSO"],
-      rows: bpData,
-      user,
-    });
+  // Generación de PDF deshabilitada según solicitud
 
   return (
     <div>
       <HistoryCard
         title="Presión arterial"
         subtitle="Últimos 7 días"
-        onDownloadPDF={onPdfPresion}
       >
         <div style={{ height: 200, width: '100%' }}>
           <ResponsiveContainer width="100%" height={180}>
@@ -127,7 +107,7 @@ export default function NASAHistoryCardsPanel() {
         </div>
       </HistoryCard>
 
-      <HistoryCard title="Glucosa" subtitle="Últimos 7 días" onDownloadPDF={()=>{}}>
+  <HistoryCard title="Glucosa" subtitle="Últimos 7 días">
         <div style={{ height: 180, width: '100%' }}>
           <ResponsiveContainer width="100%" height={160}>
             <LineChart data={glucosaData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
@@ -141,7 +121,7 @@ export default function NASAHistoryCardsPanel() {
           </ResponsiveContainer>
         </div>
       </HistoryCard>
-      <HistoryCard title="SpO₂" subtitle="Últimos 7 días" onDownloadPDF={()=>{}}>
+  <HistoryCard title="SpO₂" subtitle="Últimos 7 días">
         <div style={{ height: 180, width: '100%' }}>
           <ResponsiveContainer width="100%" height={160}>
             <LineChart data={spo2Data} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
@@ -155,7 +135,7 @@ export default function NASAHistoryCardsPanel() {
           </ResponsiveContainer>
         </div>
       </HistoryCard>
-      <HistoryCard title="Frecuencia cardíaca" subtitle="Últimos 7 días" onDownloadPDF={()=>{}}>
+  <HistoryCard title="Frecuencia cardíaca" subtitle="Últimos 7 días">
         <div style={{ height: 180, width: '100%' }}>
           <ResponsiveContainer width="100%" height={160}>
             <LineChart data={hrData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
@@ -169,7 +149,7 @@ export default function NASAHistoryCardsPanel() {
           </ResponsiveContainer>
         </div>
       </HistoryCard>
-      <HistoryCard title="Temperatura" subtitle="Últimos 7 días" onDownloadPDF={()=>{}}>
+  <HistoryCard title="Temperatura" subtitle="Últimos 7 días">
         <div style={{ height: 180, width: '100%' }}>
           <ResponsiveContainer width="100%" height={160}>
             <LineChart data={tempData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
@@ -183,7 +163,7 @@ export default function NASAHistoryCardsPanel() {
           </ResponsiveContainer>
         </div>
       </HistoryCard>
-      <HistoryCard title="Peso" subtitle="Últimos 7 días" onDownloadPDF={()=>{}}>
+  <HistoryCard title="Peso" subtitle="Últimos 7 días">
         <div style={{ height: 180, width: '100%' }}>
           <ResponsiveContainer width="100%" height={160}>
             <LineChart data={pesoData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>

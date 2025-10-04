@@ -127,6 +127,10 @@ const Coberturas = () => {
 
       <Layout title="Coberturas" showBackButton>
         <div className="p-4 space-y-6">
+          {/* Logo IGS superior */}
+          <div className="w-full flex justify-center">
+            <img src="/branding/Logo-IGS-lineal-01.png" alt="IGS" className="h-12 sm:h-16 object-contain drop-shadow-[0_0_20px_rgba(240,99,64,0.35)]" />
+          </div>
           <Card className="bg-vita-blue-light border border-vita-orange/30">
             <CardContent className="p-4 flex items-start space-x-3">
               <Info className="h-5 w-5 text-vita-orange flex-shrink-0 mt-1" />

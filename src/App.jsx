@@ -70,10 +70,7 @@ function App() {
             <Route path="progreso" element={<FitProgreso />} />
           </Route>
           {/* Redirects obligatorios */}
-          <Route path="/mi-chequeo/peso" element={<Navigate to="/fit/nutricion" replace />} />
-          <Route path="/mi-chequeo/talla" element={<Navigate to="/fit/nutricion" replace />} />
-          <Route path="/bienestar/nutricion" element={<Navigate to="/fit/nutricion" replace />} />
-          <Route path="/bienestar/nutricion/:slug" element={<Navigate to="/fit/nutricion" replace />} />
+          {/* (Eliminado) Redirecciones de Mi Chequeo y Bienestar hacia Fit/Nutrición para restaurar flujo correcto */}
           <Route path="/home" element={<Navigate to="/dashboard" replace />} />
           <Route path="/" element={<Landing />} />
                     <Route path="/login" element={<Login />} />

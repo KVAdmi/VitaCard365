@@ -1,5 +1,6 @@
 // src/features/rutinas/CreateRoutine.tsx
 import React, { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   buscarEjercicios, CategoriaEjercicio,
   crearPlan, crearRutinaDia, agregarEjerciciosARutina,
@@ -9,16 +10,15 @@ import { Capacitor } from '@capacitor/core';
 import { useToast } from '@/components/useToast';
 import ReminderPanel from '@/features/rutinas/ReminderPanel';
 import Modal from '@/components/Modal';
+import { ensureAccess } from '@/lib/access';
 
 // ----- UI helpers (respetan tu tema por variables CSS) -----
 // Marco neón uniforme (mismo look & feel que las tiles de Fitness)
 const Card: React.FC<React.PropsWithChildren<{className?: string}>> = ({ className='', children }) => (
   <div
     className={`relative rounded-2xl border border-cyan-400/20 bg-white/10 backdrop-blur-md shadow-[0_20px_40px_rgba(0,40,80,0.45)] ${className}`}
-    style={{ boxShadow: '0 0 0 1.5px #00ffe7, 0 20px 40px rgba(0,40,80,0.35)' }}
+    style={{ boxShadow: '0 20px 40px rgba(0,40,80,0.35)' }}
   >
-    {/* Borde interior suave para dar profundidad */}
-    <div className="absolute inset-0 rounded-2xl pointer-events-none border border-white/5" />
     <div className="relative z-10">
       {children}
     </div>
@@ -34,9 +34,18 @@ const SectionTitle: React.FC<{label: string, hint?: string}> = ({ label, hint })
 // ----- Constants / tipos -----
 type Paso = 'objetivo' | 'estructura' | 'dias' | 'ejercicios' | 'resumen';
 const focos: FocoDia[] = ['full','upper','lower','movilidad','cardio','core'];
+const focoLabel: Record<FocoDia, string> = {
+  full: 'completo',
+  upper: 'superior',
+  lower: 'inferior',
+  movilidad: 'movilidad',
+  cardio: 'cardio',
+  core: 'core',
+};
 const categorias: CategoriaEjercicio[] = ['empuje','tiron','rodilla','cadera','core','movilidad','cardio'];
 
 export default function CreateRoutine() {
+  const navigate = useNavigate();
   const { success, error: toastError } = useToast();
   const [paso, setPaso] = useState<Paso>('objetivo');
 
@@ -126,10 +135,32 @@ export default function CreateRoutine() {
     setSaving(true);
     try {
       const user_id = await getUserId();
+      // Verificación de acceso (membresía) antes de guardar
+      const { allowed } = await ensureAccess();
+      if (!allowed) {
+        toastError('Tu acceso no está activo. Completa el pago para continuar.');
+        setSaving(false);
+        navigate('/pago'); // ajusta a tu ruta real de pasarela
+        return;
+      }
+      if (!user_id) {
+        // Si trabajas sin login no podrás pasar RLS en producción.
+        toastError('No hay sesión activa; inicia sesión para asociar tu plan a tu cuenta.');
+        setSaving(false);
+        navigate('/login');
+        return;
+      }
+
+      // Guard simple: si hay días sin ejercicios, confirmamos
+      const diasSinItems = dias.filter(d => (itemsPorDia[d]?.length ?? 0) === 0);
+      if (diasSinItems.length > 0) {
+        const confirmar = window.confirm(`Tienes ${diasSinItems.length} día(s) sin ejercicios. ¿Deseas guardar de todas formas?`);
+        if (!confirmar) { setSaving(false); return; }
+      }
 
       // Plan
       const plan_id = await crearPlan({
-        user_id,
+        user_id: user_id as any,
         objetivo,
         semanas,
         dias_semana: diasSemana,
@@ -140,17 +171,15 @@ export default function CreateRoutine() {
       // Rutinas semana 1 + detalle
       for (const d of dias) {
         const foco = focoPorDia[d] ?? 'full';
-        const rutina_id = await crearRutinaDia({ plan_id, user_id, semana: 1, dia_semana: d, foco, minutos });
+        const rutina_id = await crearRutinaDia({ plan_id, user_id: user_id as any, semana: 1, dia_semana: d, foco, minutos });
         const items = itemsPorDia[d] ?? [];
-        if (items.length) await agregarEjerciciosARutina(rutina_id, user_id, items);
+        if (items.length) await agregarEjerciciosARutina(rutina_id, user_id as any, items);
       }
 
   success('Rutina creada ✔️');
   setPaso('resumen');
-  // Abrir modal de recordatorios con defaults sugeridos
-  setDefaultReminderDays(suggestDays(diasSemana));
-  setDefaultReminderTime('07:00');
-  setShowReminders(true);
+  // Redirigimos al viewer para validar que quedó guardada
+  navigate('/fit/plan', { replace: true });
     } catch (e:any) {
       console.error(e);
       toastError(`Error: ${e.message ?? e}`);
@@ -163,11 +192,23 @@ export default function CreateRoutine() {
   <div className="p-4 space-y-4 text-[color:var(--vc-foreground,#e7e7ea)]">
       {/* Logo superior */}
       <div className="w-full flex justify-center mt-2">
-        <img src="/branding/Logo 2 Vita.png" alt="VitaCard 365" className="h-10 object-contain" />
+        <img src="/branding/Logo 2 Vita.png" alt="VitaCard 365" className="h-20 sm:h-24 object-contain drop-shadow-[0_0_24px_rgba(240,99,64,0.55)]" />
       </div>
       <div className="sticky top-0 z-10 backdrop-blur-sm">
-        <h1 className="text-2xl font-extrabold tracking-tight">Crear mi rutina</h1>
-        <p className="text-sm opacity-70">Diseña tu plan. Confiable y rápido.</p>
+        <div className="flex items-end justify-between">
+          <div>
+            <h1 className="text-2xl font-extrabold tracking-tight">Crear mi rutina</h1>
+            <p className="text-sm opacity-70">Diseña tu plan. Confiable y rápido.</p>
+          </div>
+          <button
+            type="button"
+            onClick={()=>navigate('/fit/plan')}
+            className="px-3 py-2 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 text-sm"
+            aria-label="Ver mi plan"
+          >
+            Ver Plan
+          </button>
+        </div>
       </div>
 
       <Card>
@@ -188,7 +229,11 @@ export default function CreateRoutine() {
           <div className="flex gap-2 overflow-x-auto">
             {(['musculo','grasa','movilidad','cardio','mixto'] as const).map(o=>(
               <button key={o} onClick={()=>setObjetivo(o)}
-                className={`px-3 py-2 rounded-xl border transition-colors ${objetivo===o?'border-[color:var(--vc-primary,#f06340)] bg-[color:var(--vc-primary,#f06340)]/15 text-white':'border-white/10 hover:border-[color:var(--vc-primary,#f06340)]/60'} bg-white/5`}>{o}</button>
+                className={`px-3 py-2 rounded-xl border transition-colors ${
+                  objetivo===o
+                    ? 'bg-vita-orange text-white border-vita-orange'
+                    : 'border-white/10 hover:border-vita-orange hover:bg-vita-orange/20'
+                }`}>{o}</button>
             ))}
           </div>
 
@@ -217,7 +262,11 @@ export default function CreateRoutine() {
               <div className="flex gap-2 mt-1">
                 {[15,25,40].map(m=>(
                   <button key={m} onClick={()=>setMinutos(m)}
-                    className={`px-3 py-2 rounded-xl border transition-colors ${minutos===m?'border-[color:var(--vc-primary,#f06340)] bg-[color:var(--vc-primary,#f06340)]/15 text-white':'border-white/10 hover:border-[color:var(--vc-primary,#f06340)]/60'} bg-white/5`}>{m}′</button>
+                    className={`px-3 py-2 rounded-xl border transition-colors ${
+                      minutos===m
+                        ? 'bg-vita-orange text-white border-vita-orange'
+                        : 'border-white/10 hover:border-vita-orange hover:bg-vita-orange/20'
+                    }`}>{m}′</button>
                 ))}
               </div>
             </div>
@@ -241,8 +290,12 @@ export default function CreateRoutine() {
                 <div className="flex flex-wrap gap-2">
                   {focos.map(f=>(
                     <button key={f} onClick={()=>setFocoPorDia(prev=>({...prev,[d]:f}))}
-                      className={`px-3 py-1 rounded-full text-xs border transition-colors ${focoPorDia[d]===f?'border-[color:var(--vc-primary,#f06340)] bg-[color:var(--vc-primary,#f06340)]/15 text-white':'border-white/10 hover:border-[color:var(--vc-primary,#f06340)]/60'} bg-black/20`}>
-                      {f}
+                      className={`px-3 py-1 rounded-full text-xs border transition-colors ${
+                        focoPorDia[d]===f
+                          ? 'bg-vita-orange text-white border-vita-orange'
+                          : 'border-white/10 hover:border-vita-orange hover:bg-vita-orange/20'
+                      }`}>
+                      {focoLabel[f]}
                     </button>
                   ))}
                 </div>
@@ -262,9 +315,13 @@ export default function CreateRoutine() {
         <Card className="p-4 space-y-4">
           <SectionTitle label="Ejercicios por día" hint="agrega sets/reps/tiempo/descanso" />
           <div className="flex gap-2 overflow-x-auto">
-            {Array.from({length: diasSemana}, (_,i)=>i+1).map(d=>(
+              {Array.from({length: diasSemana}, (_,i)=>i+1).map(d=>(
               <button key={d} onClick={()=>setDiaActivo(d)}
-                className={`px-3 py-2 rounded-xl border transition-colors ${diaActivo===d?'border-[color:var(--vc-primary,#f06340)] bg-[color:var(--vc-primary,#f06340)]/15 text-white':'border-white/10 hover:border-[color:var(--vc-primary,#f06340)]/60'} bg-white/5`}>
+                className={`px-3 py-2 rounded-xl border transition-colors ${
+                  diaActivo===d
+                    ? 'bg-vita-orange text-white border-vita-orange'
+                    : 'border-white/10 hover:border-vita-orange hover:bg-vita-orange/20'
+                }`}>
                 Día {d}
               </button>
             ))}
@@ -334,12 +391,12 @@ export default function CreateRoutine() {
             <div className="flex flex-wrap gap-2 mt-3">
               <button
                 onClick={()=>setCatFiltro('todas')}
-                className={`px-3 py-1 rounded-full border bg-black/20 transition-colors ${catFiltro==='todas'?'border-[color:var(--vc-primary,#f06340)] bg-[color:var(--vc-primary,#f06340)]/15 text-white':'border-white/10 hover:border-[color:var(--vc-primary,#f06340)]/60'}`}>
+                className={`px-3 py-1 rounded-full border bg-black/20 transition-colors ${catFiltro==='todas'?'bg-vita-orange/20 text-white border-vita-orange':'border-white/10 hover:border-vita-orange hover:bg-vita-orange/10'}`}>
                 Todas
               </button>
               {categorias.map(c=>(
                 <button key={c} onClick={()=>setCatFiltro(c)}
-                  className={`px-3 py-1 rounded-full border bg-black/20 transition-colors ${catFiltro===c?'border-[color:var(--vc-primary,#f06340)] bg-[color:var(--vc-primary,#f06340)]/15 text-white':'border-white/10 hover:border-[color:var(--vc-primary,#f06340)]/60'}`}>
+                  className={`px-3 py-1 rounded-full border bg-black/20 transition-colors ${catFiltro===c?'bg-vita-orange/20 text-white border-vita-orange':'border-white/10 hover:border-vita-orange hover:bg-vita-orange/10'}`}>
                   {c}
                 </button>
               ))}
