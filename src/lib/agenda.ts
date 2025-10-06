@@ -1,5 +1,6 @@
 import { supabase } from './supabaseClient';
 import { programarUna, programarSemanales, asegurarPermisoNotificaciones } from './notifications';
+import { LocalNotifications, PendingLocalNotificationSchema } from '@capacitor/local-notifications';
 
 export type AgendaEvent = {
   id: string;
@@ -30,10 +31,11 @@ export async function fetchUpcomingAgenda(daysAhead = 30) {
   const { data: u } = await supabase.auth.getUser();
   const uid = u?.user?.id;
   if (!uid) return [] as AgendaEvent[];
+  // Normaliza a fecha local para evitar desfasar por huso horario
   const today = new Date();
   const to = new Date(); to.setDate(today.getDate()+daysAhead);
-  const fromStr = today.toISOString().slice(0,10);
-  const toStr = to.toISOString().slice(0,10);
+  const fromStr = new Date(today.getFullYear(), today.getMonth(), today.getDate()).toISOString().slice(0,10);
+  const toStr = new Date(to.getFullYear(), to.getMonth(), to.getDate()).toISOString().slice(0,10);
   const { data } = await supabase
     .from('agenda_events')
     .select('*')
@@ -49,8 +51,11 @@ export async function fetchAgendaRange(start: Date, end: Date) {
   const { data: u } = await supabase.auth.getUser();
   const uid = u?.user?.id;
   if (!uid) return [] as AgendaEvent[];
-  const fromStr = start.toISOString().slice(0,10);
-  const toStr = end.toISOString().slice(0,10);
+  // Asegura rangos por fecha local
+  const fromLocal = new Date(start.getFullYear(), start.getMonth(), start.getDate());
+  const toLocal = new Date(end.getFullYear(), end.getMonth(), end.getDate());
+  const fromStr = fromLocal.toISOString().slice(0,10);
+  const toStr = toLocal.toISOString().slice(0,10);
   const { data } = await supabase
     .from('agenda_events')
     .select('*')
@@ -77,8 +82,12 @@ export async function createAgendaEvent(input: Omit<AgendaEvent,'id'|'user_id'>)
 }
 
 export async function deleteAgendaEvent(id: string) {
+  // Intenta cancelar notificaciones locales asociadas antes de borrar
+  try {
+    const ev = await getEventById(id);
+    if (ev) await cancelNotificationsForEvent(ev);
+  } catch {}
   await supabase.from('agenda_events').delete().eq('id', id);
-  // cancelar local si existía: fuera de alcance por ahora (requeriría guardar ids asignados)
 }
 
 export async function scheduleNotificationForEvent(ev: AgendaEvent) {
@@ -102,5 +111,52 @@ export async function scheduleNotificationForEvent(ev: AgendaEvent) {
   } else if (rpt === 'monthly') {
     // simplificado: única notificación este mes; el usuario podrá duplicar para próximos meses
     await programarUna({ id, titulo, cuerpo, fecha: when });
+  }
+}
+
+// === Nuevas utilidades: lectura, actualización y cancelación de notificaciones asociadas ===
+
+export async function getEventById(id: string): Promise<AgendaEvent | null> {
+  const { data, error } = await supabase
+    .from('agenda_events')
+    .select('*')
+    .eq('id', id)
+    .single();
+  if (error) return null;
+  return data as AgendaEvent;
+}
+
+export async function updateAgendaEvent(id: string, patch: Partial<Omit<AgendaEvent,'id'|'user_id'>>) {
+  // Trae el evento anterior para cancelar notificaciones si cambian
+  const prev = await getEventById(id);
+  const { data, error } = await supabase
+    .from('agenda_events')
+    .update({ ...patch })
+    .eq('id', id)
+    .select('*')
+    .single();
+  if (error) throw error;
+  const updated = data as AgendaEvent;
+  try {
+    if (prev) await cancelNotificationsForEvent(prev);
+    await scheduleNotificationForEvent(updated);
+  } catch {}
+  return updated;
+}
+
+export async function cancelNotificationsForEvent(ev: AgendaEvent) {
+  const base = idFromUuid(ev.id);
+  const rpt = (ev.repeat_type || 'none').toLowerCase();
+  let ids: number[] = [];
+  if (rpt === 'none' || rpt === 'monthly') {
+    ids = [base];
+  } else if (rpt === 'weekly') {
+    ids = [base]; // usamos base como id único para semanal
+  } else if (rpt === 'daily') {
+    ids = Array.from({length:7}, (_,i)=> base + i);
+  }
+  if (ids.length) {
+    const list: PendingLocalNotificationSchema[] = ids.map(id => ({ id } as any));
+    try { await LocalNotifications.cancel({ notifications: list }); } catch {}
   }
 }

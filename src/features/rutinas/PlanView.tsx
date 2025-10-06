@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import Layout from '@/components/Layout';
 import { supabase } from '@/lib/supabaseClient';
 import { ensureAccess } from '@/lib/access';
+import { dateKeyMX } from '@/lib/tz';
 
 type RutinaDia = {
   id: string;
@@ -91,11 +92,7 @@ export default function PlanView() {
     setDias(out);
     // Marcas locales: evitar duplicar "hecho" el mismo día
     try {
-      const today = new Date();
-      const yyyy = today.getFullYear();
-      const mm = String(today.getMonth() + 1).padStart(2, '0');
-      const dd = String(today.getDate()).padStart(2, '0');
-      const dateKey = `${yyyy}-${mm}-${dd}`;
+      const dateKey = dateKeyMX(new Date());
       const map: Record<string, boolean> = {};
       out.forEach(d => {
         const k = `vc.rutina.done.${d.id}.${dateKey}`;
@@ -111,11 +108,7 @@ export default function PlanView() {
   // Marca una rutina como hecha hoy: inserta un workout para alimentar Progreso
   const marcarHecha = async (d: RutinaDia) => {
     try {
-      const today = new Date();
-      const yyyy = today.getFullYear();
-      const mm = String(today.getMonth() + 1).padStart(2, '0');
-      const dd = String(today.getDate()).padStart(2, '0');
-      const dateKey = `${yyyy}-${mm}-${dd}`;
+      const dateKey = dateKeyMX(new Date());
       const localKey = `vc.rutina.done.${d.id}.${dateKey}`;
       if (doneToday[d.id]) return; // ya marcada
 

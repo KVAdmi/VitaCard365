@@ -34,3 +34,15 @@ begin
       with check (usuario_id = auth.uid());
   end if;
 end $$;
+
+-- Opcional: permitir borrar solo tus propias mediciones
+do $$
+begin
+  if not exists (
+    select 1 from pg_policies where schemaname='public' and tablename='mediciones' and policyname='mediciones delete self'
+  ) then
+    create policy "mediciones delete self" on public.mediciones
+      for delete to authenticated
+      using (usuario_id = auth.uid());
+  end if;
+end $$;

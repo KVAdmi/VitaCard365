@@ -377,20 +377,8 @@ const Layout = ({ children, title, showBackButton = false }) => {
                   <svg width="20" height="20" fill="none" viewBox="0 0 20 20"><path d="M2.5 10L17.5 3.5L11.25 10L17.5 16.5L2.5 10Z" fill="currentColor"/></svg>
                 </button>
                 <button
-                  type="button"
-                  className="rounded-full bg-white/10 p-2 text-vita-orange hover:bg-vita-orange/20 transition"
-                  title="Hablar"
-                  onClick={async () => {
-                    try {
-                      await navigator.mediaDevices.getUserMedia({ audio: true });
-                      alert('Permiso de micrófono concedido. (Reconocimiento de voz próximamente)');
-                    } catch (err) {
-                      alert('Debes otorgar permiso de micrófono para usar esta función.');
-                    }
-                  }}
-                >
-                  <svg width="20" height="20" fill="none" viewBox="0 0 20 20"><circle cx="10" cy="10" r="8" stroke="currentColor" strokeWidth="2"/><rect x="8.5" y="5" width="3" height="7" rx="1.5" fill="currentColor"/></svg>
-                </button>
+                  style={{ display: 'none' }}
+                />
               </form>
               <div className="mt-2 text-xs text-vita-white/70 text-center px-2">
                 Las recomendaciones de i-Vita se basan en inteligencia artificial y no sustituyen la consulta con un profesional de la salud. Ante dudas o síntomas graves, acude siempre con tu médico.

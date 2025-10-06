@@ -6,7 +6,7 @@ import { Button } from '../components/ui/button';
 import { Label } from '../components/ui/label';
 import { Input } from '../components/ui/input';
 import { useToast } from '../components/ui/use-toast';
-import { createAgendaEvent, fetchUpcomingAgenda, fetchAgendaRange } from '@/lib/agenda';
+import { createAgendaEvent, fetchUpcomingAgenda, fetchAgendaRange, updateAgendaEvent, deleteAgendaEvent } from '@/lib/agenda';
 
 export default function AgendaPage(){
   const [events, setEvents] = useState([]);
@@ -22,6 +22,7 @@ export default function AgendaPage(){
     notify: true,
     repeat_type: 'none',
   });
+  const [editingId, setEditingId] = useState(null);
 
   // Calendario
   const today = new Date();
@@ -51,10 +52,16 @@ export default function AgendaPage(){
   async function onSubmit(e){
     e.preventDefault();
     try{
-      await createAgendaEvent(form);
-      toast({ title: 'Evento guardado', description: 'Se programará una notificación si corresponde.' });
+      if (editingId) {
+        await updateAgendaEvent(editingId, form);
+        toast({ title: 'Evento actualizado', description: 'Se reprogramaron notificaciones si corresponde.' });
+      } else {
+        await createAgendaEvent(form);
+        toast({ title: 'Evento guardado', description: 'Se programará una notificación si corresponde.' });
+      }
       setForm(f=>({ ...f, title:'', description:'' }));
       setShowForm(false);
+      setEditingId(null);
       await load();
       const start = new Date(monthCursor.getFullYear(), monthCursor.getMonth(), 1);
       const end = new Date(monthCursor.getFullYear(), monthCursor.getMonth()+1, 0);
@@ -62,6 +69,36 @@ export default function AgendaPage(){
       setMonthEvents(data);
     }catch(e){
       toast({ title: 'Error al guardar', description: e.message || 'Intenta de nuevo', variant: 'destructive' });
+    }
+  }
+
+  async function onEdit(ev){
+    setEditingId(ev.id);
+    setForm({
+      type: ev.type,
+      title: ev.title,
+      description: ev.description || '',
+      event_date: ev.event_date,
+      event_time: ev.event_time,
+      notify: !!ev.notify,
+      repeat_type: ev.repeat_type || 'none',
+    });
+    setSelectedDate(new Date(ev.event_date+'T'+ev.event_time));
+    setShowForm(true);
+  }
+
+  async function onDelete(ev){
+    if (!window.confirm('¿Eliminar este evento?')) return;
+    try{
+      await deleteAgendaEvent(ev.id);
+      toast({ title: 'Evento eliminado', description: 'Se cancelaron notificaciones si había.' });
+      await load();
+      const start = new Date(monthCursor.getFullYear(), monthCursor.getMonth(), 1);
+      const end = new Date(monthCursor.getFullYear(), monthCursor.getMonth()+1, 0);
+      const data = await fetchAgendaRange(start, end);
+      setMonthEvents(data);
+    }catch(e){
+      toast({ title: 'Error al eliminar', description: e.message || 'Intenta de nuevo', variant: 'destructive' });
     }
   }
 
@@ -132,8 +169,13 @@ export default function AgendaPage(){
         {showForm && (
           <Card className="bg-white/10 border border-cyan-400/20" style={{ boxShadow:'0 0 0 1px rgba(0,255,231,0.18)' }}>
             <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle>Nuevo evento — {form.event_date}</CardTitle>
-              <Button variant="ghost" onClick={()=>setShowForm(false)}>Cerrar</Button>
+              <CardTitle>{editingId ? 'Editar evento' : 'Nuevo evento'} — {form.event_date}</CardTitle>
+              <div className="flex items-center gap-2">
+                {editingId && (
+                  <Button variant="ghost" onClick={()=>{ setEditingId(null); setShowForm(false); }}>Cancelar</Button>
+                )}
+                <Button variant="ghost" onClick={()=>{ setEditingId(null); setShowForm(false); }}>Cerrar</Button>
+              </div>
             </CardHeader>
             <CardContent className="space-y-3">
               <form onSubmit={onSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -174,8 +216,11 @@ export default function AgendaPage(){
                   <input id="notify" type="checkbox" className="accent-orange-500" checked={!!form.notify} onChange={e=>setForm({...form, notify:e.target.checked})} />
                   <Label htmlFor="notify">Notificarme</Label>
                 </div>
-                <div className="md:col-span-2">
-                  <Button type="submit" className="w-full">Guardar</Button>
+                <div className="md:col-span-2 flex gap-2">
+                  <Button type="submit" className="flex-1">{editingId ? 'Actualizar' : 'Guardar'}</Button>
+                  {editingId && (
+                    <Button type="button" variant="destructive" onClick={()=>onDelete({id: editingId})}>Eliminar</Button>
+                  )}
                 </div>
               </form>
             </CardContent>
@@ -194,7 +239,11 @@ export default function AgendaPage(){
                       <p className="text-sm text-white/70">{new Date(ev.event_date+'T'+ev.event_time).toLocaleString()}</p>
                       <p className="text-xs text-white/50">{ev.type} {ev.repeat_type && ev.repeat_type !== 'none' ? `· ${ev.repeat_type}` : ''}</p>
                     </div>
-                    {ev.notify ? <span className="text-green-400 text-xs">Con aviso</span> : <span className="text-white/50 text-xs">Sin aviso</span>}
+                    <div className="flex items-center gap-2">
+                      <button onClick={()=>onEdit(ev)} className="px-3 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-xs">Editar</button>
+                      <button onClick={()=>onDelete(ev)} className="px-3 py-1 rounded-lg bg-red-500/80 hover:bg-red-500 text-white text-xs">Eliminar</button>
+                      {ev.notify ? <span className="text-green-400 text-xs">Con aviso</span> : <span className="text-white/50 text-xs">Sin aviso</span>}
+                    </div>
                   </li>
                 ))}
               </ul>

@@ -16,6 +16,7 @@ import {
 } from 'chart.js';
 import { Flame, Activity, HeartPulse, Target, Trophy, Zap, Timer, Award } from 'lucide-react';
 import { useRoutineSummary } from '@/hooks/useRoutineSummary';
+import { MX_TZ, dateKeyMX, dayLetterMX, lastNDaysKeysMX } from '@/lib/tz';
 import { supabase } from '@/lib/supabaseClient';
 
 ChartJS.register(
@@ -56,13 +57,16 @@ export default function FitProgreso() {
     const { data: u } = await supabase.auth.getUser();
     const uid = u?.user?.id;
     if (!uid) return;
-    // Tomar últimos 7 días
+    // Claves de los últimos 7 días en hora local MX
     const hoy = new Date();
-    const arrDias = Array.from({length:7}, (_,i)=>{
-      const d = new Date(hoy); d.setDate(hoy.getDate() - (6-i)); return d; });
-    const lab = ['D','L','M','X','J','V','S'];
-    setLabels(arrDias.map(d=>lab[d.getDay()]));
+    const keys7 = lastNDaysKeysMX(7, hoy); // array YYYY-MM-DD de hace 6 días a hoy
+    const arrDias = keys7.map(k => {
+      const [Y,M,D] = k.split('-').map(Number);
+      return new Date(Date.UTC(Y, M-1, D, 12, 0, 0)); // pivot noon to avoid DST edge
+    });
+    setLabels(arrDias.map(d=>dayLetterMX(d)));
 
+    // Rango por ISO; filtraremos por día local MX en cliente
     const desde = new Date(hoy); desde.setDate(hoy.getDate()-6);
     const { data } = await supabase
       .from('workouts')
@@ -71,18 +75,18 @@ export default function FitProgreso() {
       .gte('ts_inicio', desde.toISOString())
       .lte('ts_inicio', hoy.toISOString());
     const bucket = new Array(7).fill(0).map(()=>({min:0,kcal:0}));
+    const indexByKey = new Map(keys7.map((k,i)=>[k,i]));
     (data||[]).forEach(w=>{
-      const d = new Date(w.ts_inicio);
-      const idx = 6 - Math.floor((hoy - d) / (1000*60*60*24));
-      if (idx>=0 && idx<7) { bucket[idx].min += w.minutos||0; bucket[idx].kcal += w.kcal||0; }
+      const k = dateKeyMX(new Date(w.ts_inicio));
+      const idx = indexByKey.get(k);
+      if (idx != null) { bucket[idx].min += w.minutos||0; bucket[idx].kcal += w.kcal||0; }
     });
     setMinutos7(bucket.map(b=>b.min));
     setKcal7(bucket.map(b=>b.kcal));
     // Kcal de hoy
     setKcalHoy(bucket[6]?.kcal || 0);
     // Sesiones en la semana (últimos 7 días)
-    setSesionesSemana((data||[]).filter(w=>{
-      const d = new Date(w.ts_inicio); return (hoy - d) <= 7*24*3600*1000; }).length);
+    setSesionesSemana(bucket.reduce((acc,b)=> acc + ((b.min||0)>0 ? 1 : 0), 0));
   // Constancia: días consecutivos con minutos > 0 desde hoy hacia atrás
     let streak = 0; for (let i=6;i>=0;i--){ if ((bucket[i]?.min||0)>0) streak++; else break; }
     setStreakDias(streak);

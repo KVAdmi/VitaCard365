@@ -3,6 +3,7 @@ import { useState } from "react";
 import { askIVita } from "@/api/evitaApi";
 
 export default function IVitaChat() {
+  // Chat solo texto: sin botón de micrófono ni reconocimiento de voz
 
   const [messages, setMessages] = useState([]); // [{role, content}]
   const [input, setInput] = useState("");
