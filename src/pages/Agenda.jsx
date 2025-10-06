@@ -1,16 +1,17 @@
-import React, { useEffect, useState } from 'react';
-import Layout from '@/components/Layout';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { createAgendaEvent, fetchUpcomingAgenda } from '@/lib/agenda';
-import { useToast } from '@/components/useToast';
+import React, { useMemo, useState, useEffect } from 'react';
+import { ChevronLeft, ChevronRight, Plus } from 'lucide-react';
+import Layout from '../components/Layout';
+import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/card';
+import { Button } from '../components/ui/button';
+import { Label } from '../components/ui/label';
+import { Input } from '../components/ui/input';
+import { useToast } from '../components/ui/use-toast';
+import { createAgendaEvent, fetchUpcomingAgenda, fetchAgendaRange } from '@/lib/agenda';
 
 export default function AgendaPage(){
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
-  const { success, error } = useToast();
+  const { toast } = useToast();
 
   const [form, setForm] = useState({
     type: 'medicamento',
@@ -22,6 +23,13 @@ export default function AgendaPage(){
     repeat_type: 'none',
   });
 
+  // Calendario
+  const today = new Date();
+  const [monthCursor, setMonthCursor] = useState(new Date(today.getFullYear(), today.getMonth(), 1));
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [monthEvents, setMonthEvents] = useState([]);
+  const [showForm, setShowForm] = useState(false);
+
   async function load(){
     setLoading(true);
     const data = await fetchUpcomingAgenda(30);
@@ -31,70 +39,150 @@ export default function AgendaPage(){
 
   useEffect(()=>{ load(); },[]);
 
+  useEffect(()=>{
+    (async ()=>{
+      const start = new Date(monthCursor.getFullYear(), monthCursor.getMonth(), 1);
+      const end = new Date(monthCursor.getFullYear(), monthCursor.getMonth()+1, 0);
+      const data = await fetchAgendaRange(start, end);
+      setMonthEvents(data);
+    })();
+  }, [monthCursor]);
+
   async function onSubmit(e){
     e.preventDefault();
     try{
       await createAgendaEvent(form);
-      success('Evento guardado y programado');
+      toast({ title: 'Evento guardado', description: 'Se programará una notificación si corresponde.' });
       setForm(f=>({ ...f, title:'', description:'' }));
+      setShowForm(false);
       await load();
+      const start = new Date(monthCursor.getFullYear(), monthCursor.getMonth(), 1);
+      const end = new Date(monthCursor.getFullYear(), monthCursor.getMonth()+1, 0);
+      const data = await fetchAgendaRange(start, end);
+      setMonthEvents(data);
     }catch(e){
-      error(e.message||'Error al guardar evento');
+      toast({ title: 'Error al guardar', description: e.message || 'Intenta de nuevo', variant: 'destructive' });
     }
   }
+
+  // Utilidades calendario
+  const year = monthCursor.getFullYear();
+  const month = monthCursor.getMonth();
+  const monthName = monthCursor.toLocaleString('es-MX', { month: 'long', year: 'numeric' });
+  const firstDay = new Date(year, month, 1);
+  const startWeekday = (firstDay.getDay() + 6) % 7; // lunes=0
+  const daysInMonth = new Date(year, month+1, 0).getDate();
+  const gridDays = useMemo(()=>{
+    const arr = [];
+    for (let i=0;i<startWeekday;i++) arr.push(null);
+    for (let d=1; d<=daysInMonth; d++) arr.push(new Date(year, month, d));
+    while (arr.length % 7 !== 0) arr.push(null);
+    return arr;
+  }, [year, month, startWeekday, daysInMonth]);
+
+  const eventsByDay = useMemo(()=>{
+    const map = new Map();
+    for (const ev of monthEvents) {
+      const key = ev.event_date;
+      if (!map.has(key)) map.set(key, []);
+      map.get(key).push(ev);
+    }
+    return map;
+  }, [monthEvents]);
 
   return (
     <Layout title="Agenda" showBackButton>
       <div className="p-4 space-y-6">
-        <Card className="bg-white/5">
-          <CardHeader><CardTitle>Nuevo evento</CardTitle></CardHeader>
-          <CardContent className="space-y-3">
-            <form onSubmit={onSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <div>
-                <Label>Tipo</Label>
-                <select className="w-full bg-white/10 rounded px-3 py-2" value={form.type} onChange={e=>setForm({...form, type:e.target.value})}>
-                  <option value="medicamento">Medicamento</option>
-                  <option value="cita_medica">Cita médica</option>
-                  <option value="otro">Otro</option>
-                </select>
-              </div>
-              <div className="md:col-span-1">
-                <Label>Título</Label>
-                <Input value={form.title} onChange={e=>setForm({...form, title:e.target.value})} required />
-              </div>
-              <div className="md:col-span-2">
-                <Label>Descripción</Label>
-                <Input value={form.description} onChange={e=>setForm({...form, description:e.target.value})} />
-              </div>
-              <div>
-                <Label>Fecha</Label>
-                <Input type="date" value={form.event_date} onChange={e=>setForm({...form, event_date:e.target.value})} required />
-              </div>
-              <div>
-                <Label>Hora</Label>
-                <Input type="time" value={form.event_time.slice(0,5)} onChange={e=>setForm({...form, event_time:e.target.value+':00'})} required />
-              </div>
-              <div>
-                <Label>Repetir</Label>
-                <select className="w-full bg-white/10 rounded px-3 py-2" value={form.repeat_type} onChange={e=>setForm({...form, repeat_type:e.target.value})}>
-                  <option value="none">No repetir</option>
-                  <option value="daily">Diario</option>
-                  <option value="weekly">Semanal</option>
-                  <option value="monthly">Mensual</option>
-                </select>
-              </div>
-              <div className="flex items-center gap-2">
-                <input id="notify" type="checkbox" className="accent-orange-500" checked={!!form.notify} onChange={e=>setForm({...form, notify:e.target.checked})} />
-                <Label htmlFor="notify">Notificarme</Label>
-              </div>
-              <div className="md:col-span-2">
-                <Button type="submit" className="w-full">Guardar</Button>
-              </div>
-            </form>
+        {/* Calendario mensual */}
+        <Card className="relative bg-white/10 border border-cyan-400/20" style={{ boxShadow: '0 0 0 1px rgba(0,255,231,0.18)' }}>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <Button variant="ghost" onClick={()=>setMonthCursor(new Date(year, month-1, 1))}><ChevronLeft className="w-5 h-5"/></Button>
+            <CardTitle className="capitalize tracking-tight text-cyan-100">{monthName}</CardTitle>
+            <Button variant="ghost" onClick={()=>setMonthCursor(new Date(year, month+1, 1))}><ChevronRight className="w-5 h-5"/></Button>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-7 gap-2 text-xs text-cyan-100/80 mb-1">
+              {['L','M','X','J','V','S','D'].map(d=> (
+                <div key={d} className="text-center opacity-80">{d}</div>
+              ))}
+            </div>
+            <div className="grid grid-cols-7 gap-2">
+              {gridDays.map((d,idx)=>{
+                if (!d) return <div key={`empty-${idx}`} className="h-16 rounded-xl bg-white/5 border border-white/5"/>;
+                const key = d.toISOString().slice(0,10);
+                const has = eventsByDay.has(key);
+                const isSel = selectedDate && key===selectedDate.toISOString().slice(0,10);
+                return (
+                  <button key={key}
+                          onClick={()=>{ setSelectedDate(d); setForm(f=>({...f, event_date: key})); setShowForm(true); }}
+                          className={`relative h-16 rounded-xl text-left p-2 border transition-all ${isSel ? 'bg-cyan-400/15 border-cyan-300/30' : 'bg-white/10 border-cyan-400/10 hover:bg-cyan-400/10'} ${has ? 'ring-1 ring-[color:var(--vc-primary,#f06340)]/70' : ''}`}
+                          style={{ boxShadow: has ? '0 0 18px rgba(240,99,64,0.18)' : undefined }}
+                          title={has ? `${eventsByDay.get(key).length} evento(s)` : ''}>
+                    <div className="text-[11px] font-semibold drop-shadow-sm">{d.getDate()}</div>
+                    {has && (
+                      <span className="absolute bottom-1 right-1 inline-block w-1.5 h-1.5 rounded-full bg-[color:var(--vc-primary,#f06340)] shadow-[0_0_8px_rgba(240,99,64,0.6)]" />
+                    )}
+                  </button>
+                );
+              })}
+            </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-white/5">
+        {showForm && (
+          <Card className="bg-white/10 border border-cyan-400/20" style={{ boxShadow:'0 0 0 1px rgba(0,255,231,0.18)' }}>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle>Nuevo evento — {form.event_date}</CardTitle>
+              <Button variant="ghost" onClick={()=>setShowForm(false)}>Cerrar</Button>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <form onSubmit={onSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div>
+                  <Label>Tipo</Label>
+                  <select className="w-full bg-white/10 rounded px-3 py-2" value={form.type} onChange={e=>setForm({...form, type:e.target.value})}>
+                    <option value="medicamento">Medicamento</option>
+                    <option value="cita_medica">Cita médica</option>
+                    <option value="otro">Otro</option>
+                  </select>
+                </div>
+                <div className="md:col-span-1">
+                  <Label>Título</Label>
+                  <Input value={form.title} onChange={e=>setForm({...form, title:e.target.value})} required />
+                </div>
+                <div className="md:col-span-2">
+                  <Label>Descripción</Label>
+                  <Input value={form.description} onChange={e=>setForm({...form, description:e.target.value})} />
+                </div>
+                <div>
+                  <Label>Fecha</Label>
+                  <Input type="date" value={form.event_date} onChange={e=>setForm({...form, event_date:e.target.value})} required />
+                </div>
+                <div>
+                  <Label>Hora</Label>
+                  <Input type="time" value={form.event_time.slice(0,5)} onChange={e=>setForm({...form, event_time:e.target.value+':00'})} required />
+                </div>
+                <div>
+                  <Label>Repetir</Label>
+                  <select className="w-full bg-white/10 rounded px-3 py-2" value={form.repeat_type} onChange={e=>setForm({...form, repeat_type:e.target.value})}>
+                    <option value="none">No repetir</option>
+                    <option value="daily">Diario</option>
+                    <option value="weekly">Semanal</option>
+                    <option value="monthly">Mensual</option>
+                  </select>
+                </div>
+                <div className="flex items-center gap-2">
+                  <input id="notify" type="checkbox" className="accent-orange-500" checked={!!form.notify} onChange={e=>setForm({...form, notify:e.target.checked})} />
+                  <Label htmlFor="notify">Notificarme</Label>
+                </div>
+                <div className="md:col-span-2">
+                  <Button type="submit" className="w-full">Guardar</Button>
+                </div>
+              </form>
+            </CardContent>
+          </Card>
+        )}
+
+        <Card className="bg-white/10 border border-cyan-400/20" style={{ boxShadow:'0 0 0 1px rgba(0,255,231,0.18)' }}>
           <CardHeader><CardTitle>Próximos 30 días</CardTitle></CardHeader>
           <CardContent className="space-y-2">
             {loading ? <p>Cargando…</p> : events.length === 0 ? <p>No hay eventos.</p> : (
@@ -113,6 +201,13 @@ export default function AgendaPage(){
             )}
           </CardContent>
         </Card>
+
+        {/* Botón flotante para crear evento rápido */}
+        <div className="fixed bottom-20 right-5 z-20">
+          <Button className="rounded-full bg-[color:var(--vc-primary,#f06340)] shadow-[0_0_24px_rgba(240,99,64,0.4)]" onClick={()=>{ const d=new Date(); setSelectedDate(d); setForm(f=>({ ...f, event_date: d.toISOString().slice(0,10) })); setShowForm(true); }}>
+            <Plus className="w-5 h-5 mr-2"/>Agregar evento
+          </Button>
+        </div>
       </div>
     </Layout>
   );

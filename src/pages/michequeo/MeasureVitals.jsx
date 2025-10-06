@@ -3,7 +3,6 @@ import React, { useState } from "react";
 import VitaCard365Logo from "../../components/Vita365Logo";
 
 import { useNavigate } from 'react-router-dom';
-import CameraPPG from "../../components/michequeo/CameraPPG";
 import { supabase } from "../../lib/supabaseClient";
 import { getOrCreateLocalUserId } from "../../lib/getOrCreateLocalUserId";
 import BLEConnect from "../../components/BLEConnect";
@@ -22,7 +21,7 @@ export default function MeasureVitals() {
   const [hr, setHr] = useState(null);
   const [steps, setSteps] = useState(null);
   const [sleep, setSleep] = useState(null);
-  const [mode, setMode] = useState('auto'); // 'auto' | 'manual' | 'camera'
+  const [mode, setMode] = useState('manual'); // solo 'manual'
   const [manualType, setManualType] = useState('bp'); // 'bp' | 'glucose' | 'spo2'
   const [feedback, setFeedback] = useState(null); // {visible, data}
 
@@ -91,8 +90,8 @@ export default function MeasureVitals() {
         <button
           onClick={() => setMode('manual')}
           style={{
-            background: mode === 'manual' ? '#f06340' : 'rgba(255,255,255,0.08)',
-            color: mode === 'manual' ? '#fff' : '#f06340',
+            background: '#f06340',
+            color: '#fff',
             border: '1px solid #f06340',
             borderRadius: 8,
             padding: '8px 18px',
@@ -101,19 +100,6 @@ export default function MeasureVitals() {
             transition: 'all 0.2s',
           }}
         >Registro manual</button>
-        <button
-          onClick={() => setMode('camera')}
-          style={{
-            background: mode === 'camera' ? '#f06340' : 'rgba(255,255,255,0.08)',
-            color: mode === 'camera' ? '#fff' : '#f06340',
-            border: '1px solid #f06340',
-            borderRadius: 8,
-            padding: '8px 18px',
-            fontWeight: 600,
-            cursor: 'pointer',
-            transition: 'all 0.2s',
-          }}
-        >Medir con cámara</button>
       </div>
 
       {/* Tarjeta de feedback post-medición */}
@@ -199,7 +185,13 @@ export default function MeasureVitals() {
               ]}
               submitText="Guardar medición"
               onSubmit={async data => {
-                const usuario_id = getOrCreateLocalUserId();
+                // Requerir sesión para guardar en nube (RLS exige auth.uid())
+                const { data: authData } = await supabase.auth.getUser();
+                const usuario_id = authData?.user?.id;
+                if (!usuario_id) {
+                  alert('Necesitas iniciar sesión para guardar tus mediciones en la nube.');
+                  return;
+                }
                 const payload = {
                   usuario_id,
                   sistolica: parseInt(data.systolic, 10),
@@ -209,9 +201,20 @@ export default function MeasureVitals() {
                   ts: data.ts ? new Date(data.ts).toISOString() : new Date().toISOString(),
                   // Puedes agregar brazo/postura si tu formulario los tiene
                 };
-                const { error } = await supabase.from('mediciones').insert([payload]);
-                if (error) alert('Error al guardar: ' + error.message);
-                else alert('¡Medición de presión guardada!');
+                try {
+                  const { error } = await supabase.from('mediciones').insert([{ 
+                    usuario_id,
+                    ts: payload.ts,
+                    source: 'manual',
+                    tipo: 'bp',
+                    sistolica: Number.isFinite(payload.sistolica) ? payload.sistolica : null,
+                    diastolica: Number.isFinite(payload.diastolica) ? payload.diastolica : null,
+                    pulso_bpm: Number.isFinite(payload.pulso_bpm) ? payload.pulso_bpm : null,
+                    notas: `${data.arm||''} ${data.posture||''}`.trim() || null,
+                  }]);
+                  if (error) throw error;
+                  alert('¡Medición de presión guardada!');
+                } catch (err) { alert('Error al guardar: ' + (err.message||err)); }
               }}
             />
           )}
@@ -224,7 +227,12 @@ export default function MeasureVitals() {
               ]}
               submitText="Guardar medición"
               onSubmit={async data => {
-                const usuario_id = getOrCreateLocalUserId();
+                const { data: authData } = await supabase.auth.getUser();
+                const usuario_id = authData?.user?.id;
+                if (!usuario_id) {
+                  alert('Necesitas iniciar sesión para guardar tus mediciones en la nube.');
+                  return;
+                }
                 const payload = {
                   usuario_id,
                   glucosa_mg_dl: parseFloat(data.glucose),
@@ -232,9 +240,18 @@ export default function MeasureVitals() {
                   ts: data.ts ? new Date(data.ts).toISOString() : new Date().toISOString(),
                   notas: data.condicion || null,
                 };
-                const { error } = await supabase.from('glucosa').insert([payload]);
-                if (error) alert('Error al guardar: ' + error.message);
-                else alert('¡Medición de glucosa guardada!');
+                try {
+                  const nota = `glucosa=${payload.glucosa_mg_dl}${data.condicion?`, ${data.condicion}`:''}`;
+                  const { error } = await supabase.from('mediciones').insert([{ 
+                    usuario_id,
+                    ts: payload.ts,
+                    source: 'manual',
+                    notas: nota,
+                    tipo: 'glucosa'
+                  }]);
+                  if (error) throw error;
+                  alert('¡Medición de glucosa guardada!');
+                } catch (err) { alert('Error al guardar: ' + (err.message||err)); }
               }}
             />
           )}
@@ -247,7 +264,12 @@ export default function MeasureVitals() {
               ]}
               submitText="Guardar medición"
               onSubmit={async data => {
-                const usuario_id = getOrCreateLocalUserId();
+                const { data: authData } = await supabase.auth.getUser();
+                const usuario_id = authData?.user?.id;
+                if (!usuario_id) {
+                  alert('Necesitas iniciar sesión para guardar tus mediciones en la nube.');
+                  return;
+                }
                 const payload = {
                   usuario_id,
                   spo2: parseFloat(data.spo2),
@@ -255,24 +277,24 @@ export default function MeasureVitals() {
                   source: 'manual',
                   ts: data.ts ? new Date(data.ts).toISOString() : new Date().toISOString(),
                 };
-                const { error } = await supabase.from('mediciones').insert([payload]);
-                if (error) alert('Error al guardar: ' + error.message);
-                else alert('¡Medición de SpO₂ guardada!');
+                try {
+                  const { error } = await supabase.from('mediciones').insert([{ 
+                    usuario_id,
+                    ts: payload.ts,
+                    source: 'manual',
+                    tipo: 'spo2',
+                    spo2: Number.isFinite(payload.spo2) ? payload.spo2 : null,
+                    pulso_bpm: Number.isFinite(payload.pulso_bpm) ? payload.pulso_bpm : null,
+                  }]);
+                  if (error) throw error;
+                  alert('¡Medición de SpO₂ guardada!');
+                } catch (err) { alert('Error al guardar: ' + (err.message||err)); }
               }}
             />
           )}
         </div>
       )}
-      {mode === 'camera' && (
-        <div style={{ marginTop: 16 }}>
-          <CameraPPG onSaved={bpm => {
-            let diag = 'Pulso normal.';
-            if (bpm > 120) diag = 'ALERTA: Pulso elevado. Descansa y consulta si persiste.';
-            else if (bpm < 50) diag = 'ALERTA: Pulso bajo. Consulta a tu médico.';
-            setFeedback({visible:true, color:'#f06340', titulo:'Pulso (cámara)', valor:`${bpm} bpm`, diagnostico:diag, detalle:'Registro guardado correctamente.'});
-          }} />
-        </div>
-      )}
+      {/* Modo cámara eliminado por solicitud */}
 
     </div>
   );

@@ -73,7 +73,7 @@ export default function FitPage() {
           {/* KPIs compactos */}
           <div className="max-w-[1100px] mx-auto grid grid-cols-3 gap-3 sm:gap-4 mb-12 relative z-10">
             <div className="rounded-xl bg-cyan-400/10 border border-cyan-300/20 px-3 py-2 text-cyan-100/90 text-xs shadow-[0_2px_8px_rgba(0,255,255,0.08)]">
-              Racha: <span className="font-semibold text-cyan-50">{streakDias} {streakDias===1?'día':'días'}</span>
+              Constancia: <span className="font-semibold text-cyan-50">{streakDias} {streakDias===1?'día':'días'}</span>
             </div>
             <div className="rounded-xl bg-cyan-400/10 border border-cyan-300/20 px-3 py-2 text-cyan-100/90 text-xs shadow-[0_2px_8px_rgba(0,255,255,0.08)]">
               Semana: <span className="font-semibold text-cyan-50">{sesionesSemana}/{diasSemana} sesiones</span>
@@ -82,7 +82,7 @@ export default function FitPage() {
               Kcal hoy: <span className="font-semibold text-cyan-50">{kcalHoy}</span>
             </div>
           </div>
-          {/* Grid reducido: solo 2 tarjetas; en móvil 1 columna para evitar que se peguen */}
+          {/* Grid: 2 tarjetas + recordatorio de nutrición como tercera tarjeta (mismo tamaño) */}
           <div className="max-w-[1100px] mx-auto grid grid-cols-1 sm:grid-cols-2 gap-x-6 sm:gap-x-10 gap-y-8 sm:gap-y-12 place-items-center relative z-10 px-2">
             <Link
               to="/fit/sync"
@@ -109,19 +109,20 @@ export default function FitPage() {
               <div className="mt-1 text-[12px] text-cyan-100/80 text-center tracking-tight">Objetivo • Gym/Casa • Nivel</div>
               <div className="absolute inset-0 rounded-2xl pointer-events-none border border-white/5 group-hover:border-cyan-300/30 transition-all" />
             </Link>
-          </div>
 
-          {/* Banner cristal neón de asistencia fitness 24/7 */}
-          <div className="max-w-[1100px] mx-auto mt-2 px-2 relative z-10">
-            <div className="rounded-2xl border border-cyan-300/25 bg-white/10 backdrop-blur-xl shadow-[0_8px_40px_rgba(0,200,255,0.18)] p-4 sm:p-5 flex items-center gap-4">
-              <div className="w-10 h-10 rounded-full bg-vita-orange/20 border border-vita-orange/40 grid place-content-center shadow-[0_0_18px_rgba(255,140,0,0.35)]">
-                <ListChecks className="w-5 h-5 text-vita-orange" />
+            {/* Tarjeta: Asistencia Fitness 24/7 (nutrición) con mismo tamaño y estilo */}
+            <Link
+              to="/coberturas?cat=fitness"
+              className="group relative flex flex-col items-center justify-center h-[170px] w-full max-w-[320px] sm:h-[200px] sm:w-[260px] rounded-2xl border border-cyan-400/20 bg-white/10 backdrop-blur-md shadow-[0_20px_40px_rgba(0,40,80,0.45)] transition-all duration-200 hover:bg-cyan-400/10 hover:shadow-[0_0_32px_4px_rgba(0,255,255,0.18)] hover:-translate-y-1 active:scale-[0.97]"
+              style={{ boxShadow: '0 0 0 1.5px #00ffe7, 0 20px 40px rgba(0,40,80,0.35)' }}
+            >
+              <div className="absolute -top-4 left-1/2 -translate-x-1/2 rounded-full border-2 border-cyan-300/30 bg-cyan-400/10 p-2 shadow-[0_0_16px_2px_rgba(0,255,255,0.18)] group-hover:scale-110 transition-transform">
+                <ListChecks className={`h-6 w-6 ${iconGlow.nutricion} transition-all duration-200`} />
               </div>
-              <div className="text-cyan-50">
-                <p className="text-sm sm:text-base font-semibold tracking-tight">Tienes Asistencia Fitness 24/7</p>
-                <p className="text-xs sm:text-sm text-cyan-100/80 -mt-0.5">Nutrición y entrenamiento con expertos, siempre disponible en tus coberturas.</p>
-              </div>
-            </div>
+              <div className="mt-4 text-base font-semibold text-white text-center tracking-tight drop-shadow-[0_1px_2px_rgba(0,0,0,0.25)]">Asistencia Fitness 24/7</div>
+              <div className="mt-1 text-[12px] text-cyan-100/80 text-center tracking-tight">Nutrición y entrenamiento con expertos</div>
+              <div className="absolute inset-0 rounded-2xl pointer-events-none border border-white/5 group-hover:border-cyan-300/30 transition-all" />
+            </Link>
           </div>
 
           {/* Imagen de marca al fondo */}

@@ -371,22 +371,45 @@ export async function connectFlow(opts: ConnectFlowOpts): Promise<ConnectFlowRes
 
     // Descubrir servicios y capacidades
     const caps = await discoverServices(deviceId);
-    const type: 'Heart Rate' | 'FTMS' | 'Unknown' = caps.hasHr ? 'Heart Rate' : caps.hasFtms ? 'FTMS' : 'Unknown';
+    let hasHr = !!caps.hasHr;
+    let hasFtms = !!caps.hasFtms;
 
-    // Suscripción HR si procede
-    if (caps.hasHr && onHr) {
-      await subscribeHr(deviceId, (s) => {
-        if (s && typeof s === 'number') {
-          onHr(s);
-        } else if (s && (s as any).hr_bpm != null) {
-          onHr((s as any).hr_bpm);
+    // Suscripción HR si procede; si no se detectó por discovery, intento fallback
+    if (onHr) {
+      if (hasHr) {
+        await subscribeHr(deviceId, (s) => {
+          if (s && typeof s === 'number') onHr(s);
+          else if (s && (s as any).hr_bpm != null) onHr((s as any).hr_bpm);
+        });
+        hrSubscribed = true;
+      } else {
+        try {
+          await subscribeHr(deviceId, (s) => {
+            if (!hasHr) hasHr = true; // detectado on-the-fly
+            if (s && typeof s === 'number') onHr(s);
+            else if (s && (s as any).hr_bpm != null) onHr((s as any).hr_bpm);
+          });
+          hrSubscribed = true;
+        } catch {
+          // sin HR, continuar
         }
-      });
-      hrSubscribed = true;
+      }
     }
 
+    // Intento ligero de FTMS: suscribir a una característica común para marcar soporte si llega algo
+    if (!hasFtms) {
+      try {
+        await subscribeFtms(deviceId, ['2AD2'], () => { hasFtms = true; });
+      } catch {
+        // ignorar si no soporta FTMS
+      }
+    }
+
+    const type: 'Heart Rate' | 'FTMS' | 'Unknown' = hasHr ? 'Heart Rate' : hasFtms ? 'FTMS' : 'Unknown';
+
     // Batería
-    const batteryPct = caps.hasBattery ? await readBatteryPct(deviceId) : undefined;
+    const batteryFirst = caps.hasBattery ? await readBatteryPct(deviceId) : undefined;
+    const batteryPct = typeof batteryFirst === 'number' ? batteryFirst : (hasHr || hasFtms) ? await readBatteryPct(deviceId) : undefined;
 
     // Poll del adaptador cada 3s para detectar apagado
     if (Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'android') {
@@ -406,8 +429,8 @@ export async function connectFlow(opts: ConnectFlowOpts): Promise<ConnectFlowRes
 
     return {
       deviceId,
-      hasHr: !!caps.hasHr,
-      hasFtms: !!caps.hasFtms,
+      hasHr,
+      hasFtms,
       type,
       batteryPct,
       disconnect: async () => {

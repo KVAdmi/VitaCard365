@@ -226,23 +226,7 @@ export default function FitSyncPage() {
             )}
             <GymBlePanel />
 
-            {/* Música integrada: Spotify y Apple Music (pendiente de conexión) */}
-            <div className="mt-4 flex items-center justify-center gap-8">
-              <button
-                type="button"
-                className="h-20 w-20 rounded-full border border-white/15 bg-white/5 hover:bg-white/10 shadow-[0_0_18px_rgba(0,0,0,.25)] overflow-hidden flex items-center justify-center"
-                title="Conectar Spotify"
-              >
-                <img src="/branding/spoty.png" alt="Spotify" className="h-10 w-10 object-contain" />
-              </button>
-              <button
-                type="button"
-                className="h-20 w-20 rounded-full border border-white/15 bg-white/5 hover:bg-white/10 shadow-[0_0_18px_rgba(0,0,0,.25)] overflow-hidden flex items-center justify-center"
-                title="Conectar Apple Music"
-              >
-                <img src="/branding/apple.png" alt="Apple Music" className="h-10 w-10 object-contain" />
-              </button>
-            </div>
+            {/* Música integrada: Spotify y Apple Music (temporalmente oculto) */}
           </div>
         </div>
       </div>

@@ -17,6 +17,11 @@
 
 
     <style name="AppTheme.NoActionBarLaunch" parent="Theme.SplashScreen">
-        <item name="android:background">@drawable/splash</item>
+        <!-- Android 12+ splash attributes -->
+        <item name="windowSplashScreenBackground">#0C1C3E</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/splash</item>
+        <item name="postSplashScreenTheme">@style/AppTheme.NoActionBar</item>
+        <!-- Fallback pre-Android 12: pintar fondo + logo centrado -->
+        <item name="android:windowBackground">@drawable/launch_splash</item>
     </style>
 </resources>

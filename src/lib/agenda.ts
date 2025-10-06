@@ -45,6 +45,23 @@ export async function fetchUpcomingAgenda(daysAhead = 30) {
   return (data || []) as AgendaEvent[];
 }
 
+export async function fetchAgendaRange(start: Date, end: Date) {
+  const { data: u } = await supabase.auth.getUser();
+  const uid = u?.user?.id;
+  if (!uid) return [] as AgendaEvent[];
+  const fromStr = start.toISOString().slice(0,10);
+  const toStr = end.toISOString().slice(0,10);
+  const { data } = await supabase
+    .from('agenda_events')
+    .select('*')
+    .eq('user_id', uid)
+    .gte('event_date', fromStr)
+    .lte('event_date', toStr)
+    .order('event_date', { ascending: true })
+    .order('event_time', { ascending: true });
+  return (data || []) as AgendaEvent[];
+}
+
 export async function createAgendaEvent(input: Omit<AgendaEvent,'id'|'user_id'>) {
   const { data: u } = await supabase.auth.getUser();
   const uid = u?.user?.id;

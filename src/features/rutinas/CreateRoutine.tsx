@@ -14,11 +14,12 @@ import { ensureAccess } from '@/lib/access';
 
 // ----- UI helpers (respetan tu tema por variables CSS) -----
 // Marco neón uniforme (mismo look & feel que las tiles de Fitness)
-const Card: React.FC<React.PropsWithChildren<{className?: string}>> = ({ className='', children }) => (
+const Card: React.FC<React.PropsWithChildren<{className?: string, hoverable?: boolean}>> = ({ className='', hoverable=false, children }) => (
   <div
-    className={`relative rounded-2xl border border-cyan-400/20 bg-white/10 backdrop-blur-md shadow-[0_20px_40px_rgba(0,40,80,0.45)] ${className}`}
-    style={{ boxShadow: '0 20px 40px rgba(0,40,80,0.35)' }}
+    className={`group relative rounded-2xl border border-cyan-400/20 bg-white/10 backdrop-blur-md shadow-[0_20px_40px_rgba(0,40,80,0.45)] ${hoverable ? 'transition-all duration-200 hover:bg-cyan-400/10 hover:shadow-[0_0_32px_4px_rgba(0,255,255,0.18)]' : ''} ${className}`}
+    style={{ boxShadow: '0 0 0 1.5px #00ffe7, 0 20px 40px rgba(0,40,80,0.35)' }}
   >
+    <div className="absolute inset-0 rounded-2xl pointer-events-none border border-white/5 group-hover:border-cyan-300/30 transition-all" />
     <div className="relative z-10">
       {children}
     </div>
@@ -190,6 +191,12 @@ export default function CreateRoutine() {
 
   return (
   <div className="p-4 space-y-4 text-[color:var(--vc-foreground,#e7e7ea)]">
+      {/* Neon keyframes locales para pulsar botones */}
+      <style>
+        {`
+          @keyframes neonPulseSoft { 0%, 100% { box-shadow: 0 0 0 1px rgba(0,255,231,0.28), 0 0 18px rgba(0,255,231,0.12);} 50% { box-shadow: 0 0 0 1px rgba(0,255,231,0.42), 0 0 24px rgba(0,255,231,0.18);} }
+        `}
+      </style>
       {/* Logo superior */}
       <div className="w-full flex justify-center mt-2">
         <img src="/branding/Logo 2 Vita.png" alt="VitaCard 365" className="h-20 sm:h-24 object-contain drop-shadow-[0_0_24px_rgba(240,99,64,0.55)]" />
@@ -198,13 +205,14 @@ export default function CreateRoutine() {
         <div className="flex items-end justify-between">
           <div>
             <h1 className="text-2xl font-extrabold tracking-tight">Crear mi rutina</h1>
-            <p className="text-sm opacity-70">Diseña tu plan. Confiable y rápido.</p>
+            <p className="text-sm opacity-70">Diseña tu plan.</p>
           </div>
           <div className="flex items-center gap-2">
             <button
               type="button"
               onClick={()=>navigate('/fit/progreso')}
-              className="px-3 py-2 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 text-sm"
+              className="px-3 py-2 rounded-xl text-sm border border-cyan-300/20 bg-cyan-400/10 text-cyan-100/90 hover:bg-cyan-400/20 hover:shadow-[0_0_16px_2px_rgba(0,255,255,0.12)]"
+              style={{ boxShadow: '0 0 0 1px rgba(0,255,231,0.28)', animation: 'neonPulseSoft 2.2s ease-in-out infinite' }}
               aria-label="Ver mi progreso"
             >
               Ver Progreso
@@ -212,7 +220,8 @@ export default function CreateRoutine() {
             <button
               type="button"
               onClick={()=>navigate('/fit/plan')}
-              className="px-3 py-2 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 text-sm"
+              className="px-3 py-2 rounded-xl text-sm border border-cyan-300/20 bg-cyan-400/10 text-cyan-100/90 hover:bg-cyan-400/20 hover:shadow-[0_0_16px_2px_rgba(0,255,255,0.12)]"
+              style={{ boxShadow: '0 0 0 1px rgba(0,255,231,0.28)', animation: 'neonPulseSoft 2.2s ease-in-out infinite' }}
               aria-label="Ver mi plan"
             >
               Ver Plan
@@ -221,7 +230,7 @@ export default function CreateRoutine() {
         </div>
       </div>
 
-      <Card>
+      <Card hoverable>
         <div className="grid grid-cols-3 sm:grid-cols-5 text-xs">
           {(['objetivo','estructura','dias','ejercicios','resumen'] as Paso[]).map(p => (
             <button key={p} onClick={()=>setPaso(p)}
@@ -234,7 +243,7 @@ export default function CreateRoutine() {
 
       {/* Paso 1 */}
       {paso==='objetivo' && (
-        <Card className="p-4 space-y-4">
+        <Card className="p-4 space-y-4" hoverable>
           <SectionTitle label="Objetivo del plan" />
           <div className="flex gap-2 overflow-x-auto">
             {(['musculo','grasa','movilidad','cardio','mixto'] as const).map(o=>(
@@ -291,12 +300,13 @@ export default function CreateRoutine() {
 
       {/* Paso 2 */}
       {paso==='estructura' && (
-        <Card className="p-4 space-y-4">
+        <Card className="p-4 space-y-4" hoverable>
           <SectionTitle label="Foco por día" hint="Upper/Lower/Full/Movilidad/Cardio/Core" />
           <div className="grid grid-cols-1 gap-3">
             {Array.from({length: diasSemana}, (_,i)=>i+1).map(d=>(
-              <div key={d} className="p-3 rounded-xl bg-white/5 border border-white/10">
-                <div className="text-sm mb-2">Día {d}</div>
+              <div key={d} className="p-3 rounded-xl bg-white/10 border border-cyan-400/20"
+                   style={{ boxShadow: '0 0 0 1px rgba(0,255,231,0.22)' }}>
+                <div className="text-sm mb-2 font-semibold text-[color:var(--vc-primary,#f06340)]">Día {d}</div>
                 <div className="flex flex-wrap gap-2">
                   {focos.map(f=>(
                     <button key={f} onClick={()=>setFocoPorDia(prev=>({...prev,[d]:f}))}
@@ -322,7 +332,7 @@ export default function CreateRoutine() {
 
       {/* Paso 3 */}
       {paso==='dias' && (
-        <Card className="p-4 space-y-4">
+        <Card className="p-4 space-y-4" hoverable>
           <SectionTitle label="Ejercicios por día" hint="agrega sets/reps/tiempo/descanso" />
           <div className="flex gap-2 overflow-x-auto">
               {Array.from({length: diasSemana}, (_,i)=>i+1).map(d=>(
@@ -340,7 +350,8 @@ export default function CreateRoutine() {
           {/* Lista de items */}
           <div className="space-y-2">
             {(itemsPorDia[diaActivo] ?? []).map((it,idx)=>(
-              <div key={idx} className="p-3 rounded-xl bg-black/20 border border-white/10">
+              <div key={idx} className="p-3 rounded-xl bg-black/20 border border-cyan-400/20"
+                   style={{ boxShadow: '0 0 0 1px rgba(0,255,231,0.18)' }}>
                 <div className="flex items-center justify-between gap-2">
                   <div className="text-sm opacity-80">Ejercicio: {it.ejercicio_id.slice(0,8)}…</div>
                   <button onClick={()=>removeItem(diaActivo, idx)} className="text-xs opacity-70">Quitar</button>
@@ -388,7 +399,8 @@ export default function CreateRoutine() {
           </div>
 
           {/* Buscador + filtros */}
-          <div className="p-3 rounded-xl bg-white/5 border border-white/10 overflow-hidden">
+          <div className="p-3 rounded-xl bg-white/10 border border-cyan-400/20 overflow-hidden"
+               style={{ boxShadow: '0 0 0 1px rgba(0,255,231,0.18)' }}>
             <div className="flex gap-2 flex-wrap">
               <input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Buscar ejercicio (press, sentadilla…)"
                      className="flex-1 min-w-0 px-3 py-2 rounded-xl bg-black/30 border border-white/10 text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-[color:var(--vc-primary,#f06340)] focus:border-[color:var(--vc-primary,#f06340)]" />
@@ -432,7 +444,8 @@ export default function CreateRoutine() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-3 max-h-64 overflow-y-auto">
               {resultados.map((r:any)=>(
                 <button key={r.id} onClick={()=>pushItem(diaActivo, r.id)}
-                  className="p-3 text-left rounded-xl bg-black/20 border border-white/10 hover:border-[color:var(--vc-primary,#f06340)] hover:bg-[color:var(--vc-primary,#f06340)]/10 transition-colors">
+                  className="p-3 text-left rounded-xl bg-black/20 border border-cyan-400/20 hover:bg-cyan-400/10 transition-colors"
+                  style={{ boxShadow: '0 0 0 1px rgba(0,255,231,0.16)' }}>
                   <div className="text-sm font-medium">{r.nombre}</div>
                   <div className="text-[11px] opacity-60">{r.categoria} · nivel {r.nivel_base}</div>
                   {r.equipo?.length ? <div className="text-[10px] opacity-60">equipo: {r.equipo.join(', ')}</div> : null}
@@ -450,13 +463,14 @@ export default function CreateRoutine() {
 
       {/* Paso 4 */}
       {paso==='ejercicios' && (
-        <Card className="p-4 space-y-4">
+        <Card className="p-4 space-y-4" hoverable>
           <SectionTitle label="Resumen rápido" hint="Semana 1" />
           <div className="space-y-2">
             {Array.from({length: diasSemana}, (_,i)=>i+1).map(d=>(
-              <div key={d} className="p-3 rounded-xl bg-white/5 border border-white/10">
+              <div key={d} className="p-3 rounded-xl bg-white/10 border border-cyan-400/20"
+                   style={{ boxShadow: '0 0 0 1px rgba(0,255,231,0.18)' }}>
                 <div className="flex items-center justify-between">
-                  <div className="text-sm font-semibold">Día {d} — {focoPorDia[d] ?? 'full'}</div>
+                  <div className="text-sm font-semibold"><span className="text-[color:var(--vc-primary,#f06340)]">Día {d}</span> — {focoPorDia[d] ?? 'full'}</div>
                   <button onClick={()=>{setDiaActivo(d);setPaso('dias')}} className="text-xs opacity-80">Editar</button>
                 </div>
                 <div className="mt-2 text-xs opacity-80">
@@ -496,7 +510,7 @@ export default function CreateRoutine() {
 
       {/* Banner inferior */}
       <div className="w-full flex justify-center pb-8">
-        <img src="/branding/10.png" alt="VitaCard 365" className="w-full max-w-xl" />
+        <img src="/branding/13.png" alt="VitaCard 365" className="w-full max-w-xl" />
       </div>
 
       <div className={Capacitor.getPlatform()!=='web' ? 'h-12' : ''}/>

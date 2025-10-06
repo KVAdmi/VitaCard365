@@ -27,6 +27,8 @@ const RobotIcon = (props) => (
 );
 import { Button } from './ui/button';
 import { useAuth } from '../contexts/AuthContext';
+import { supabase } from '@/lib/supabaseClient';
+import { getAvatarUrl } from '@/lib/avatar';
 import { Card, CardHeader, CardTitle, CardDescription } from './ui/card';
 import {
   DropdownMenu,
@@ -104,6 +106,54 @@ const Layout = ({ children, title, showBackButton = false }) => {
     return () => { try { sub && sub.remove(); } catch {} };
   }, [navigate]);
 
+  // Avatar firmado y refresco para evitar expiración
+  const [signedAvatar, setSignedAvatar] = useState(null);
+  useEffect(() => {
+    let timer;
+    (async () => {
+      try {
+        const { data: u } = await supabase.auth.getUser();
+        const uid = u?.user?.id;
+        if (!uid) { setSignedAvatar(null); return; }
+        // Primero intentamos en profiles_certificado_v2 (prod)
+        const { data: cert } = await supabase
+          .from('profiles_certificado_v2')
+          .select('avatar_url')
+          .eq('user_id', uid)
+          .limit(1)
+          .single();
+        let path = cert?.avatar_url;
+        if (!path) {
+          // Fallback a profiles.normal
+          const { data: prof } = await supabase
+            .from('profiles')
+            .select('avatar_url')
+            .eq('user_id', uid)
+            .limit(1)
+            .single();
+          path = prof?.avatar_url;
+        }
+        if (path) {
+          const url = await getAvatarUrl(path);
+          setSignedAvatar(url);
+        } else {
+          setSignedAvatar(null);
+        }
+      } catch {
+        setSignedAvatar(null);
+      } finally {
+        // refrescar cada 50 minutos aprox para evitar expirar (firma 60m)
+        timer = setTimeout(() => {
+          try {
+            // fuerza re-ejecución
+            setSignedAvatar(sa => sa); 
+          } catch {}
+        }, 50 * 60 * 1000);
+      }
+    })();
+    return () => { if (timer) clearTimeout(timer); };
+  }, [user?.id]);
+
   return (
     <div className="min-h-screen bg-vita-blue text-vita-white">
       <header className="sticky top-0 z-40 glass-card">
@@ -171,7 +221,9 @@ const Layout = ({ children, title, showBackButton = false }) => {
               className="w-8 h-8 bg-vita-orange rounded-full flex items-center justify-center cursor-pointer overflow-hidden"
               onClick={() => navigate('/perfil')}
             >
-              {user?.user_metadata?.avatarUrl ? (
+              {signedAvatar ? (
+                <img src={signedAvatar} alt="Avatar" className="w-full h-full object-cover" />
+              ) : user?.user_metadata?.avatarUrl ? (
                 <img src={user.user_metadata.avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
               ) : (
                 <span className="text-white text-sm font-bold">

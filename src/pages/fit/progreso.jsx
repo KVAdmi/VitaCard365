@@ -1,5 +1,6 @@
 // Progreso: dashboard con marcos neón, tendencias, anillos y badges
 import React, { useEffect, useMemo, useState } from 'react';
+import Layout from '@/components/Layout';
 import { Line, Doughnut, Radar } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
@@ -82,7 +83,7 @@ export default function FitProgreso() {
     // Sesiones en la semana (últimos 7 días)
     setSesionesSemana((data||[]).filter(w=>{
       const d = new Date(w.ts_inicio); return (hoy - d) <= 7*24*3600*1000; }).length);
-    // Racha: días consecutivos con minutos > 0 desde hoy hacia atrás
+  // Constancia: días consecutivos con minutos > 0 desde hoy hacia atrás
     let streak = 0; for (let i=6;i>=0;i--){ if ((bucket[i]?.min||0)>0) streak++; else break; }
     setStreakDias(streak);
   })(); }, []);
@@ -182,7 +183,14 @@ export default function FitProgreso() {
   }), []);
 
   return (
+    <Layout title="Progreso" showBackButton>
     <div className="px-4 pb-24 min-h-screen bg-gradient-to-br from-[#0E1A2B] via-[#101a2e] to-[#0a1120] relative overflow-hidden">
+      {/* Fallback back button (por si un layout viejo no lo trae) */}
+      <div className="pt-4 pb-2">
+        <button onClick={() => window.history.back()} className="text-cyan-100/80 hover:text-white text-sm border border-cyan-300/20 rounded-lg px-3 py-1 bg-cyan-400/10">
+          ← Regresar
+        </button>
+      </div>
       {/* Líneas NASA de fondo */}
       <div className="absolute inset-0 pointer-events-none z-0">
         <svg width="100%" height="100%" className="w-full h-full" style={{ position: 'absolute', top: 0, left: 0 }}>
@@ -214,7 +222,7 @@ export default function FitProgreso() {
         <NeonCard>
           <div className="flex items-center gap-2 text-cyan-100">
             <Timer className="h-4 w-4 text-cyan-300" />
-            <div className="text-xs opacity-80">Racha</div>
+            <div className="text-xs opacity-80">Constancia</div>
           </div>
           <div className="mt-1 text-white text-lg font-bold">{streakDias} {streakDias === 1 ? 'día' : 'días'}</div>
         </NeonCard>
@@ -295,7 +303,7 @@ export default function FitProgreso() {
             <div className="text-white font-semibold">Insignias</div>
           </div>
           <div className="mt-3 grid grid-cols-3 gap-3">
-            {[{ t: 'Racha 7', c: 'Racha de 7 días' }, { t: 'Cardio+', c: 'HR > 25 min' }, { t: 'Fuerza', c: '5 sesiones' }].map((b, i) => (
+            {[{ t: 'Constancia 7', c: '7 días seguidos' }, { t: 'Cardio+', c: 'HR > 25 min' }, { t: 'Fuerza', c: '5 sesiones' }].map((b, i) => (
               <div key={i} className="group relative flex flex-col items-center justify-center p-3 rounded-xl bg-white/5 border border-cyan-300/20 hover:bg-cyan-400/10 transition">
                 <Award className="h-6 w-6 text-amber-300 drop-shadow-[0_0_8px_rgba(255,170,0,0.7)]" />
                 <div className="mt-1 text-[11px] text-center text-cyan-100/90 font-semibold">{b.t}</div>
@@ -306,5 +314,6 @@ export default function FitProgreso() {
         </NeonCard>
       </div>
     </div>
+    </Layout>
   );
 }

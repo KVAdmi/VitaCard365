@@ -10,6 +10,7 @@ import {
   getIsScanning,
   getIsConnecting,
   getConnectedDeviceId,
+  scanFtmsHr as scanBleFtmsHr,
 } from '@/ble/ble';
 
 // [BLE] Using bridge only (rama nativa)
@@ -189,13 +190,20 @@ export default function GymBlePanel({ onHr }) {
     setDevices([]);
     setStatus('Pidiendo permisos');
     try {
-      // Inicia countdown 15s cuando empiece el escaneo
-      await startScan((d) => {
+      // Cuando "Solo fitness" está activo, escanear filtrando por servicios FTMS/HRS
+      const onDevice = (d) => {
         setDevices(prev => {
           if (prev.find(x => x.id === d.deviceId)) return prev; // anti-duplicados por deviceId
           return [...prev, { id: d.deviceId, name: d.name || 'Sin nombre', rssi: d.rssi }];
         });
-      });
+      };
+
+      if (onlyFitness) {
+        await scanBleFtmsHr(onDevice);
+      } else {
+        // Escaneo general
+        await startScan(onDevice);
+      }
       setStatus('Escaneando');
       setCountdown(15);
       if (countdownRef.current) clearInterval(countdownRef.current);

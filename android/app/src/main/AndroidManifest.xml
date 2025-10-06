@@ -1,7 +1,4 @@
-
-
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-
     <!-- PERMISOS -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
@@ -11,16 +8,12 @@
     <!-- Bluetooth (Android 12+) -->
     <uses-permission android:name="android.permission.BLUETOOTH" />
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
-    <uses-permission
-        android:name="android.permission.BLUETOOTH_SCAN"
-        android:usesPermissionFlags="neverForLocation" />
+    <uses-permission android:name="android.permission.BLUETOOTH_SCAN" android:usesPermissionFlags="neverForLocation" />
     <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
     <uses-permission android:name="android.permission.BLUETOOTH_ADVERTISE" />
 
     <!-- Recomendado por Maps: OpenGL ES 2.0 -->
-    <uses-feature
-        android:glEsVersion="0x00020000"
-        android:required="true" />
+    <uses-feature android:glEsVersion="0x00020000" android:required="true" />
     <!-- BLE disponible pero no requerido para instalar -->
     <uses-feature android:name="android.hardware.bluetooth_le" android:required="false" />
 
@@ -43,11 +36,11 @@
         android:theme="@style/AppTheme"
         android:hardwareAccelerated="true"
         android:enableOnBackInvokedCallback="true">
-
         <!-- Google Maps SDK (debe coincidir con la que pasas desde JS) -->
         <meta-data
             android:name="com.google.android.geo.API_KEY"
-            android:value="AIzaSyBg5PGOY4R91A2u9BW_eu6021p7gNJR7pk" />
+            android:value="AIzaSyBg5PGOY4R91A2u9BW_eu6021p7gNJR7pk"
+        />
 
         <!-- Activity principal -->
         <activity
@@ -69,10 +62,7 @@
             android:authorities="${applicationId}.fileprovider"
             android:exported="false"
             android:grantUriPermissions="true">
-            <meta-data
-                android:name="android.support.FILE_PROVIDER_PATHS"
-                android:resource="@xml/file_paths" />
+            <meta-data android:name="android.support.FILE_PROVIDER_PATHS" android:resource="@xml/file_paths" />
         </provider>
-
     </application>
 </manifest>

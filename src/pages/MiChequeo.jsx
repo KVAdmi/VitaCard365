@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Layout from '../components/Layout';
 import { Button } from '../components/ui/button';
@@ -10,7 +10,7 @@ import NASAHistoryCardsPanel from '../components/mi-chequeo/NASAHistoryCardsPane
 import AudioCleanupPanel from '../components/mi-chequeo/AudioCleanupPanel';
 import { Card, CardContent } from '../components/ui/card';
 import { Bar } from 'react-chartjs-2';
-import { HeartPulse, Wind, Thermometer, Activity, Weight, Moon, AlertTriangle } from 'lucide-react';
+import { HeartPulse, Wind, Activity, Weight, Moon, AlertTriangle } from 'lucide-react';
 import { useToast } from '../components/ui/use-toast';
 
 import {
@@ -28,6 +28,8 @@ import {
 import { Line } from 'react-chartjs-2';
 
 import { triageTests, levelCopy } from '../lib/triageEngine';
+import { useAuth } from '../contexts/AuthContext';
+import { supabase } from '../lib/supabaseClient';
 
 ChartJS.register(
   CategoryScale,
@@ -172,10 +174,12 @@ const MeasurementCard = ({ measurement }) => {
 const MiChequeo = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user } = useAuth();
   const [measurements] = useLocalStorage('vita-measurements', []);
   const [sleepHistory] = useLocalStorage('vita-sleep-history', []);
   const [triageEvents] = useLocalStorage('vita-triage_events', []);
   const mainPanelRef = useRef();
+  const [medDb, setMedDb] = useState([]);
 
   // Exportación a PDF deshabilitada por solicitud
 
@@ -186,6 +190,26 @@ const MiChequeo = () => {
     d.setHours(0,0,0,0);
     return d;
   }, []);
+
+  // Cargar datos reales de 'mediciones' (últimos 30 días) del usuario autenticado
+  useEffect(() => {
+    (async () => {
+      try {
+        if (!user?.id) return;
+        const from = new Date();
+        from.setDate(from.getDate() - 30);
+        const { data, error } = await supabase
+          .from('mediciones')
+          .select('*')
+          .eq('usuario_id', user.id)
+          .gte('ts', from.toISOString())
+          .order('ts', { ascending: true });
+        if (!error) setMedDb(data || []);
+      } catch (e) {
+        console.warn('No se pudieron cargar mediciones:', e?.message || e);
+      }
+    })();
+  }, [user?.id]);
 
   // Filtrar sleepHistory y triageEvents a los últimos 7 días
   const filteredSleepHistory = React.useMemo(() =>
@@ -198,21 +222,12 @@ const MiChequeo = () => {
   );
 
   // Unificar todas las entradas para la gráfica general (solo últimos 7 días)
+  // Feed combinado sólo para tarjetas (mantiene sleep/triage locales si aplica)
   const allEntries = React.useMemo(() => {
-    const sleepData = filteredSleepHistory.map((item) => ({
-      ...item,
-      date: item.date,
-      type: 'sleep',
-    }));
-    const triageData = filteredTriageEvents.map((item) => ({
-      ...item,
-      date: item.created_at,
-      type: 'triage',
-    }));
-    return [...measurements, ...sleepData, ...triageData].sort(
-      (a, b) => new Date(b.date || b.created_at) - new Date(a.date || a.created_at)
-    );
-  }, [measurements, filteredSleepHistory, filteredTriageEvents]);
+    const sleepData = filteredSleepHistory.map((item) => ({ ...item, date: item.date, type: 'sleep' }));
+    const triageData = filteredTriageEvents.map((item) => ({ ...item, date: item.created_at, type: 'triage' }));
+    return [...sleepData, ...triageData].sort((a, b) => new Date(b.date || b.created_at) - new Date(a.date || a.created_at));
+  }, [filteredSleepHistory, filteredTriageEvents]);
 
   // Extraer la última sesión de sueño (de los últimos 7 días) para el panel principal
   const lastSleep = React.useMemo(() => {
@@ -295,58 +310,31 @@ const MiChequeo = () => {
   }, [allEntries]);
 
   const evolutionChartData = React.useMemo(() => {
-    const sortedData = [...allEntries]
-      .filter((d) => d.type === 'vitals' || d.type === 'weight')
-      .sort((a, b) => new Date(a.date) - new Date(b.date));
+    // Construir series desde 'mediciones'
+    const series = medDb;
+    // fechas únicas
+    const labelDates = Array.from(new Set(series.map(r => r.ts))).sort((a,b)=> new Date(a) - new Date(b));
+    const fmt = (iso) => new Date(iso).toLocaleDateString('es-ES', { day: '2-digit', month: 'short' });
+    const labels = labelDates.map(fmt);
+    const findForDay = (pred) => labelDates.map(dIso => {
+      const row = series.find(r => pred(r) && new Date(r.ts).toDateString()===new Date(dIso).toDateString());
+      return row ? row : null;
+    });
+    const dataWeight = findForDay(r => r.peso_kg != null).map(r => r ? Number(r.peso_kg) : null);
+    const dataSis = findForDay(r => r.sistolica != null).map(r => r ? r.sistolica : null);
+    const dataDia = findForDay(r => r.diastolica != null).map(r => r ? r.diastolica : null);
+    const dataPulse = findForDay(r => r.pulso_bpm != null).map(r => r ? r.pulso_bpm : null);
 
     return {
-      labels: sortedData.map((d) =>
-        new Date(d.date).toLocaleDateString('es-ES', { day: '2-digit', month: 'short' })
-      ),
+      labels,
       datasets: [
-        {
-          label: 'Peso (kg)',
-          data: sortedData.map((d) => d.vitals?.weight),
-          borderColor: '#4ade80',
-          backgroundColor: 'rgba(74, 222, 128, 0.1)',
-          yAxisID: 'yWeight',
-          tension: 0.3,
-          pointStyle: 'circle',
-        },
-        {
-          label: 'Sistólica (mmHg)',
-          data: sortedData.map((d) =>
-            d.vitals?.pressure ? parseInt(d.vitals.pressure.split('/')[0]) : null
-          ),
-          borderColor: '#f87171',
-          backgroundColor: 'rgba(248, 113, 113, 0.1)',
-          yAxisID: 'yPressure',
-          tension: 0.3,
-          pointStyle: 'circle',
-        },
-        {
-          label: 'Diastólica (mmHg)',
-          data: sortedData.map((d) =>
-            d.vitals?.pressure ? parseInt(d.vitals.pressure.split('/')[1]) : null
-          ),
-          borderColor: '#fb923c',
-          backgroundColor: 'rgba(251, 146, 60, 0.1)',
-          yAxisID: 'yPressure',
-          tension: 0.3,
-          pointStyle: 'circle',
-        },
-        {
-          label: 'Pulso (BPM)',
-          data: sortedData.map((d) => d.vitals?.heartRate),
-          borderColor: '#f472b6',
-          backgroundColor: 'rgba(244, 114, 182, 0.1)',
-          yAxisID: 'yPressure',
-          tension: 0.3,
-          pointStyle: 'circle',
-        },
+        { label: 'Peso (kg)', data: dataWeight, borderColor: '#4ade80', backgroundColor: 'rgba(74,222,128,0.1)', yAxisID: 'yWeight', tension: 0.3, pointStyle: 'circle' },
+        { label: 'Sistólica (mmHg)', data: dataSis, borderColor: '#f87171', backgroundColor: 'rgba(248,113,113,0.1)', yAxisID: 'yPressure', tension: 0.3, pointStyle: 'circle' },
+        { label: 'Diastólica (mmHg)', data: dataDia, borderColor: '#fb923c', backgroundColor: 'rgba(251,146,60,0.1)', yAxisID: 'yPressure', tension: 0.3, pointStyle: 'circle' },
+        { label: 'Pulso (BPM)', data: dataPulse, borderColor: '#f472b6', backgroundColor: 'rgba(244,114,182,0.1)', yAxisID: 'yPressure', tension: 0.3, pointStyle: 'circle' },
       ],
     };
-  }, [allEntries]);
+  }, [medDb]);
 
   const chartOptions = {
     responsive: true,

@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Helmet } from 'react-helmet';
 import Layout from '../components/Layout';
@@ -30,6 +31,7 @@ import {
 
 const Coberturas = () => {
   const { coverageUsage, trackCoverageUsage } = useUser();
+  const location = useLocation();
   const [selectedCategory, setSelectedCategory] = useState('medica');
   const [confirmingService, setConfirmingService] = useState(null);
   const { toast } = useToast();
@@ -117,6 +119,18 @@ const Coberturas = () => {
     const remaining = service.events - getServiceUsage(service.id);
     return `${remaining} de ${service.events} disponibles`;
   };
+
+  // Si viene ?cat=fitness en la URL, seleccionar esa categoría por defecto
+  useEffect(() => {
+    try {
+      const params = new URLSearchParams(location.search);
+      const cat = params.get('cat');
+      if (cat && ['medica','legal','vial','mascotas','fitness','hogar','funeraria'].includes(cat)) {
+        setSelectedCategory(cat);
+      }
+    } catch {}
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <>

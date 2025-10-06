@@ -49,8 +49,14 @@ export async function uploadUserAvatar(file: File, opts?: { table?: 'profiles'|'
   const table = opts?.table ?? 'profiles';
   const recordIdColumn = opts?.record_id_column ?? (table === 'profiles' ? 'user_id' : 'user_id');
   const updates: any = { avatar_url: path };
-  const { error: updErr } = await supabase.from(table).update(updates).eq(recordIdColumn, uid);
+  // Intentar update, y si no afecta filas, hacer upsert seguro
+  const { data: updData, error: updErr, status } = await supabase.from(table).update(updates).eq(recordIdColumn, uid).select(recordIdColumn);
   if (updErr) throw updErr;
+  if (!updData || updData.length === 0) {
+    const payload: any = { [recordIdColumn]: uid, ...updates };
+  const { error: upsertErr } = await supabase.from(table).upsert(payload, { onConflict: recordIdColumn });
+    if (upsertErr) throw upsertErr;
+  }
 
   // Generar signed URL
   const { data: signed, error: sErr } = await supabase.storage.from('avatars').createSignedUrl(path, 60*60);

@@ -31,7 +31,8 @@ const Perfil = () => {
     phone: '',
     curp: '',
     birthDate: '',
-    avatarUrl: ''
+    avatarUrl: '',
+    bloodType: ''
   });
   const [errors, setErrors] = useState({});
   const fileInputRef = useRef(null);
@@ -45,7 +46,8 @@ const Perfil = () => {
         phone: user.user_metadata.phone || '',
         curp: user.user_metadata.curp || '',
         birthDate: user.user_metadata.birthDate || '',
-        avatarUrl: user.user_metadata.avatarUrl || ''
+        avatarUrl: user.user_metadata.avatarUrl || '',
+        bloodType: user.user_metadata.bloodType || ''
       });
       if (user.user_metadata.planStatus === 'active' && (!user.user_metadata.phone || !user.user_metadata.curp || !user.user_metadata.birthDate)) {
         setIsEditing(true);
@@ -149,7 +151,23 @@ const Perfil = () => {
     setErrors(validationErrors);
 
     try {
+      // 1) Persistir en auth.user_metadata para mantener consistencia en cliente
       await updateUser(profileData);
+      // 2) Persistir en tabla profiles (si existe columna blood_type)
+      try {
+        const { data: u } = await supabase.auth.getUser();
+        const uid = u?.user?.id;
+        if (uid) {
+          await supabase.from('profiles').update({
+            phone: profileData.phone || null,
+            curp: profileData.curp || null,
+            birth_date: profileData.birthDate || null,
+            blood_type: profileData.bloodType || null,
+            name: profileData.name || null,
+            alias: profileData.alias || null,
+          }).eq('user_id', uid);
+        }
+      } catch {}
       setIsEditing(false);
       toast({
         title: '¡Éxito!',

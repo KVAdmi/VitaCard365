@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from "react";
 import { generateVitalsPDF } from "../../lib/generateVitalsPDF";
 import { fetchUserChartsData } from "../../lib/fetchUserChartsData";
+import { supabase } from "../../lib/supabaseClient";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { useAuth } from "../../contexts/AuthContext";
 
@@ -30,57 +31,78 @@ function HistoryCard({ title, subtitle, children }) {
 }
 
 export default function NASAHistoryCardsPanel() {
-
-  // DEMO: Datos dummy para demo rápida
+  const { user } = useAuth();
   const [loading, setLoading] = useState(false);
-  const [mediciones, setMediciones] = useState([
-    // 7 días de presión arterial, pulso, SpO2, temperatura, peso
-    ...Array.from({length:7}).map((_,i) => {
-      const d = new Date(); d.setDate(d.getDate()-i);
-      return {
-        ts: d.toISOString(),
-        sistolica: 110+Math.floor(Math.random()*20),
-        diastolica: 70+Math.floor(Math.random()*10),
-        pulso_bpm: 65+Math.floor(Math.random()*15),
-        spo2: 95+Math.floor(Math.random()*4),
-        temperatura: 36+Math.random(),
-        peso: 70+Math.random()*2-1,
-      };
-    })
-  ]);
+  const [mediciones, setMediciones] = useState([]);
+
+  // Cargar datos reales de Supabase (últimos 7 días)
+  useEffect(() => {
+    (async () => {
+      try {
+        if (!user?.id) return;
+        setLoading(true);
+        const since = new Date();
+        since.setDate(since.getDate() - 6); // incluye hoy
+        since.setHours(0,0,0,0);
+        const { data, error } = await supabase
+          .from('mediciones')
+          .select('*')
+          .eq('usuario_id', user.id)
+          .gte('ts', since.toISOString())
+          .order('ts', { ascending: true });
+        if (!error) setMediciones(data || []);
+      } catch (e) {
+        // opcional: log
+        console.warn('No se pudieron cargar mediciones:', e?.message || e);
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, [user?.id]);
 
   // Formatear datos para las gráficas
-  const bpData = mediciones.map(m => ({
-    fecha: new Date(m.ts).toLocaleDateString('es-MX', { day: '2-digit', month: 'short' }),
-    sistolica: m.sistolica,
-    diastolica: m.diastolica,
-    pulso: m.pulso_bpm
-  }));
+  const bpData = mediciones
+    .filter(m => m.sistolica != null || m.diastolica != null || m.pulso_bpm != null)
+    .map(m => ({
+      fecha: new Date(m.ts).toLocaleDateString('es-MX', { day: '2-digit', month: 'short' }),
+      sistolica: m.sistolica ?? null,
+      diastolica: m.diastolica ?? null,
+      pulso: m.pulso_bpm ?? null,
+    }));
 
-  const glucosaData = mediciones.map(m => ({
-    fecha: new Date(m.ts).toLocaleDateString('es-MX', { day: '2-digit', month: 'short' }),
-    glucosa: 80+Math.floor(Math.random()*40)
-  }));
+  // Glucosa: derivar de mediciones tipo 'glucosa' si existe en notas
+  const glucosaData = mediciones
+    .filter(m => m.tipo === 'glucosa' && m.notas)
+    .map(m => {
+      const match = String(m.notas).match(/glucosa\s*=\s*([0-9]+\.?[0-9]*)/i);
+      const valor = match ? parseFloat(match[1]) : null;
+      return {
+        fecha: new Date(m.ts).toLocaleDateString('es-MX', { day: '2-digit', month: 'short' }),
+        glucosa: valor,
+      };
+    })
+    .filter(d => d.glucosa != null);
 
-  const spo2Data = mediciones.map(m => ({
-    fecha: new Date(m.ts).toLocaleDateString('es-MX', { day: '2-digit', month: 'short' }),
-    spo2: m.spo2
-  }));
+  const spo2Data = mediciones
+    .filter(m => m.spo2 != null)
+    .map(m => ({
+      fecha: new Date(m.ts).toLocaleDateString('es-MX', { day: '2-digit', month: 'short' }),
+      spo2: m.spo2
+    }));
 
-  const hrData = mediciones.map(m => ({
-    fecha: new Date(m.ts).toLocaleDateString('es-MX', { day: '2-digit', month: 'short' }),
-    pulso: m.pulso_bpm
-  }));
+  const hrData = mediciones
+    .filter(m => m.pulso_bpm != null)
+    .map(m => ({
+      fecha: new Date(m.ts).toLocaleDateString('es-MX', { day: '2-digit', month: 'short' }),
+      pulso: m.pulso_bpm
+    }));
 
-  const tempData = mediciones.map(m => ({
-    fecha: new Date(m.ts).toLocaleDateString('es-MX', { day: '2-digit', month: 'short' }),
-    temperatura: m.temperatura
-  }));
-
-  const pesoData = mediciones.map(m => ({
-    fecha: new Date(m.ts).toLocaleDateString('es-MX', { day: '2-digit', month: 'short' }),
-    peso: m.peso
-  }));
+  const pesoData = mediciones
+    .filter(m => m.tipo === 'peso' && (m.peso_kg != null || m.peso != null))
+    .map(m => ({
+      fecha: new Date(m.ts).toLocaleDateString('es-MX', { day: '2-digit', month: 'short' }),
+      peso: m.peso_kg ?? m.peso
+    }));
 
   // Generación de PDF deshabilitada según solicitud
 
@@ -145,20 +167,6 @@ export default function NASAHistoryCardsPanel() {
               <Tooltip contentStyle={{ background: '#18181b', border: 'none', color: '#fff' }} />
               <Legend wrapperStyle={{ color: '#fff' }} />
               <Line type="monotone" dataKey="pulso" stroke="#fbbf24" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} animationDuration={900} name="Pulso" />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
-      </HistoryCard>
-  <HistoryCard title="Temperatura" subtitle="Últimos 7 días">
-        <div style={{ height: 180, width: '100%' }}>
-          <ResponsiveContainer width="100%" height={160}>
-            <LineChart data={tempData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#23325b" />
-              <XAxis dataKey="fecha" stroke="#fff" fontSize={12} tick={{ fill: '#fff' }} />
-              <YAxis stroke="#f87171" fontSize={12} tick={{ fill: '#f87171' }} />
-              <Tooltip contentStyle={{ background: '#18181b', border: 'none', color: '#fff' }} />
-              <Legend wrapperStyle={{ color: '#fff' }} />
-              <Line type="monotone" dataKey="temperatura" stroke="#f87171" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} animationDuration={900} name="Temperatura" />
             </LineChart>
           </ResponsiveContainer>
         </div>
