@@ -15,30 +15,43 @@ export async function uploadUserAvatar(file: File, opts?: { table?: 'profiles'|'
   // Validaciones básicas
   const allowed = ['image/jpeg','image/png','image/webp'];
   if (!allowed.includes(file.type)) throw new Error('Tipo no permitido');
-  if (file.size > 1024*1024) throw new Error('Archivo >1MB');
 
   // Opcional: reescalar si el contexto lo permite
   let blob: Blob = file;
   try {
     if (typeof createImageBitmap !== 'undefined') {
       const bmp = await createImageBitmap(file);
-      const max = 512;
-      const scale = Math.min(1, max / Math.max(bmp.width, bmp.height));
-      const w = Math.round(bmp.width * scale);
-      const h = Math.round(bmp.height * scale);
+      // Recorte cuadrado centrado + escalado a 800px lado mayor
+      const target = 800;
+      const side = Math.min(bmp.width, bmp.height);
+      const sx = Math.max(0, Math.floor((bmp.width - side)/2));
+      const sy = Math.max(0, Math.floor((bmp.height - side)/2));
+      const canvasCrop = document.createElement('canvas');
+      canvasCrop.width = side; canvasCrop.height = side;
+      const ctxCrop = canvasCrop.getContext('2d');
+      if (!ctxCrop) throw new Error('Canvas no disponible');
+      ctxCrop.drawImage(bmp, sx, sy, side, side, 0, 0, side, side);
+
+      const scale = Math.min(1, target / side);
+      const w = Math.round(side * scale);
+      const h = Math.round(side * scale);
       const canvas = document.createElement('canvas');
       canvas.width = w; canvas.height = h;
       const ctx = canvas.getContext('2d');
       if (!ctx) throw new Error('Canvas no disponible');
-      ctx.drawImage(bmp, 0, 0, w, h);
-      const type = file.type === 'image/jpeg' ? 'image/jpeg' : 'image/png';
-      blob = await new Promise<Blob>((resolve) => canvas.toBlob(b => resolve(b!), type, 0.88)!);
+      ctx.drawImage(canvasCrop, 0, 0, w, h);
+      // Forzar JPEG para mejor compresión
+      blob = await new Promise<Blob>((resolve) => canvas.toBlob(b => resolve(b!), 'image/jpeg', 0.82)!);
     }
   } catch {
     // si falla, subimos el original
   }
 
-  const ext = file.type === 'image/png' ? 'png' : file.type === 'image/webp' ? 'webp' : 'jpg';
+  // Validación de tamaño final (hasta 2MB)
+  if (blob.size > 2 * 1024 * 1024) throw new Error('Archivo >2MB');
+
+  // Usar extensión acorde al blob final (generalmente jpg)
+  const ext = 'jpg';
   const name = `avatar_${Date.now()}.${ext}`;
   const path = `${uid}/${name}`;
 

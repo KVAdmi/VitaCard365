@@ -5,11 +5,18 @@
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
 
+    <!-- Foreground service y notificaciones (Android 13+) -->
+    <!-- Agregado para compatibilidad con servicios en primer plano y notificaciones -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
     <!-- Bluetooth (Android 12+) -->
     <uses-permission android:name="android.permission.BLUETOOTH" />
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
     <uses-permission android:name="android.permission.BLUETOOTH_SCAN" android:usesPermissionFlags="neverForLocation" />
     <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+    <!-- TODO: Si la app no hace advertising BLE, se puede retirar BLUETOOTH_ADVERTISE en una PR posterior. -->
     <uses-permission android:name="android.permission.BLUETOOTH_ADVERTISE" />
 
     <!-- Recomendado por Maps: OpenGL ES 2.0 -->
@@ -53,6 +60,14 @@
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <!-- Deep link para callback OAuth (vitacard365://auth/callback) -->
+            <!-- autoVerify aplica solo para App Links https; removido para esquema personalizado -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="vitacard365" android:host="auth" android:path="/callback" />
             </intent-filter>
         </activity>
 

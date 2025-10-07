@@ -2,12 +2,17 @@
 import React from 'react';
 import { Button } from '../ui/button';
 import { supabase } from '../../lib/supabaseClient';
+import { Capacitor } from '@capacitor/core';
 
-const GoogleLoginButton = () => {
+const GoogleLoginButton = ({ nextPath } = {}) => {
   const handleGoogleLogin = async () => {
+    const isNative = Capacitor.isNativePlatform && Capacitor.isNativePlatform();
+    const next = nextPath ? encodeURIComponent(nextPath) : '';
+    const base = isNative ? 'vitacard365://auth/callback' : `${window.location.origin}/auth/callback`;
+    const redirectTo = next ? `${base}?next=${next}` : base;
     await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: `${window.location.origin}/auth/callback` }
+      options: { redirectTo }
     });
   };
 

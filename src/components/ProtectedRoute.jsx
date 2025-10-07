@@ -67,7 +67,8 @@ const ProtectedRoute = ({ children }) => {
 
   // Si el acceso no está activo y no está en una ruta permitida de pago, redirigimos a /mi-plan
   if (!accessActive && !isOnAllowedPaymentRoute) {
-    return <Navigate to="/mi-plan" replace state={{ from: location.pathname }} />;
+    // En acceso inactivo, fuerza flujo de pago
+    return <Navigate to="/payment-gateway" replace state={{ from: location.pathname }} />;
   }
 
   // Acceso permitido

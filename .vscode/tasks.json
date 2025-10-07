@@ -514,6 +514,13 @@
 			"command": "npm run build",
 			"isBackground": false,
 			"group": "build"
+		},
+		{
+			"label": "assets: generate fresh",
+			"type": "shell",
+			"command": "npx @capacitor/assets generate",
+			"isBackground": false,
+			"group": "build"
 		}
 	]
 }

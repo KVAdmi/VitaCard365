@@ -38,12 +38,16 @@ import Receipt from './pages/Receipt';
 import PaymentGateway from './pages/PaymentGateway';
 import FitCallback from './pages/FitCallback';
 import ResetPassword from './pages/ResetPassword';
+import AuthCallback from './pages/AuthCallback';
+import { useEffect } from 'react';
+import { initAuthDeepLinks } from '@/lib/deeplinks';
 
 
 
 
 
 function App() {
+  useEffect(()=>{ initAuthDeepLinks(); },[]);
   return (
     <HelmetProvider>
       <>
@@ -79,6 +83,8 @@ function App() {
                     <Route path="/politicas-de-privacidad" element={<Policy />} />
                     <Route path="/terminos-y-condiciones" element={<Terms />} />
                     <Route path="/reset-password" element={<ResetPassword />} />
+                    <Route path="/auth/callback" element={<AuthCallback />} />
+                    <Route path="/auth/callback" element={<AuthCallback />} />
                     
                     <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
                     <Route path="/coberturas" element={<ProtectedRoute><Coberturas /></ProtectedRoute>} />

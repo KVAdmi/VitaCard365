@@ -15,8 +15,9 @@ console.log('=====================');
 // exporta una sola instancia
 export const supabase = createClient(url, anon, {
   auth: {
+    flowType: 'pkce',
     persistSession: true,
-    detectSessionInUrl: true,
+    detectSessionInUrl: true, // web: detecta /auth/callback; nativo: usamos appUrlOpen
     autoRefreshToken: true,
     storageKey: 'vita-auth',
     storage: window.localStorage

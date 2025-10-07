@@ -8,7 +8,14 @@
         "build": "vite build --config vite.config.mjs",
         "preview": "vite preview --config vite.config.mjs",
         "postbuild": "node scripts/check-css.cjs",
-        "api": "node server/index.js"
+        "seed:users": "node scripts/create-seed-users.mjs",
+        "admin:set-password": "node scripts/set-password-by-email.mjs",
+        "backfill:profiles": "node scripts/backfill-profiles.mjs",
+        "api": "node server/index.js",
+        "release:android": "npm run build && npx cap sync android && cd android && .\\gradlew.bat clean bundleRelease",
+        "release:ios": "npm run build && npx cap sync ios && npx cap open ios",
+        "publish:android:internal": "cd android && .\\gradlew.bat publishBundle --no-daemon",
+        "publish:ios:testflight": "cd ios && bundle install && bundle exec fastlane beta"
     },
     "dependencies": {
         "@capacitor-community/bluetooth-le": "^7.0.0",

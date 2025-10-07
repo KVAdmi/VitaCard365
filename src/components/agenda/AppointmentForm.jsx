@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { toLocalDateTimeISO } from '@/lib/date';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
@@ -17,7 +18,7 @@ const AppointmentForm = ({ onSubmit, initialData }) => {
       setFormData({
         ...initialData,
         // Format date for datetime-local input
-        datetime: initialData.datetime ? new Date(initialData.datetime).toISOString().slice(0, 16) : ''
+        datetime: initialData.datetime ? toLocalDateTimeISO(new Date(initialData.datetime)) : ''
       });
     }
   }, [initialData]);

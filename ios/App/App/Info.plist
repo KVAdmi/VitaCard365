@@ -9,6 +9,8 @@
     <string>Usamos tu ubicación para registrar tus recorridos y centrar el mapa.</string>
     <key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
     <string>Usamos tu ubicación para registrar tus recorridos y centrar el mapa.</string>
+	<key>NSBluetoothPeripheralUsageDescription</key>
+	<string>VitaCard necesita acceso Bluetooth para conectar dispositivos de entrenamiento compatibles.</string>
 	<key>NSBluetoothAlwaysUsageDescription</key>
 	<string>VitaCard usa Bluetooth para conectar aparatos de gimnasio y registrar tu entrenamiento.</string>
 	<key>CFBundleDevelopmentRegion</key>
@@ -54,5 +56,19 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>location</string>
+		<string>bluetooth-central</string>
+	</array>
+		<key>CFBundleURLTypes</key>
+		<array>
+			<dict>
+				<key>CFBundleURLSchemes</key>
+				<array>
+					<string>vitacard365</string>
+				</array>
+			</dict>
+		</array>
 </dict>
 </plist>

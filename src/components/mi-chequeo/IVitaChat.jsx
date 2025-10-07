@@ -9,6 +9,7 @@ export default function IVitaChat() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
+  const [remaining, setRemaining] = useState(null);
 
   async function handleSend(e) {
     e?.preventDefault?.();
@@ -34,6 +35,12 @@ export default function IVitaChat() {
       console.log("[chat] askIVita:", r);
 
       if (!r.ok) {
+        if (r.status === 429) {
+          setRemaining(r.remaining ?? 0);
+          setErrorMsg('Has llegado al límite de mensajes diarios. Vuelve mañana para tu consulta con i‑Vita.');
+          setLoading(false);
+          return;
+        }
         setErrorMsg(
           `Error de conexión${r.status ? ` (status ${r.status})` : ""}. ${
             r.errorDetail || ""
@@ -47,7 +54,8 @@ export default function IVitaChat() {
       setMessages(prev => [...prev, { role: "assistant", content: botText }]);
 
       // 4) Asegura que el banner se quite
-      setErrorMsg("");
+  setErrorMsg("");
+  if (typeof r.remaining === 'number') setRemaining(r.remaining);
     } catch (err) {
       console.error("[chat] fetch error:", err);
       setErrorMsg("Error de conexión. Intenta de nuevo.");
@@ -80,10 +88,13 @@ export default function IVitaChat() {
           onChange={e => setInput(e.target.value)}
           disabled={loading}
         />
-        <button type="submit" disabled={loading}>
+        <button type="submit" disabled={loading || (remaining !== null && remaining <= 0)}>
           Enviar
         </button>
       </form>
+      {remaining !== null && remaining >= 0 && (
+        <div className="text-xs text-white/70 mt-2">Consultas disponibles hoy: {remaining}</div>
+      )}
     </div>
   );
 }

@@ -1,11 +1,14 @@
 // src/pages/PaymentGateway.jsx
 import { useEffect, useRef, useState } from "react";
+import { useNavigate } from 'react-router-dom';
+import { supabase } from '@/lib/supabaseClient';
 import { usePayment } from "../hooks/usePayment";
 import { createPreference } from "../lib/api";
 import Layout from "../components/Layout";
 // import MPWallet from "../components/payments/MPWallet.jsx";
 
 export default function PaymentGateway() {
+  const navigate = useNavigate();
   const {
     planType, setPlanType,
     familySize, setFamilySize,
@@ -20,6 +23,23 @@ export default function PaymentGateway() {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+
+  // Si ya está activo en Supabase, ir directo a Perfil
+  useEffect(() => { (async()=>{
+    try{
+      const { data: u } = await supabase.auth.getUser();
+      const uid = u?.user?.id;
+      if (!uid) return;
+      const { data } = await supabase
+        .from('profiles_certificado_v2')
+        .select('acceso_activo')
+        .eq('user_id', uid)
+        .maybeSingle();
+      if (data?.acceso_activo) {
+        navigate('/perfil', { replace: true });
+      }
+    }catch{}
+  })(); }, []);
 
   // Resetear errores cuando cambie la configuración
   const lastConfig = useRef({ planType, familySize, frequency, totalAmount });
