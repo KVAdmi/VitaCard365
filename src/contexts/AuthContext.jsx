@@ -146,8 +146,15 @@ export const AuthProvider = ({ children }) => {
       if (error) throw error;
     } else {
       localStorage.removeItem('vita-user');
-      setUser(null);
     }
+    try {
+      // Limpieza defensiva de posibles restos
+      localStorage.removeItem('supabase.auth.token');
+      localStorage.removeItem('vita-auth');
+    } catch {}
+    setUser(null);
+    // Navegar a landing para resetear toda la UI de manera segura
+    try { window.location.replace('/'); } catch {}
   };
 
   const updateUser = async (updateData) => {

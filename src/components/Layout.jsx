@@ -106,6 +106,24 @@ const Layout = ({ children, title, showBackButton = false }) => {
     return () => { try { sub && sub.remove(); } catch {} };
   }, [navigate]);
 
+  // Cerrar overlays/modales globales al cambiar de ruta para evitar "pantalla oscura"
+  useEffect(() => {
+    // Cierra el chat si estuviera abierto
+    if (showChat) setShowChat(false);
+    // Intenta cerrar cualquier Dialog/Sheet compatible con tecla Escape
+    try {
+      const evt = new KeyboardEvent('keydown', {
+        key: 'Escape',
+        code: 'Escape',
+        keyCode: 27,
+        which: 27,
+        bubbles: true,
+      });
+      document.dispatchEvent(evt);
+    } catch {}
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.pathname]);
+
   // Avatar firmado y refresco para evitar expiración
   const [signedAvatar, setSignedAvatar] = useState(null);
   useEffect(() => {

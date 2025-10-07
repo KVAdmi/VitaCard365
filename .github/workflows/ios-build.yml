@@ -1,0 +1,103 @@
+name: iOS Build and TestFlight
+
+on:
+  workflow_dispatch:
+    inputs:
+      scheme:
+        description: Xcode scheme
+        required: false
+        default: App
+
+jobs:
+  build-ios:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build web app
+        run: npm run build
+
+      - name: Capacitor sync iOS
+        run: npx cap sync ios
+
+      - name: Install CocoaPods
+        run: |
+          sudo gem install cocoapods -N || true
+          cd ios/App
+          pod install --repo-update
+
+      - name: Import signing certificates and provisioning profile
+        uses: apple-actions/import-codesign-certs@v2
+        with:
+          p12-file-base64: ${{ secrets.IOS_CERT_P12_BASE64 }}
+          p12-password: ${{ secrets.IOS_CERT_PASSWORD }}
+          mobileprovision-base64: ${{ secrets.IOS_PROVISIONING_PROFILE_BASE64 }}
+
+      - name: Xcode archive
+        run: |
+          mkdir -p build
+          xcodebuild \
+            -workspace ios/App/App.xcworkspace \
+            -scheme "${{ github.event.inputs.scheme }}" \
+            -configuration Release \
+            -archivePath build/App.xcarchive \
+            clean archive \
+            DEVELOPMENT_TEAM=${{ secrets.APPLE_TEAM_ID }} \
+            PRODUCT_BUNDLE_IDENTIFIER=${{ secrets.IOS_BUNDLE_ID }} \
+            CODE_SIGN_STYLE=Manual
+
+      - name: Create exportOptions.plist
+        run: |
+          cat > exportOptions.plist << 'EOF'
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>method</key>
+            <string>app-store</string>
+            <key>uploadSymbols</key>
+            <true/>
+            <key>destination</key>
+            <string>export</string>
+            <key>signingStyle</key>
+            <string>manual</string>
+            <key>teamID</key>
+            <string>${{ secrets.APPLE_TEAM_ID }}</string>
+            <key>provisioningProfiles</key>
+            <dict>
+              <key>${{ secrets.IOS_BUNDLE_ID }}</key>
+              <string>${{ secrets.IOS_PROFILE_NAME }}</string>
+            </dict>
+          </dict>
+          </plist>
+          EOF
+
+      - name: Export IPA
+        run: |
+          xcodebuild -exportArchive \
+            -archivePath build/App.xcarchive \
+            -exportOptionsPlist exportOptions.plist \
+            -exportPath build/export
+
+      - name: Upload to TestFlight
+        uses: apple-actions/upload-testflight@v2
+        with:
+          app-path: build/export/*.ipa
+          issuer-id: ${{ secrets.ASC_ISSUER_ID }}
+          api-key-id: ${{ secrets.ASC_KEY_ID }}
+          api-key: ${{ secrets.ASC_API_KEY }}
+
+      - name: Upload IPA artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-ipa
+          path: build/export/*.ipa

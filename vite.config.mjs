@@ -4,6 +4,8 @@ import { resolve } from 'path';
 
 // https://vitejs.dev/config/
 export default defineConfig({
+  // Importante para Capacitor: rutas relativas en assets
+  base: './',
   plugins: [react()],
   resolve: {
     alias: {

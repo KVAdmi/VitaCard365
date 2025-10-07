@@ -1,5 +1,6 @@
 // Progreso: dashboard con marcos neón, tendencias, anillos y badges
 import React, { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Layout from '@/components/Layout';
 import { Line, Doughnut, Radar } from 'react-chartjs-2';
 import {
@@ -45,6 +46,7 @@ const NeonCard = ({ children, className = '' }) => (
 );
 
 export default function FitProgreso() {
+  const navigate = useNavigate();
   const { diasSemana } = useRoutineSummary();
   const [labels, setLabels] = useState(['L','M','X','J','V','S','D']);
   const [minutos7, setMinutos7] = useState([0,0,0,0,0,0,0]);
@@ -191,7 +193,7 @@ export default function FitProgreso() {
     <div className="px-4 pb-24 min-h-screen bg-gradient-to-br from-[#0E1A2B] via-[#101a2e] to-[#0a1120] relative overflow-hidden">
       {/* Fallback back button (por si un layout viejo no lo trae) */}
       <div className="pt-4 pb-2">
-        <button onClick={() => window.history.back()} className="text-cyan-100/80 hover:text-white text-sm border border-cyan-300/20 rounded-lg px-3 py-1 bg-cyan-400/10">
+        <button onClick={() => { try { navigate(-1); } catch { navigate('/dashboard', { replace: true }); } }} className="text-cyan-100/80 hover:text-white text-sm border border-cyan-300/20 rounded-lg px-3 py-1 bg-cyan-400/10">
           ← Regresar
         </button>
       </div>

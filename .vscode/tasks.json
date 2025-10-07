@@ -521,6 +521,90 @@
 			"command": "npx @capacitor/assets generate",
 			"isBackground": false,
 			"group": "build"
+		},
+		{
+			"label": "npm run build (quick)",
+			"type": "shell",
+			"command": "npm run build",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "npm run build (quick)",
+			"type": "shell",
+			"command": "npm run build",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "Clean web dist",
+			"type": "shell",
+			"command": "powershell -NoProfile -Command \"if (Test-Path dist) { attrib -r -h -s -force dist -Recurse -ErrorAction SilentlyContinue; Remove-Item -Recurse -Force dist }\"",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "npm run build (clean)",
+			"type": "shell",
+			"command": "npm run build",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "cap copy android",
+			"type": "shell",
+			"command": "npx cap copy android",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "gradle clean assembleDebug",
+			"type": "shell",
+			"command": "cd android; .\\gradlew.bat clean assembleDebug",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "build:web",
+			"type": "shell",
+			"command": "npm run build",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "npx cap copy android",
+			"type": "shell",
+			"command": "npx cap copy android",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "build:web",
+			"type": "shell",
+			"command": "npm run build",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "cap copy android",
+			"type": "shell",
+			"command": "npx cap copy android",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "build:web",
+			"type": "shell",
+			"command": "npm run build",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "cap copy android",
+			"type": "shell",
+			"command": "npx cap copy android",
+			"isBackground": false,
+			"group": "build"
 		}
 	]
 }

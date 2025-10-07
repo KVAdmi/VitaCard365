@@ -41,6 +41,7 @@ import ResetPassword from './pages/ResetPassword';
 import AuthCallback from './pages/AuthCallback';
 import { useEffect } from 'react';
 import { initAuthDeepLinks } from '@/lib/deeplinks';
+import IntroVideo from './pages/IntroVideo';
 
 
 
@@ -73,10 +74,10 @@ function App() {
             <Route path="nutricion" element={<FitNutricion />} />
             <Route path="progreso" element={<FitProgreso />} />
           </Route>
-          {/* Redirects obligatorios */}
-          {/* (Eliminado) Redirecciones de Mi Chequeo y Bienestar hacia Fit/Nutrición para restaurar flujo correcto */}
-          <Route path="/home" element={<Navigate to="/dashboard" replace />} />
-          <Route path="/" element={<Landing />} />
+          {/* Intro: raíz muestra el video y luego navega a /login */}
+          <Route path="/" element={<IntroVideo />} />
+          {/* En este flujo, home = login */}
+          <Route path="/home" element={<Navigate to="/login" replace />} />
                     <Route path="/login" element={<Login />} />
                     <Route path="/register" element={<Register />} />
                     <Route path="/legal" element={<Legal />} />
