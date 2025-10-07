@@ -605,6 +605,13 @@
 			"command": "npx cap copy android",
 			"isBackground": false,
 			"group": "build"
+		},
+		{
+			"label": "gradlew.bat clean bundleRelease (targetSdk 35)",
+			"type": "shell",
+			"command": "cd android; .\\gradlew.bat clean bundleRelease",
+			"isBackground": false,
+			"group": "build"
 		}
 	]
 }
