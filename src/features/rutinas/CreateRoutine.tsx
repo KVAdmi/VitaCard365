@@ -49,6 +49,7 @@ export default function CreateRoutine() {
   const navigate = useNavigate();
   const { success, error: toastError } = useToast();
   const [paso, setPaso] = useState<Paso>('objetivo');
+  const [lugar, setLugar] = useState<'Gym'|'Casa'>('Casa');
 
   // Paso 1
   const [objetivo, setObjetivo] = useState<'musculo'|'grasa'|'movilidad'|'cardio'|'mixto'>('musculo');
@@ -244,6 +245,16 @@ export default function CreateRoutine() {
       {/* Paso 1 */}
       {paso==='objetivo' && (
         <Card className="p-4 space-y-4" hoverable>
+          <SectionTitle label="¿Dónde entrenarás?" />
+          <div className="flex gap-2 overflow-x-auto">
+            {(['Casa','Gym'] as const).map(loc => (
+              <button key={loc} onClick={()=>setLugar(loc)}
+                className={`px-3 py-2 rounded-xl border transition-colors ${
+                  lugar===loc ? 'bg-vita-orange text-white border-vita-orange' : 'border-white/10 hover:border-vita-orange hover:bg-vita-orange/20'
+                }`}>{loc}</button>
+            ))}
+          </div>
+
           <SectionTitle label="Objetivo del plan" />
           <div className="flex gap-2 overflow-x-auto">
             {(['musculo','grasa','movilidad','cardio','mixto'] as const).map(o=>(
@@ -301,7 +312,7 @@ export default function CreateRoutine() {
       {/* Paso 2 */}
       {paso==='estructura' && (
         <Card className="p-4 space-y-4" hoverable>
-          <SectionTitle label="Foco por día" hint="Upper/Lower/Full/Movilidad/Cardio/Core" />
+          <SectionTitle label="Foco por día" hint={lugar==='Casa' ? 'Lenguaje sencillo y ejercicios sin equipo' : 'Upper/Lower/Full/Movilidad/Cardio/Core'} />
           <div className="grid grid-cols-1 gap-3">
             {Array.from({length: diasSemana}, (_,i)=>i+1).map(d=>(
               <div key={d} className="p-3 rounded-xl bg-white/10 border border-cyan-400/20"
@@ -315,7 +326,14 @@ export default function CreateRoutine() {
                           ? 'bg-vita-orange text-white border-vita-orange'
                           : 'border-white/10 hover:border-vita-orange hover:bg-vita-orange/20'
                       }`}>
-                      {focoLabel[f]}
+                      {lugar==='Casa' ? (
+                        f==='upper' ? 'Parte superior' :
+                        f==='lower' ? 'Piernas y glúteos' :
+                        f==='full' ? 'Todo el cuerpo' :
+                        f==='movilidad' ? 'Movilidad suave' :
+                        f==='cardio' ? 'Cardio sencillo' :
+                        'Centro (abdomen)'
+                      ) : focoLabel[f]}
                     </button>
                   ))}
                 </div>
@@ -333,7 +351,19 @@ export default function CreateRoutine() {
       {/* Paso 3 */}
       {paso==='dias' && (
         <Card className="p-4 space-y-4" hoverable>
-          <SectionTitle label="Ejercicios por día" hint="agrega sets/reps/tiempo/descanso" />
+          <SectionTitle label="Ejercicios por día" hint={lugar==='Casa' ? 'Añade ejercicios fáciles sin equipo. Puedes usar tiempos en lugar de repeticiones.' : 'agrega sets/reps/tiempo/descanso'} />
+          <div className="flex items-center justify-between">
+            <div className="text-xs opacity-70">Selecciona un día y agrega ejercicios.</div>
+            {Object.values(itemsPorDia).some(arr => (arr?.length ?? 0) > 0) && (
+              <button
+                onClick={()=>navigate('/fit/plan')}
+                className="px-3 py-1.5 rounded-full text-xs border border-cyan-300/30 bg-cyan-400/10 text-cyan-100/90 hover:bg-cyan-400/20"
+                aria-label="Ver mi plan"
+              >
+                Ver mi plan
+              </button>
+            )}
+          </div>
           <div className="flex gap-2 overflow-x-auto">
               {Array.from({length: diasSemana}, (_,i)=>i+1).map(d=>(
               <button key={d} onClick={()=>setDiaActivo(d)}
@@ -353,7 +383,7 @@ export default function CreateRoutine() {
               <div key={idx} className="p-3 rounded-xl bg-black/20 border border-cyan-400/20"
                    style={{ boxShadow: '0 0 0 1px rgba(0,255,231,0.18)' }}>
                 <div className="flex items-center justify-between gap-2">
-                  <div className="text-sm opacity-80">Ejercicio: {it.ejercicio_id.slice(0,8)}…</div>
+                  <div className="text-sm opacity-80">Ejercicio: {it.ejercicio_id.slice(0,8)}… {lugar==='Casa' ? '(sin equipo)' : ''}</div>
                   <button onClick={()=>removeItem(diaActivo, idx)} className="text-xs opacity-70">Quitar</button>
                 </div>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-2 text-xs">
@@ -367,7 +397,7 @@ export default function CreateRoutine() {
                       className="mt-1 px-2 py-1 rounded-lg bg-white/5 border border-white/10 text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-[color:var(--vc-primary,#f06340)] focus:border-[color:var(--vc-primary,#f06340)]"/>
                   </label>
                   <label className="flex flex-col">
-                    <span className="opacity-60">Reps</span>
+                    <span className="opacity-60">{lugar==='Casa' ? 'Repeticiones' : 'Reps'}</span>
                     <input type="number" min={1} max={50} value={it.reps ?? 10}
                       onChange={e=>{
                         const v = parseInt(e.target.value||'10');
@@ -376,7 +406,7 @@ export default function CreateRoutine() {
                       className="mt-1 px-2 py-1 rounded-lg bg-white/5 border border-white/10 text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-[color:var(--vc-primary,#f06340)] focus:border-[color:var(--vc-primary,#f06340)]"/>
                   </label>
                   <label className="flex flex-col">
-                    <span className="opacity-60">Tiempo (s)</span>
+                    <span className="opacity-60">Tiempo (segundos)</span>
                     <input type="number" min={10} max={900} value={it.tiempo_seg ?? 0}
                       onChange={e=>{
                         const v = parseInt(e.target.value||'0')||0;
@@ -480,7 +510,16 @@ export default function CreateRoutine() {
                         <li key={idx}>ex {it.ejercicio_id.slice(0,6)}… — {it.series}×{it.reps ?? `${it.tiempo_seg}s`} / rest {it.descanso_seg ?? 60}s</li>
                       ))}
                     </ul>
-                  ) : <span>Sin ejercicios añadidos</span>}
+                  ) : (
+                    <span>
+                      Sin ejercicios añadidos
+                      {Object.values(itemsPorDia).some(arr => (arr?.length ?? 0) > 0) && (
+                        <>
+                          {' '}• <button onClick={()=>navigate('/fit/plan')} className="underline underline-offset-2">Ver mi plan</button>
+                        </>
+                      )}
+                    </span>
+                  )}
                 </div>
               </div>
             ))}

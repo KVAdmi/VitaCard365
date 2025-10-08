@@ -3,11 +3,25 @@ dist/
 build/
 supabase/.temp/
 
+# Env files
 .env
 .env.local
 .env.*.local
 .env.aws
+
+# Duplicate patterns (safe)
 dist/
 build/
 supabase/.temp/
-\nVitaCard365\nVitaCard365/**\nvitacard_certs/**\nvitacard_private.key\n
+
+# Ignore nested VitaCard365 export folder
+VitaCard365/
+VitaCard365/**
+
+# Certificates and private keys (NEVER commit)
+vitacard_certs/
+*.p12
+*.pem
+*.cer
+vitacard_private.key
+**/vitacard_private.key

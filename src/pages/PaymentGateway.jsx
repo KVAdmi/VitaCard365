@@ -19,12 +19,16 @@ export default function PaymentGateway() {
     frequencyDiscount,
     breakdown,
     individualPrice,
-  } = usePayment();
+    isVitalicio,
+    chargedFamilySize,
+  } = usePayment({ membership });
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [showUpsell, setShowUpsell] = useState(false);
 
-  // Si ya está activo en Supabase, ir directo a Perfil
+  // Cargar estado de membresía y mostrar mensajes especiales
+  const [membership, setMembership] = useState({ acceso_activo: false, periodicidad: null, membresia: null });
   useEffect(() => { (async()=>{
     try{
       const { data: u } = await supabase.auth.getUser();
@@ -32,14 +36,18 @@ export default function PaymentGateway() {
       if (!uid) return;
       const { data } = await supabase
         .from('profiles_certificado_v2')
-        .select('acceso_activo')
+        .select('acceso_activo, periodicidad, membresia')
         .eq('user_id', uid)
         .maybeSingle();
-      if (data?.acceso_activo) {
-        navigate('/perfil', { replace: true });
+      if (data) setMembership({ acceso_activo: !!data.acceso_activo, periodicidad: data.periodicidad, membresia: data.membresia });
+      // Si vitalicio, no mostrar pago
+      if (data?.periodicidad === 'vitalicio') {
+        setShowVitalicio(true);
       }
     }catch{}
   })(); }, []);
+
+  const [showVitalicio, setShowVitalicio] = useState(false);
 
   // Resetear errores cuando cambie la configuración
   const lastConfig = useRef({ planType, familySize, frequency, totalAmount });
@@ -54,7 +62,17 @@ export default function PaymentGateway() {
       lastConfig.current = { planType, familySize, frequency, totalAmount };
       setError(null);
     }
-  }, [planType, familySize, frequency, totalAmount]);
+
+    // Upsell temporal: solo cuando es plan individual y no vitalicio
+    let timer;
+    if (planType === 'individual' && !showVitalicio) {
+      setShowUpsell(true);
+      timer = setTimeout(() => setShowUpsell(false), 3500);
+    } else {
+      setShowUpsell(false);
+    }
+    return () => { if (timer) clearTimeout(timer); };
+  }, [planType, familySize, frequency, totalAmount, showVitalicio]);
 
   const onGenerate = async () => {
     try {
@@ -103,6 +121,19 @@ export default function PaymentGateway() {
   return (
     <Layout title="Pasarela de pago" showBackButton>
   <div className="rounded-2xl bg-white/5 border border-white/10 p-4 sm:p-6 mx-2 sm:mx-4 my-3">
+        {/* Mensaje para vitalicio */}
+        {showVitalicio && (
+          <div className="mb-4 rounded-xl border border-emerald-400/30 bg-emerald-400/10 p-3 text-emerald-200">
+            Tu membresía es vitalicia. No necesitas realizar pagos. ¡Disfruta de tus beneficios!
+          </div>
+        )}
+
+        {/* Upsell para plan individual (aparece 3.5s y se oculta) */}
+        {planType === 'individual' && !showVitalicio && showUpsell && (
+          <div className="mb-4 rounded-xl border border-cyan-300/30 bg-cyan-400/10 p-3 text-cyan-100/90">
+            Protege a tu familia y aprovecha los descuentos del plan familiar. ¡Añade miembros con tarifa preferencial!
+          </div>
+        )}
         {/* Plan */}
         <div className="flex items-center gap-4 mb-4">
           <button
@@ -135,7 +166,7 @@ export default function PaymentGateway() {
                   inputMode="numeric"
                   pattern="[0-9]*"
                   readOnly
-                  value={Math.max(0, familySize - 1)}
+                  value={Math.max(0, (familySize - 1) - (isVitalicio ? 1 : 0))}
                   className="w-12 rounded-md bg-white/10 border border-white/10 px-2 py-1 text-sm focus:outline-none text-center text-white"
                 />
                 <div className="flex gap-1">
@@ -156,7 +187,10 @@ export default function PaymentGateway() {
                 </div>
               </div>
               <div className="text-xs text-green-300 mt-1">
-                Total: {familySize} {familySize === 1 ? "persona" : "personas"} (Titular + {Math.max(0, familySize - 1)} familiares)
+                Total a cobrar: {chargedFamilySize} {chargedFamilySize === 1 ? "persona" : "personas"}
+                {isVitalicio && planType==='familiar' && (
+                  <span className="text-white/70"> (Titular ya pagado: no se cobra)</span>
+                )}
               </div>
             </div>
           )}

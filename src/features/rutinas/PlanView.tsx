@@ -66,7 +66,7 @@ export default function PlanView() {
       .select('id,dia_semana,foco,minutos')
       .eq('plan_id', planRow.id)
       .eq('semana', 1)
-      .eq('user_id', uid)
+      // Nota: filtramos por plan_id/semana; user_id puede faltar en algunos inserts
       .order('dia_semana', { ascending: true });
 
     const ids = (rutinas ?? []).map((r:any)=>r.id);

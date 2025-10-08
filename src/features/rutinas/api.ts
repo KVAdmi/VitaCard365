@@ -44,6 +44,17 @@ export async function getUserId(): Promise<string | null> {
   return uid;
 }
 
+// ===== Storage util =====
+export function getPublicUrl(path: string): string {
+  if (!path) return '';
+  // Asume que los archivos están en un bucket público 'assets' en la carpeta 'ejercicios'
+  const { data } = supabase
+    .storage
+    .from('assets/ejercicios') // Ajusta esto al nombre de tu bucket y carpeta
+    .getPublicUrl(path);
+  return data?.publicUrl ?? '';
+}
+
 // ===== Buscador SOLO en public.ejercicios =====
 export async function buscarEjercicios(params: BuscarEjerciciosParams = {}): Promise<EjercicioCatalogo[]> {
   const { q = '', categoria = 'todas', equipoIncluye, nivelMax, limit = 40 } = params;

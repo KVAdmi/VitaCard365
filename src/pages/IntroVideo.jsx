@@ -60,7 +60,7 @@ export default function IntroVideo() {
       // Intentar reproducción cuando esté listo
       tryAutoplay();
     };
-    v.addEventListener('canplay', onCanPlay);
+  v.addEventListener('canplay', onCanPlay);
 
     // Eventos para entender el estado del video
     const onPlaying = () => {
@@ -163,6 +163,13 @@ export default function IntroVideo() {
       className={`fixed inset-0 bg-black ${isFading ? 'opacity-0' : 'opacity-100'}`}
       style={{ transition: 'opacity 250ms ease-in-out' }}
     >
+      <style>{`
+        /* Oculta overlays de play en reproducción automática en WebView/nativo */
+        video::-webkit-media-controls { display: none !important; }
+        video::-webkit-media-controls-enclosure { display: none !important; }
+        video::-webkit-media-controls-play-button { display: none !important; }
+        video { -webkit-appearance: none; appearance: none; }
+      `}</style>
       <video
         ref={videoRef}
         src={primarySrc}

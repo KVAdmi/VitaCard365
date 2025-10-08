@@ -141,6 +141,10 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = async () => {
+    try {
+      const ok = window.confirm('¿Seguro que deseas cerrar sesión? Si cierras sesión, no recibirás notificaciones.');
+      if (!ok) return;
+    } catch {}
     if (isSupabaseConnected) {
       const { error } = await supabase.auth.signOut();
       if (error) throw error;

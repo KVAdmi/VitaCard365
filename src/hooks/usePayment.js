@@ -10,7 +10,8 @@ const PAYMENT_FREQUENCIES = {
   annually: { months: 12, discount: 20, label: 'Anual' }, // Individual: desc 20%
 };
 
-export const usePayment = () => {
+export const usePayment = (opts = {}) => {
+  const membership = opts.membership || null;
   const [planType, setPlanType] = useState('individual'); // 'individual' or 'familiar'
   const [familySize, setFamilySize] = useState(2);
   const [frequency, setFrequency] = useState('monthly');
@@ -27,6 +28,12 @@ export const usePayment = () => {
     } else {
       if (familySize < 2) setFamilySize(2);
     }
+
+    // Si el titular es vitalicio, no se le cobra a él: solo familiares
+    const isVitalicio = membership?.periodicidad === 'vitalicio';
+    const chargedFamilySize = planType === 'familiar'
+      ? Math.max(0, currentFamilySize - (isVitalicio ? 1 : 0))
+      : 1;
 
     // 1) Descuento familiar por número de integrantes
     let currentFamilyDiscount = 0;
@@ -49,8 +56,8 @@ export const usePayment = () => {
   }
   setFrequencyDiscount(currentFrequencyDiscount);
 
-  // 3) Cálculo final
-  const baseTotal = INDIVIDUAL_PRICE * currentFamilySize * months;
+  // 3) Cálculo final (cobro sobre los miembros a cobrar, no necesariamente todos)
+  const baseTotal = INDIVIDUAL_PRICE * chargedFamilySize * months;
   const afterFamily = baseTotal * (1 - currentFamilyDiscount / 100);
   const finalPrice = afterFamily * (1 - currentFrequencyDiscount / 100);
 
@@ -65,7 +72,7 @@ export const usePayment = () => {
 
     // Guarda breakdown en refs/estado si lo prefieres; aquí lo exponemos por return
     // (no setState adicional para evitar renders extra)
-  }, [planType, familySize, frequency]);
+  }, [planType, familySize, frequency, membership?.periodicidad]);
 
   const handleFamilySizeChange = (newSize) => {
     if (planType === 'familiar') {
@@ -87,6 +94,12 @@ export const usePayment = () => {
     frequencyDiscount,              // %
     individualPrice: INDIVIDUAL_PRICE,
     paymentFrequencies: PAYMENT_FREQUENCIES,
+    isVitalicio: membership?.periodicidad === 'vitalicio',
+    get chargedFamilySize() {
+      const currentFamilySize = planType === 'individual' ? 1 : (familySize < 2 ? 2 : familySize);
+      const isVitalicio = membership?.periodicidad === 'vitalicio';
+      return planType === 'familiar' ? Math.max(0, currentFamilySize - (isVitalicio ? 1 : 0)) : 1;
+    },
 
     // NUEVO: datos para mostrar ahorro/desglose
     get breakdown() {
@@ -94,8 +107,9 @@ export const usePayment = () => {
       if (planType === 'familiar' && frequency !== 'monthly') {
         freqDiscount = 5;
       }
-      const currentFamilySize = planType === 'individual' ? 1 : (familySize < 2 ? 2 : familySize);
-      const baseTotal = INDIVIDUAL_PRICE * currentFamilySize * months;
+  const currentFamilySize = planType === 'individual' ? 1 : (familySize < 2 ? 2 : familySize);
+  // Descuentos pueden basarse en el tamaño visible de la familia (incluye titular)
+  const baseTotal = INDIVIDUAL_PRICE * (membership?.periodicidad==='vitalicio' && planType==='familiar' ? Math.max(0, currentFamilySize-1) : currentFamilySize) * months;
       let familyDiscount = 0;
       if (planType === 'familiar') {
         if (currentFamilySize === 2) familyDiscount = 10;

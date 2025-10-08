@@ -5,7 +5,6 @@ import VitaCard365Logo from "../../components/Vita365Logo";
 import { useNavigate } from 'react-router-dom';
 import { supabase } from "../../lib/supabaseClient";
 import { getOrCreateLocalUserId } from "../../lib/getOrCreateLocalUserId";
-import BLEConnect from "../../components/BLEConnect";
 import VitalForm from "../../components/michequeo/VitalForm";
 import {
   ensureHealthReady,
@@ -63,10 +62,6 @@ export default function MeasureVitals() {
     );
   }
 
-  // Fallback para abrir BLE
-  function openBLE() {
-    setUiState('ble');
-  }
 
   return (
     <div style={{ display: "grid", gap: 12, padding: 12 }}>
@@ -85,7 +80,7 @@ export default function MeasureVitals() {
       </div>
       <h2>Mi Chequeo</h2>
 
-      {/* Selector de modo (sin botón de sincronizar dispositivo) */}
+      {/* Selector de modo (solo manual) */}
       <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
         <button
           onClick={() => setMode('manual')}

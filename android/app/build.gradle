@@ -3,8 +3,8 @@ apply plugin: 'com.android.application'
 android {
     namespace "com.vitacard365.app"
     compileSdk rootProject.ext.compileSdkVersion
-    def appVersionCode = project.hasProperty('APP_VERSION_CODE') ? APP_VERSION_CODE.toInteger() : 1
-    def appVersionName = project.hasProperty('APP_VERSION_NAME') ? APP_VERSION_NAME : "1.0"
+    def appVersionCode = project.hasProperty('APP_VERSION_CODE') ? APP_VERSION_CODE.toInteger() : 2
+    def appVersionName = project.hasProperty('APP_VERSION_NAME') ? APP_VERSION_NAME : "1.0.1"
 
     defaultConfig {
         applicationId "com.vitacard365.app"

@@ -23,6 +23,7 @@ import { sessionHub } from '@/fit/sessionHub';
 import KeepAliveAccordion from '../../components/ui/KeepAliveAccordion';
 import GymBlePanel from '../../components/fit/GymBlePanel';
 import Layout from '../../components/Layout';
+import { useNativeHeartRate } from '@/hooks/useNativeHeartRate';
 
 
 export default function FitSyncPage() {
@@ -165,6 +166,9 @@ export default function FitSyncPage() {
   }, [isPaused]);
 
   const hrAvg = hrSamples.length ? Math.round(hrSamples.reduce((a, b) => a + b, 0) / hrSamples.length) : null;
+  // Panel de reloj/monitor (HRS 0x180D)
+  const { status: hrStatus, error: hrError, hr, scanAndConnect, disconnect: hrDisconnect } = useNativeHeartRate();
+  useEffect(()=>{ if (hr != null) { setPulsoActual(hr); setHrSamples(arr => (arr.length>300?arr.slice(-299):arr).concat(hr)); } }, [hr]);
 
   return (
     <Layout title="Sincronizar mi rutina" showBackButton>
@@ -225,6 +229,21 @@ export default function FitSyncPage() {
               </div>
             )}
             <GymBlePanel />
+
+            {/* Reloj / Monitor de pulso (HRS) */}
+            <KeepAliveAccordion title="Reloj o monitor de pulso (BLE)" defaultOpen={false}>
+              <div className="rounded-xl border border-cyan-300/30 bg-white/5 p-3">
+                <div className="text-sm text-white/80 mb-2">Estado: {hrStatus}{hrError?` — ${hrError}`:''}</div>
+                <div className="flex gap-2">
+                  <button onClick={scanAndConnect} className="px-3 py-1.5 rounded-lg border border-cyan-300/30 bg-cyan-400/10 hover:bg-cyan-400/20">Buscar y conectar</button>
+                  <button onClick={hrDisconnect} className="px-3 py-1.5 rounded-lg border border-white/10 bg-white/5 hover:bg-white/10">Desconectar</button>
+                </div>
+                <div className="mt-3 grid grid-cols-2 sm:grid-cols-3 gap-2">
+                  <HUD label="Pulso (reloj)" value={hr!=null?`${hr} bpm`:'—'} />
+                </div>
+                <div className="text-xs text-white/60 mt-2">Al conectar, el pulso del reloj alimenta el HUD y tu sesión.</div>
+              </div>
+            </KeepAliveAccordion>
 
             {/* Música integrada: Spotify y Apple Music (temporalmente oculto) */}
           </div>

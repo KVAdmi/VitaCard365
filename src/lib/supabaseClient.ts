@@ -20,6 +20,7 @@ export const supabase = createClient(url, anon, {
     detectSessionInUrl: true, // web: detecta /auth/callback; nativo: usamos appUrlOpen
     autoRefreshToken: true,
     storageKey: 'vita-auth',
-    storage: window.localStorage
+    storage: SupabaseStorage as any
   },
 });
+import { SupabaseStorage } from './supabaseStorage';
