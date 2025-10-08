@@ -7,6 +7,7 @@
         "dev": "vite",
         "build": "cross-env ROLLUP_SKIP_NODEJS_NATIVE=1 ROLLUP_SKIP_NATIVE=1 vite build --config vite.config.mjs",
         "preview": "vite preview --config vite.config.mjs",
+        "postinstall": "node scripts/force-rollup-js.js",
         "postbuild": "node scripts/check-css.cjs",
         "seed:users": "node scripts/create-seed-users.mjs",
         "admin:set-password": "node scripts/set-password-by-email.mjs",
