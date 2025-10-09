@@ -10,8 +10,10 @@ import { supabase } from '@/lib/supabaseClient';
 import { uploadUserAvatar, getAvatarUrl } from '@/lib/avatar';
 import { useToast } from '../components/ui/use-toast';
 import { LogOut, Save, Copy, Info, Camera, Edit } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const Perfil = () => {
+  const navigate = useNavigate();
   const { user, logout, updateUser } = useAuth();
   const { toast } = useToast();
   
@@ -361,6 +363,7 @@ const Perfil = () => {
               </Button>
             </CardContent>
           </Card>
+          {/* Wallet card removida del Perfil: ahora solo se accede desde el Dashboard */}
         </div>
       </Layout>
     </>

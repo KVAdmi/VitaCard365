@@ -1,5 +1,23 @@
-include ':app'
-include ':capacitor-cordova-android-plugins'
-project(':capacitor-cordova-android-plugins').projectDir = new File('./capacitor-cordova-android-plugins/')
+pluginManagement {
+	repositories {
+		gradlePluginPortal()
+		google()
+		mavenCentral()
+	}
+}
 
-apply from: 'capacitor.settings.gradle'
+plugins {
+	// Si ya tienes versiones declaradas, déjalas; si no, no agregues nada aquí.
+}
+
+apply from: "capacitor.settings.gradle"
+
+// --- GUARD: solo cargar Cordova si el archivo settings.gradle existe ---
+def cordovaSettings = new File(rootDir, "capacitor-cordova-android-plugins/settings.gradle")
+if (cordovaSettings.exists()) {
+	apply from: cordovaSettings
+}
+// --- FIN GUARD ---
+
+// Core app module
+include ':app'
