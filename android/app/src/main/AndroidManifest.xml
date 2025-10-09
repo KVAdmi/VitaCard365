@@ -4,6 +4,8 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <!-- Micrófono para grabación de sueño -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
 
     <!-- Foreground service y notificaciones (Android 13+) -->
     <!-- Agregado para compatibilidad con servicios en primer plano y notificaciones -->
@@ -42,6 +44,7 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         android:hardwareAccelerated="true"
+        android:usesCleartextTraffic="true"
         android:enableOnBackInvokedCallback="true">
         <!-- Google Maps SDK (debe coincidir con la que pasas desde JS) -->
         <meta-data
@@ -51,24 +54,22 @@
 
         <!-- Activity principal -->
         <activity
-            android:name=".MainActivity"
-            android:label="@string/title_activity_main"
+            android:name="com.vitacard365.app.MainActivity"
             android:exported="true"
             android:launchMode="singleTask"
-            android:screenOrientation="portrait"
-            android:theme="@style/AppTheme.NoActionBarLaunch"
-            android:hardwareAccelerated="true">
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
+            android:hardwareAccelerated="true"
+            android:windowSoftInputMode="adjustResize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-            <!-- Deep link para callback OAuth (vitacard365://auth/callback) -->
-            <!-- autoVerify aplica solo para App Links https; removido para esquema personalizado -->
-            <intent-filter>
+            <!-- Deep links HTTPS (App Links) -->
+            <intent-filter android:autoVerify="true">
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="vitacard365" android:host="auth" android:path="/callback" />
+                <data android:scheme="https" android:host="vitacard365.app" />
             </intent-filter>
         </activity>
 

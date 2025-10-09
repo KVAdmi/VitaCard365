@@ -11,6 +11,7 @@ export function initAuthDeepLinks() {
   if (!(Capacitor.isNativePlatform && Capacitor.isNativePlatform())) return;
 
   App.addListener('appUrlOpen', async ({ url }) => {
+    try { console.log('[DL] appUrlOpen', url); } catch {}
     try {
       const u = new URL(url);
       // Expect vitacard365://auth/callback?code=...&state=...
@@ -23,7 +24,11 @@ export function initAuthDeepLinks() {
             try {
               const { data } = await supabase.auth.getUser();
               const uid = data?.user?.id || null;
-              if (!uid) { window.location.replace('/login'); return; }
+              if (!uid) {
+                // En nativo usamos HashRouter, navegar con hash para evitar conflictos
+                window.location.hash = '#/login';
+                return;
+              }
               // Leve fetch runtime para decidir destino
               const { data: acc } = await supabase
                 .from('profiles_certificado_v2')
@@ -32,12 +37,13 @@ export function initAuthDeepLinks() {
                 .limit(1)
                 .single();
               if (acc?.acceso_activo) {
-                window.location.replace(next || '/dashboard');
+                const dest = next || '/dashboard';
+                window.location.hash = `#${dest}`;
               } else {
-                window.location.replace('/payment-gateway');
+                window.location.hash = '#/payment-gateway';
               }
             } catch {
-              window.location.replace('/dashboard');
+              window.location.hash = '#/dashboard';
             }
           }
         }

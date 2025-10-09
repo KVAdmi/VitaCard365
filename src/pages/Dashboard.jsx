@@ -11,7 +11,10 @@ import {
   Shield, 
   Heart, 
   Leaf,
-  Dumbbell
+  Dumbbell,
+  Wallet as WalletIcon,
+  Lock,
+  Brain
 } from 'lucide-react';
 import { fetchAccess } from '@/lib/access';
 
@@ -26,8 +29,10 @@ const Dashboard = () => {
   const quickActions = [
     { title: 'Coberturas', icon: Shield, path: '/coberturas' },
     { title: 'Fitness', icon: Dumbbell, path: '/fit' },
-    { title: 'Mi Chequeo', icon: Heart, path: '/mi-chequeo' },
-    { title: 'Bienestar', icon: Leaf, path: '/bienestar' }
+  { title: 'Mi Chequeo', icon: Heart, path: '/mi-chequeo' },
+  { title: 'Bienestar', icon: Brain, path: '/bienestar' },
+    { title: 'Eco', icon: Leaf, path: '/eco' },
+    { title: 'Wallet', icon: WalletIcon, path: '/perfil/wallet', locked: true }
   ];
 
   const planStatus = useMemo(() => {
@@ -94,8 +99,11 @@ const Dashboard = () => {
                   className="flex flex-col items-center justify-center space-y-3 p-6 sm:p-6 rounded-2xl glass-card cursor-pointer transition-all shadow-lg border border-white/10"
                   style={{ minHeight: '120px', minWidth: '110px', boxShadow: '0 4px 24px 0 rgba(96,165,250,0.10)' }}
                 >
-                  <div className="w-16 h-16 sm:w-16 sm:h-16 flex items-center justify-center rounded-full shadow-lg" style={{ backgroundColor: '#f06340' }}>
+                  <div className="w-16 h-16 sm:w-16 sm:h-16 flex items-center justify-center rounded-full shadow-lg relative" style={{ backgroundColor: '#f06340' }}>
                     <action.icon className="h-10 w-10 sm:h-10 sm:w-10 text-white" />
+                    {action.locked && (
+                      <Lock className="h-4 w-4 text-white/90 absolute -right-1 -top-1 drop-shadow" />
+                    )}
                   </div>
                   <p className="text-base sm:text-base font-semibold text-center text-vita-white">{action.title}</p>
                 </motion.div>

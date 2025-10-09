@@ -5,7 +5,7 @@ import FitPlan from './pages/fit/plan';
 import FitNutricion from './pages/fit/nutricion';
 import FitProgreso from './pages/fit/progreso';
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Helmet, HelmetProvider } from 'react-helmet-async';
 import { Toaster } from './components/ui/toaster';
 import { AuthProvider } from './contexts/AuthContext';
@@ -42,6 +42,10 @@ import AuthCallback from './pages/AuthCallback';
 import { useEffect } from 'react';
 import { initAuthDeepLinks } from '@/lib/deeplinks';
 import IntroVideo from './pages/IntroVideo';
+import ScrollToTop from './components/ScrollToTop';
+import { Capacitor } from '@capacitor/core';
+import Eco from './pages/Eco';
+import Wallet from './pages/perfil/Wallet';
 
 
 
@@ -49,6 +53,11 @@ import IntroVideo from './pages/IntroVideo';
 
 function App() {
   useEffect(()=>{ initAuthDeepLinks(); },[]);
+  try {
+    const isNative = typeof window !== 'undefined' && (typeof Capacitor?.isNativePlatform==='function' ? Capacitor.isNativePlatform() : false);
+    console.log('[Router] native?', isNative);
+    console.log('[Router] href/hash', window.location?.href, window.location?.hash);
+  } catch {}
   return (
     <HelmetProvider>
       <>
@@ -62,9 +71,15 @@ function App() {
         
         <AuthProvider>
           <UserProvider>
-            <Router>
-              <div className="min-h-screen bg-vita-background">
-                <Routes>
+            {(() => {
+              const isNative = typeof Capacitor?.isNativePlatform === 'function' && Capacitor.isNativePlatform();
+              const RouterCmp = isNative ? HashRouter : BrowserRouter;
+              const notFoundTarget = isNative ? '/' : '/dashboard';
+              return (
+                <RouterCmp>
+                  <ScrollToTop />
+                  <div className="min-h-screen bg-vita-background">
+                    <Routes>
           {/* Rutas FIT (Fitness) */}
           <Route path="/fit" element={<ProtectedRoute><FitIndex /></ProtectedRoute>}>
             <Route index element={<FitPlan />} />
@@ -76,6 +91,10 @@ function App() {
           </Route>
           {/* Intro: raíz muestra el video y luego navega a /login */}
           <Route path="/" element={<IntroVideo />} />
+          {/* Hash vacío (#) en Android puede no resolver a '/': servir Intro */}
+          <Route path="" element={<IntroVideo />} />
+          {/* Android WebView puede iniciar en /index.html; mapearlo a IntroVideo */}
+          <Route path="/index.html" element={<IntroVideo />} />
           {/* En este flujo, home = login */}
           <Route path="/home" element={<Navigate to="/login" replace />} />
                     <Route path="/login" element={<Login />} />
@@ -101,22 +120,26 @@ function App() {
                     <Route path="/agenda" element={<ProtectedRoute><Agenda /></ProtectedRoute>} />
                     
                     <Route path="/bienestar" element={<ProtectedRoute><Bienestar /></ProtectedRoute>} />
+                    <Route path="/eco" element={<ProtectedRoute><Eco /></ProtectedRoute>} />
                     <Route path="/bienestar/nutricion/:slug" element={<ProtectedRoute><NutritionDetailPage /></ProtectedRoute>} />
                     <Route path="/bienestar/:category" element={<ProtectedRoute><WellnessCategoryPage /></ProtectedRoute>} />
                     <Route path="/bienestar/:category/:slug" element={<ProtectedRoute><WellnessDetailPage /></ProtectedRoute>} />
 
-                      {/* Catch-all para rutas no encontradas: redirige a dashboard */}
-                      <Route path="*" element={<Navigate to="/dashboard" replace />} />
+                      {/* Catch-all: en nativo redirige a Intro; en web a dashboard */}
+                      <Route path="*" element={<Navigate to={notFoundTarget} replace />} />
 
                     <Route path="/mi-plan" element={<ProtectedRoute><Pagos /></ProtectedRoute>} />
                     <Route path="/payment-gateway" element={<ProtectedRoute><PaymentGateway /></ProtectedRoute>} />
                     <Route path="/paymentgateway" element={<Navigate to="/payment-gateway" replace />} />
                     <Route path="/perfil" element={<ProtectedRoute><Perfil /></ProtectedRoute>} />
+                    <Route path="/perfil/wallet" element={<ProtectedRoute><Wallet /></ProtectedRoute>} />
                     <Route path="/recibo/:paymentId" element={<ProtectedRoute><Receipt /></ProtectedRoute>} />
                     <Route path="/fit-auth-callback" element={<FitCallback />} />
-                  </Routes>
-                </div>
-              </Router>
+                    </Routes>
+                  </div>
+                </RouterCmp>
+              );
+            })()}
             <Toaster />
           </UserProvider>
         </AuthProvider>

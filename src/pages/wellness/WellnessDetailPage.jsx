@@ -44,7 +44,9 @@ const WellnessDetailPage = () => {
   const renderContent = () => {
     switch(item.type) {
       case 'breathing':
-        return <BreathingPlayer pattern={item.pattern} />;
+        // mapear slug a variantes sugeridas
+  const variant = item.slug.includes('cuadrada') ? 'foco' : item.slug.includes('478') ? 'sueño' : item.slug.includes('suspiro') ? 'antiestres' : 'calma';
+  return <BreathingPlayer pattern={item.pattern} variant={variant} withSound={true} />;
       case 'audio':
         return <AudioPlayer src={item.audioSrc} />;
       default:

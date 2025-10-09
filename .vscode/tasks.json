@@ -612,6 +612,34 @@
 			"command": "cd android; .\\gradlew.bat clean bundleRelease",
 			"isBackground": false,
 			"group": "build"
+		},
+		{
+			"label": "build:web (pre-apk)",
+			"type": "shell",
+			"command": "npm run build",
+			"isBackground": false,
+			"problemMatcher": [
+				"$eslint-stylish"
+			],
+			"group": "build"
+		},
+		{
+			"label": "build:web",
+			"type": "shell",
+			"command": "npm run build",
+			"args": [],
+			"isBackground": false,
+			"problemMatcher": [
+				"$eslint-stylish"
+			],
+			"group": "build"
+		},
+		{
+			"label": "build:web (force)",
+			"type": "shell",
+			"command": "npm run build",
+			"isBackground": false,
+			"group": "build"
 		}
 	]
 }

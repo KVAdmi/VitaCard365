@@ -5,22 +5,25 @@ import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 function patchNativeToJS(rootDir) {
-  const nativePath = join(rootDir, 'node_modules', 'rollup', 'dist', 'native.js');
-  const fallbackPath = join(rootDir, 'node_modules', 'rollup', 'dist', 'rollup.js');
+  const distDir = join(rootDir, 'node_modules', 'rollup', 'dist');
+  const nativePathCJS = join(distDir, 'native.js');
+  const fallbackPath = join(distDir, 'rollup.js');
 
-  if (!existsSync(nativePath) || !existsSync(fallbackPath)) {
+  if (!existsSync(fallbackPath)) {
     return; // Nothing to patch or rollup not installed yet
   }
 
   try {
-    const original = readFileSync(nativePath, 'utf8');
-    // If it already prefers JS, skip
-    if (original.includes("require('./rollup.js')")) return;
-
-    // Replace the native require logic with direct JS require
-    const patched = `"use strict";\nmodule.exports = require('./rollup.js');\n`;
-    writeFileSync(nativePath, patched, 'utf8');
-    console.log('[force-rollup-js] Patched rollup/dist/native.js to use rollup.js');
+    // Patch CJS native.js
+    if (existsSync(nativePathCJS)) {
+      const originalCJS = readFileSync(nativePathCJS, 'utf8');
+      if (!originalCJS.includes("require('./rollup.js')")) {
+        const patchedCJS = `"use strict";\nmodule.exports = require('./rollup.js');\n`;
+        writeFileSync(nativePathCJS, patchedCJS, 'utf8');
+        console.log('[force-rollup-js] Patched rollup/dist/native.js to use rollup.js');
+      }
+    }
+    // No tocar ESM dist/es/native.js para preservar named exports parse/parseAsync
   } catch (err) {
     console.warn('[force-rollup-js] Failed to patch rollup native loader:', err?.message || err);
   }

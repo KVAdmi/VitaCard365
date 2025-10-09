@@ -260,7 +260,9 @@ const NutritionDetailPage = () => {
           exit={{ opacity: 0 }}
           className="p-4 md:p-6"
         >
-          <NutritionCard item={item} />
+          <div className="px-2 md:px-4">
+            <NutritionCard item={item} />
+          </div>
         </motion.div>
       </Layout>
     </>

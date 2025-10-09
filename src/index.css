@@ -77,6 +77,7 @@
     -moz-user-select: none;
     -ms-user-select: none;
   }
+  html, body, #root { background: #0c1c3e; }
   img, svg {
     pointer-events: none;
   }

@@ -15,6 +15,8 @@
 	<string>VitaCard necesita acceso Bluetooth para conectar dispositivos de entrenamiento compatibles.</string>
 	<key>NSBluetoothAlwaysUsageDescription</key>
 	<string>VitaCard usa Bluetooth para conectar aparatos de gimnasio y registrar tu entrenamiento.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>VitaCard necesita acceso al micrófono para grabar sesiones de sueño y generar tu resumen.</string>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
 	<key>CFBundleDisplayName</key>

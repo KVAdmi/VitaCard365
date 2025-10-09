@@ -5,11 +5,13 @@ import MeasureLayout from '../../components/michequeo/MeasureLayout';
 import { Button } from '../../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Alert, AlertDescription } from '../../components/ui/alert';
-import { Play, StopCircle, Mic, AlertCircle, Save, Trash2 } from 'lucide-react';
+import { Play, StopCircle, Mic, AlertCircle, Save, Trash2, Download, Share2 } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import AudioCleanupPanel from '../../components/mi-chequeo/AudioCleanupPanel';
+import { startSleepRecording, saveBlobNative, shareSavedFile } from '../../lib/sleepRecording';
+import { Capacitor } from '@capacitor/core';
 import SleepHistoryGlass from '../../components/mi-chequeo/SleepHistoryGlass';
 
 const SleepMonitor = () => {
@@ -17,19 +19,40 @@ const SleepMonitor = () => {
   const [elapsedTime, setElapsedTime] = useState(0);
   const [summary, setSummary] = useState(null);
   const timerRef = useRef(null);
+  const recorderRef = useRef(null);
+  const audioResultRef = useRef(null);
 
-  const startMonitoring = () => {
-    setIsMonitoring(true);
-    setSummary(null);
-    setElapsedTime(0);
-    timerRef.current = setInterval(() => {
-      setElapsedTime(prev => prev + 1);
-    }, 1000);
+  const ensureMicPermission = async () => {
+    // En web: getUserMedia ya pide permiso. En nativo, MediaRecorder depende del WebView.
+    // Si integramos plugin nativo, aquí iría la solicitud explícita.
+    return true;
   };
 
-  const stopMonitoring = () => {
+  const startMonitoring = async () => {
+    try {
+      await ensureMicPermission();
+      setIsMonitoring(true);
+      setSummary(null);
+      setElapsedTime(0);
+      // intentar iniciar grabación
+      recorderRef.current = await startSleepRecording();
+    } catch (e) {
+      // fallback: sin audio, solo cronómetro
+      recorderRef.current = null;
+    }
+    timerRef.current = setInterval(() => setElapsedTime(prev => prev + 1), 1000);
+  };
+
+  const stopMonitoring = async () => {
     setIsMonitoring(false);
     clearInterval(timerRef.current);
+    // detener grabación si existe
+    if (recorderRef.current?.stop) {
+      try {
+        const { blob, durationSec } = await recorderRef.current.stop();
+        audioResultRef.current = { blob, durationSec };
+      } catch {}
+    }
     generateSummary();
   };
 
@@ -49,6 +72,7 @@ const SleepMonitor = () => {
       eventos_voz: Math.floor(Math.random() * 5),
       picos_ruido: Math.floor(Math.random() * 20),
       score_sueno: score < 0 ? 0 : score,
+      has_audio: !!audioResultRef.current,
     });
   };
 
@@ -91,21 +115,55 @@ const SleepMonitor = () => {
           )}
         </CardContent>
       </Card>
-      {summary && <SleepSummary summary={summary} clearSummary={() => setSummary(null)} />}
+  {summary && <SleepSummary summary={summary} audioBlob={audioResultRef.current?.blob || null} clearSummary={() => setSummary(null)} />}
     </div>
   );
 };
 
-const SleepSummary = ({ summary, clearSummary }) => {
+const SleepSummary = ({ summary, audioBlob, clearSummary }) => {
   const [sleepHistory, setSleepHistory] = useLocalStorage('vita-sleep-history', []);
   const { toast } = useToast();
   const navigate = useNavigate();
+  const [saving, setSaving] = React.useState(false);
+  const [sharing, setSharing] = React.useState(false);
+  const [saveAudio, setSaveAudio] = React.useState(true);
 
-  const handleSave = () => {
-    const newHistory = [summary, ...sleepHistory];
+  const handleSave = async () => {
+    let fileInfo = null;
+    setSaving(true);
+    try {
+      if (saveAudio && audioBlob) {
+        const ext = audioBlob.type?.includes('mp4') || audioBlob.type?.includes('m4a') ? 'm4a' : (audioBlob.type?.includes('webm') ? 'webm' : 'wav');
+        const filename = `sleep_${new Date(summary.date).getTime()}.${ext}`;
+        fileInfo = await saveBlobNative(audioBlob, filename);
+      }
+    } catch (e) {
+      // si falla, seguimos guardando sólo el resumen
+    }
+    const record = { ...summary, fileInfo };
+    const newHistory = [record, ...sleepHistory];
     setSleepHistory(newHistory);
-    toast({ title: 'Resumen guardado', description: 'Tu sesión de sueño se ha guardado en el historial.' });
+    setSaving(false);
+    toast({ title: 'Sesión guardada', description: fileInfo ? 'Audio guardado en Documentos de la app.' : 'Guardado el resumen sin audio.' });
     navigate('/mi-chequeo');
+  };
+
+  const handleShare = async () => {
+    if (!audioBlob) {
+      toast({ title: 'No hay audio para compartir', variant: 'destructive' });
+      return;
+    }
+    setSharing(true);
+    try {
+      // Guardar temporalmente (si aún no existe) y compartir
+      const ext = audioBlob.type?.includes('mp4') || audioBlob.type?.includes('m4a') ? 'm4a' : (audioBlob.type?.includes('webm') ? 'webm' : 'wav');
+      const filename = `sleep_${new Date(summary.date).getTime()}.${ext}`;
+      const fileInfo = await saveBlobNative(audioBlob, filename);
+      await shareSavedFile(fileInfo);
+    } catch (e) {
+      toast({ title: 'No se pudo compartir el audio', variant: 'destructive' });
+    }
+    setSharing(false);
   };
 
   const handleDelete = () => {
@@ -130,6 +188,12 @@ const SleepSummary = ({ summary, clearSummary }) => {
           <CardTitle>Resumen de la Sesión</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
+          {/* Preferencias rápidas */}
+          <div className="flex items-center gap-3 bg-white/5 rounded-md p-2">
+            <input id="save-audio" type="checkbox" checked={saveAudio} onChange={(e)=>setSaveAudio(e.target.checked)} />
+            <label htmlFor="save-audio" className="text-sm text-white/90">Guardar audio (recomendado). Si lo desactivas, solo se guardará el resumen.</label>
+          </div>
+
           <div className="text-center">
             <div className={`text-6xl font-bold ${status.color}`}>{summary.score_sueno}</div>
             <p className={`text-lg font-semibold ${status.color}`}>{status.text}</p>
@@ -153,7 +217,8 @@ const SleepSummary = ({ summary, clearSummary }) => {
             </div>
           </div>
           <div className="flex flex-col sm:flex-row gap-2 pt-4">
-            <Button onClick={handleSave} className="flex-1 bg-green-500 hover:bg-green-600"><Save className="mr-2 h-4 w-4"/>Guardar</Button>
+            <Button onClick={handleSave} disabled={saving} className="flex-1 bg-green-500 hover:bg-green-600"><Save className="mr-2 h-4 w-4"/>{saving ? 'Guardando…' : 'Guardar'}</Button>
+            <Button onClick={handleShare} disabled={sharing || !audioBlob} variant="secondary" className="flex-1 bg-white/10 hover:bg-white/20 text-white"><Share2 className="mr-2 h-4 w-4"/>{sharing ? 'Compartiendo…' : 'Compartir audio'}</Button>
             <Button onClick={handleDelete} variant="destructive" className="flex-1"><Trash2 className="mr-2 h-4 w-4"/>Eliminar</Button>
           </div>
         </CardContent>
@@ -181,7 +246,7 @@ const MeasureSleep = () => {
         <Alert variant="default" className="bg-white/5 border-vita-orange/50 text-white">
           <AlertCircle className="h-4 w-4 text-vita-orange" />
           <AlertDescription>
-            Monitoreo de sueño: los datos se procesan en tu dispositivo. Este módulo no sustituye evaluación clínica.
+            Monitoreo de sueño: los datos se procesan en tu dispositivo. Este módulo no sustituye evaluación clínica. Actualmente no se guarda audio en tu galería; sólo se genera un resumen. Para guardar audio real en nativo, debemos habilitar permisos del micrófono y almacenamiento con Capacitor.
           </AlertDescription>
         </Alert>
 

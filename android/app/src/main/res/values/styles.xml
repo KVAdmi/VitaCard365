@@ -7,6 +7,8 @@
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
+        <!-- Pre-Android 12 fallback splash background -->
+        <item name="android:windowBackground">@drawable/launch_splash</item>
     </style>
 
     <style name="AppTheme.NoActionBar" parent="Theme.AppCompat.DayNight.NoActionBar">
@@ -24,4 +26,5 @@
         <!-- Fallback pre-Android 12: pintar fondo + logo centrado -->
         <item name="android:windowBackground">@drawable/launch_splash</item>
     </style>
+
 </resources>

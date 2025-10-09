@@ -13,6 +13,13 @@ const config: CapacitorConfig = {
       androidScaleType: 'CENTER_CROP',
       showSpinner: false
     }
+  },
+  android: {
+    backgroundColor: '#FF0C1C3E',
+    allowMixedContent: true
+  },
+  ios: {
+    backgroundColor: '#FF0C1C3E'
   }
 };
 

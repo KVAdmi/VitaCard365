@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { SplashScreen } from '@capacitor/splash-screen';
 
 export default function IntroVideo() {
   const navigate = useNavigate();
@@ -8,21 +9,18 @@ export default function IntroVideo() {
   const [needsTap, setNeedsTap] = useState(false);
   const [isFading, setIsFading] = useState(false);
   const [starting, setStarting] = useState(false);
+  const [ready, setReady] = useState(false);
+  useEffect(()=>{ try{ console.log('[Intro] mounted'); }catch{} },[]);
 
-  const base = import.meta.env.BASE_URL || './';
-  const primarySrc = `${base}assets/landing-video.mp4`;
+  // Usar rutas absolutas desde public/ para Capacitor
+  const primarySrc = '/landing-video.mp4';
   // Fallback por si el archivo aún tiene espacios en el nombre
-  const legacySrc = `${base}assets/Video%20intro.mp4`;
-  const poster = `${base}assets/landing-poster.jpg`;
+  const legacySrc = '/Video%20intro.mp4';
+  const poster = '/landing-poster.jpg';
 
   useEffect(() => {
-    // Ocultar SplashScreen en nativo si el plugin existe; en web no hace nada.
-    try {
-      // Evitamos importar el paquete para no romper dev en web.
-      const cap = typeof window !== 'undefined' ? window.Capacitor : undefined;
-      const hide = cap?.Plugins?.SplashScreen?.hide;
-      if (typeof hide === 'function') hide();
-    } catch {}
+    // Ocultar SplashScreen correctamente usando el plugin
+    SplashScreen.hide().catch(() => {});
 
     const t = setTimeout(() => setShowSkip(true), 3000);
     return () => clearTimeout(t);
@@ -51,12 +49,13 @@ export default function IntroVideo() {
         await v.play();
         setNeedsTap(false);
       } catch {
-        // Autoplay bloqueado
+        // Autoplay bloqueado: mostramos botón, pero NO navegamos
         setNeedsTap(true);
       }
     };
 
     const onCanPlay = () => {
+      setReady(true);
       // Intentar reproducción cuando esté listo
       tryAutoplay();
     };
@@ -92,7 +91,7 @@ export default function IntroVideo() {
     // Segundo intento por si 'canplay' no dispara en algunos WebViews
     const fallbackTimer = setTimeout(() => {
       tryAutoplay();
-      // Si ni así avanza en 1.5s, mostrar tap
+      // Si ni así avanza en 1.5s, mostrar tap (sin navegar)
       stallTimer = setTimeout(() => {
         if (v.paused || v.currentTime < 0.2) {
           setNeedsTap(true);
@@ -119,7 +118,7 @@ export default function IntroVideo() {
 
   const onTapToStart = async () => {
     const v = videoRef.current;
-    if (!v) return goLoginWithFade();
+    if (!v) return; // si no hay video, no navegamos automáticamente
     try {
       v.setAttribute('muted', '');
       v.setAttribute('playsinline', '');
@@ -130,15 +129,10 @@ export default function IntroVideo() {
       setStarting(true);
       await v.play();
       setNeedsTap(false);
-      // Si en 3s no avanza, saltamos a login para no bloquear
-      setTimeout(() => {
-        if (v.paused || v.currentTime < 0.2) {
-          goLoginWithFade();
-        }
-      }, 3000);
     } catch {
-      // Si aún no se puede reproducir, navegamos a login
-      goLoginWithFade();
+      // Si aún no se puede reproducir, mantenemos el botón para que el usuario vuelva a intentar
+      setStarting(false);
+      setNeedsTap(true);
     }
   };
 
@@ -174,7 +168,7 @@ export default function IntroVideo() {
         ref={videoRef}
         src={primarySrc}
         poster={poster}
-        className="w-full h-full object-cover"
+        className={`w-full h-full object-cover transition-opacity duration-500 ${ready ? 'opacity-100' : 'opacity-0'}`}
         autoPlay
         muted
         playsInline

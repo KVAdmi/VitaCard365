@@ -25,3 +25,9 @@ vitacard_certs/
 *.cer
 vitacard_private.key
 **/vitacard_private.key
+
+# Android build artifacts (ignore)
+android/capacitor-cordova-android-plugins/
+android/.gradle/
+android/app/build/
+android/build/

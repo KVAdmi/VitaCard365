@@ -16,10 +16,11 @@ dependencies {
     implementation project(':capacitor-geolocation')
     implementation project(':capacitor-google-maps')
     implementation project(':capacitor-local-notifications')
+    implementation project(':capacitor-preferences')
     implementation project(':capacitor-share')
-    implementation "androidx.health.connect:connect-client:1.1.0-alpha10"
+
 }
-apply from: "../../node_modules/cordova-plugin-health/src/android/build-extras.gradle"
+
 
 if (hasProperty('postBuildExtras')) {
   postBuildExtras()
