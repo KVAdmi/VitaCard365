@@ -33,7 +33,7 @@
   },
   "environments": [],
   "deploy": {
-    "channels": []
+    "channels": [ ]
   },
   "signingCertificates": {
     "android": [],
