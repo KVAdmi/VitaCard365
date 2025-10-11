@@ -7,10 +7,10 @@ import { motion } from 'framer-motion';
 import { Plus, Info } from 'lucide-react';
 
 import NASAHistoryCardsPanel from '../components/mi-chequeo/NASAHistoryCardsPanel';
-import AudioCleanupPanel from '../components/mi-chequeo/AudioCleanupPanel';
+// import AudioCleanupPanel from '../components/mi-chequeo/AudioCleanupPanel';
 import { Card, CardContent } from '../components/ui/card';
 import { Bar } from 'react-chartjs-2';
-import { HeartPulse, Wind, Activity, Weight, Moon, AlertTriangle } from 'lucide-react';
+import { HeartPulse, Wind, Activity, Weight, AlertTriangle } from 'lucide-react';
 import { useToast } from '../components/ui/use-toast';
 
 import {
@@ -30,6 +30,7 @@ import { Line } from 'react-chartjs-2';
 import { triageTests, levelCopy } from '../lib/triageEngine';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabaseClient';
+// Sleep module totalmente desactivado en UI
 
 ChartJS.register(
   CategoryScale,
@@ -100,24 +101,7 @@ const MeasurementCard = ({ measurement }) => {
     </div>
   );
 
-  const SleepCard = ({ measurement }) => {
-    const scoreColor =
-      measurement.score_sueno > 85
-        ? 'text-green-400'
-        : measurement.score_sueno > 70
-        ? 'text-yellow-400'
-        : 'text-red-400';
-    return (
-      <div className="flex items-center space-x-2">
-        <Moon className="w-5 h-5 text-vita-orange" />
-        <div>
-          <span className="font-bold text-white">Calidad del Sueño: </span>
-          <span className={`font-bold ${scoreColor}`}>{measurement.score_sueno}</span>
-          <span className="text-white/80">/100</span>
-        </div>
-      </div>
-    );
-  };
+  // SleepCard eliminado
 
   const TriageCard = ({ measurement }) => {
     const testTitle = triageTests[measurement.test_id]?.title || 'Test de Alertas';
@@ -139,8 +123,7 @@ const MeasurementCard = ({ measurement }) => {
         return <VitalsCard measurement={measurement} />;
       case 'weight':
         return <WeightCard measurement={measurement} />;
-      case 'sleep':
-        return <SleepCard measurement={measurement} />;
+      // case 'sleep': eliminado
       case 'triage':
         return <TriageCard measurement={measurement} />;
       default:
@@ -183,13 +166,9 @@ const MiChequeo = () => {
 
   // Exportación a PDF deshabilitada por solicitud
 
-  // Limitar histórico de sueño a los últimos 7 días
-  const sevenDaysAgo = React.useMemo(() => {
-    const d = new Date();
-    d.setDate(d.getDate() - 6); // Incluye hoy
-    d.setHours(0,0,0,0);
-    return d;
-  }, []);
+  // Limitar histórico de sueño a los últimos 7 días (solo si el módulo está activo)
+  // Sleep: filtros y cálculos eliminados
+  const sevenDaysAgo = React.useMemo(() => null, []);
 
   // Cargar datos reales de 'mediciones' (últimos 30 días) del usuario autenticado
   useEffect(() => {
@@ -212,10 +191,7 @@ const MiChequeo = () => {
   }, [user?.id]);
 
   // Filtrar sleepHistory y triageEvents a los últimos 7 días
-  const filteredSleepHistory = React.useMemo(() =>
-    sleepHistory.filter(item => new Date(item.date) >= sevenDaysAgo),
-    [sleepHistory, sevenDaysAgo]
-  );
+  const filteredSleepHistory = React.useMemo(() => [], []);
   const filteredTriageEvents = React.useMemo(() =>
     triageEvents.filter(item => new Date(item.created_at) >= sevenDaysAgo),
     [triageEvents, sevenDaysAgo]
@@ -230,46 +206,10 @@ const MiChequeo = () => {
   }, [filteredSleepHistory, filteredTriageEvents]);
 
   // Extraer la última sesión de sueño (de los últimos 7 días) para el panel principal
-  const lastSleep = React.useMemo(() => {
-    if (!filteredSleepHistory.length) return null;
-    // Ordenar por fecha descendente
-    const sorted = [...filteredSleepHistory].sort((a, b) => new Date(b.date) - new Date(a.date));
-    return sorted[0];
-  }, [filteredSleepHistory]);
+  const lastSleep = React.useMemo(() => null, []);
 
   // Preparar datos para la gráfica de sueño (dB y ronquidos)
-  const sleepChartData = React.useMemo(() => {
-    if (!lastSleep || !lastSleep.timeseries) return null;
-    // timeseries: [{ts, db, snore_prob, is_snore}]
-    const labels = lastSleep.timeseries.map((d) =>
-      new Date(d.ts).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })
-    );
-    return {
-      labels,
-      datasets: [
-        {
-          type: 'line',
-          label: 'dB',
-          data: lastSleep.timeseries.map((d) => d.db),
-          borderColor: '#60a5fa',
-          backgroundColor: 'rgba(96,165,250,0.1)',
-          yAxisID: 'yDb',
-          tension: 0.3,
-          pointRadius: 0,
-        },
-        {
-          type: 'bar',
-          label: 'Ronquidos',
-          data: lastSleep.timeseries.map((d) => d.is_snore ? d.db : 0),
-          backgroundColor: 'rgba(251,191,36,0.7)',
-          yAxisID: 'yDb',
-          borderRadius: 4,
-          barPercentage: 1.0,
-          categoryPercentage: 1.0,
-        },
-      ],
-    };
-  }, [lastSleep]);
+  const sleepChartData = React.useMemo(() => null, []);
 
   const sleepChartOptions = {
     responsive: true,
@@ -380,49 +320,7 @@ const MiChequeo = () => {
         </div>
 
 
-        {/* Panel principal de calidad de sueño y gráfica, exportable, con botón PDF */}
-        <div ref={mainPanelRef} className="mb-8">
-          {lastSleep && (
-            <Card className="glass-card mb-8">
-              <CardContent className="p-4 flex flex-col sm:flex-row gap-4 items-center sm:items-stretch">
-                <div className="flex-1 min-w-[180px] max-w-full flex flex-col justify-center items-center sm:items-start">
-                  <div className="flex justify-between w-full mb-1">
-                    <h3 className="text-lg font-bold text-vita-white">Calidad de Sueño (última noche)</h3>
-                    {/* Botón Descargar PDF (calidad de sueño) removido */}
-                  </div>
-                  <div className="flex flex-wrap gap-4 items-center justify-center sm:justify-start mb-2">
-                    <div className="flex flex-col items-center">
-                      <span className="text-3xl font-extrabold text-vita-blue-light drop-shadow">{lastSleep.sleep_score ?? '--'}</span>
-                      <span className="text-xs text-vita-muted-foreground">Sleep Score</span>
-                    </div>
-                    <div className="flex flex-col items-center">
-                      <span className="text-2xl font-bold text-white">{lastSleep.minutes ? (lastSleep.minutes/60).toFixed(1) : '--'} h</span>
-                      <span className="text-xs text-vita-muted-foreground">Horas dormidas</span>
-                    </div>
-                    <div className="flex flex-col items-center">
-                      <span className="text-2xl font-bold text-yellow-300">{lastSleep.snore_minutes ?? '--'}</span>
-                      <span className="text-xs text-vita-muted-foreground">Min. roncando</span>
-                    </div>
-                    <div className="flex flex-col items-center">
-                      <span className="text-2xl font-bold text-orange-400">{lastSleep.interruptions ?? '--'}</span>
-                      <span className="text-xs text-vita-muted-foreground">Interrupciones</span>
-                    </div>
-                  </div>
-                  <div className="flex flex-col gap-1 mt-2">
-                    <span className="text-xs text-vita-muted-foreground">Última sesión: {lastSleep.date ? new Date(lastSleep.date).toLocaleString('es-ES', { dateStyle: 'medium', timeStyle: 'short' }) : '--'}</span>
-                  </div>
-                </div>
-                <div className="flex-1 min-w-[200px] max-w-full h-40 flex items-center justify-center">
-                  {sleepChartData ? (
-                    <Bar data={sleepChartData} options={sleepChartOptions} height={140} />
-                  ) : (
-                    <div className="flex items-center justify-center h-full text-vita-muted-foreground text-center text-xs">Sin datos de gráfica</div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          )}
-        </div>
+        {/* Panel de calidad de sueño eliminado */}
 
   {/* Panel de limpieza de audios locales y privacidad (solo visible en calidad de sueño) */}
   {/* <AudioCleanupPanel /> */}

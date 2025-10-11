@@ -11,9 +11,9 @@ function HistoryCard({ title, subtitle, children }) {
     <div style={{
       background: "#0C1C3A",
       borderRadius: 12,
-      padding: 16,
+      padding: 12,
       color: "#fff",
-      marginBottom: 16,
+      marginBottom: 12,
       boxShadow: "0 6px 18px rgba(0,0,0,0.15)"
     }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -23,7 +23,7 @@ function HistoryCard({ title, subtitle, children }) {
         </div>
         {/* Botón 'Descargar PDF' removido por solicitud */}
       </div>
-      <div style={{ marginTop: 12 }}>
+      <div style={{ marginTop: 8 }}>
         {children}
       </div>
     </div>
@@ -112,15 +112,15 @@ export default function NASAHistoryCardsPanel() {
         title="Presión arterial"
         subtitle="Últimos 7 días"
       >
-        <div style={{ height: 200, width: '100%' }}>
-          <ResponsiveContainer width="100%" height={180}>
-            <LineChart data={bpData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+        <div style={{ height: 220, width: '100%' }}>
+          <ResponsiveContainer width="100%" height={200}>
+            <LineChart data={bpData} margin={{ top: 12, right: 30, left: 0, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#23325b" />
               <XAxis dataKey="fecha" stroke="#fff" fontSize={12} tick={{ fill: '#fff' }} />
               <YAxis yAxisId="left" stroke="#f06340" fontSize={12} tick={{ fill: '#f06340' }} />
               <YAxis yAxisId="right" orientation="right" stroke="#60a5fa" fontSize={12} tick={{ fill: '#60a5fa' }} />
               <Tooltip contentStyle={{ background: '#18181b', border: 'none', color: '#fff' }} />
-              <Legend wrapperStyle={{ color: '#fff' }} />
+              <Legend verticalAlign="top" height={24} wrapperStyle={{ color: '#fff' }} />
               <Line yAxisId="left" type="monotone" dataKey="sistolica" stroke="#f06340" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} animationDuration={900} name="Sistólica" />
               <Line yAxisId="left" type="monotone" dataKey="diastolica" stroke="#60a5fa" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} animationDuration={900} name="Diastólica" />
               <Line yAxisId="right" type="monotone" dataKey="pulso" stroke="#fbbf24" strokeWidth={2} dot={{ r: 3 }} activeDot={{ r: 5 }} animationDuration={900} name="Pulso" />
@@ -130,56 +130,56 @@ export default function NASAHistoryCardsPanel() {
       </HistoryCard>
 
   <HistoryCard title="Glucosa" subtitle="Últimos 7 días">
-        <div style={{ height: 180, width: '100%' }}>
-          <ResponsiveContainer width="100%" height={160}>
-            <LineChart data={glucosaData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+        <div style={{ height: 220, width: '100%' }}>
+          <ResponsiveContainer width="100%" height={200}>
+            <LineChart data={glucosaData} margin={{ top: 12, right: 30, left: 0, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#23325b" />
               <XAxis dataKey="fecha" stroke="#fff" fontSize={12} tick={{ fill: '#fff' }} />
               <YAxis stroke="#f06340" fontSize={12} tick={{ fill: '#f06340' }} />
               <Tooltip contentStyle={{ background: '#18181b', border: 'none', color: '#fff' }} />
-              <Legend wrapperStyle={{ color: '#fff' }} />
+              <Legend verticalAlign="top" height={24} wrapperStyle={{ color: '#fff' }} />
               <Line type="monotone" dataKey="glucosa" stroke="#f06340" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} animationDuration={900} name="Glucosa" />
             </LineChart>
           </ResponsiveContainer>
         </div>
       </HistoryCard>
   <HistoryCard title="SpO₂" subtitle="Últimos 7 días">
-        <div style={{ height: 180, width: '100%' }}>
-          <ResponsiveContainer width="100%" height={160}>
-            <LineChart data={spo2Data} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+        <div style={{ height: 220, width: '100%' }}>
+          <ResponsiveContainer width="100%" height={200}>
+            <LineChart data={spo2Data} margin={{ top: 12, right: 30, left: 0, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#23325b" />
               <XAxis dataKey="fecha" stroke="#fff" fontSize={12} tick={{ fill: '#fff' }} />
               <YAxis stroke="#60a5fa" fontSize={12} tick={{ fill: '#60a5fa' }} />
               <Tooltip contentStyle={{ background: '#18181b', border: 'none', color: '#fff' }} />
-              <Legend wrapperStyle={{ color: '#fff' }} />
+              <Legend verticalAlign="top" height={24} wrapperStyle={{ color: '#fff' }} />
               <Line type="monotone" dataKey="spo2" stroke="#60a5fa" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} animationDuration={900} name="SpO₂" />
             </LineChart>
           </ResponsiveContainer>
         </div>
       </HistoryCard>
   <HistoryCard title="Frecuencia cardíaca" subtitle="Últimos 7 días">
-        <div style={{ height: 180, width: '100%' }}>
-          <ResponsiveContainer width="100%" height={160}>
-            <LineChart data={hrData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+        <div style={{ height: 220, width: '100%' }}>
+          <ResponsiveContainer width="100%" height={200}>
+            <LineChart data={hrData} margin={{ top: 12, right: 30, left: 0, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#23325b" />
               <XAxis dataKey="fecha" stroke="#fff" fontSize={12} tick={{ fill: '#fff' }} />
               <YAxis stroke="#fbbf24" fontSize={12} tick={{ fill: '#fbbf24' }} />
               <Tooltip contentStyle={{ background: '#18181b', border: 'none', color: '#fff' }} />
-              <Legend wrapperStyle={{ color: '#fff' }} />
+              <Legend verticalAlign="top" height={24} wrapperStyle={{ color: '#fff' }} />
               <Line type="monotone" dataKey="pulso" stroke="#fbbf24" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} animationDuration={900} name="Pulso" />
             </LineChart>
           </ResponsiveContainer>
         </div>
       </HistoryCard>
   <HistoryCard title="Peso" subtitle="Últimos 7 días">
-        <div style={{ height: 180, width: '100%' }}>
-          <ResponsiveContainer width="100%" height={160}>
-            <LineChart data={pesoData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+        <div style={{ height: 220, width: '100%' }}>
+          <ResponsiveContainer width="100%" height={200}>
+            <LineChart data={pesoData} margin={{ top: 12, right: 30, left: 0, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#23325b" />
               <XAxis dataKey="fecha" stroke="#fff" fontSize={12} tick={{ fill: '#fff' }} />
               <YAxis stroke="#4ade80" fontSize={12} tick={{ fill: '#4ade80' }} />
               <Tooltip contentStyle={{ background: '#18181b', border: 'none', color: '#fff' }} />
-              <Legend wrapperStyle={{ color: '#fff' }} />
+              <Legend verticalAlign="top" height={24} wrapperStyle={{ color: '#fff' }} />
               <Line type="monotone" dataKey="peso" stroke="#4ade80" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} animationDuration={900} name="Peso" />
             </LineChart>
           </ResponsiveContainer>

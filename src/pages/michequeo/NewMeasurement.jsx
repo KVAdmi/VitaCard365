@@ -4,7 +4,7 @@ import Layout from '../../components/Layout';
 
 import { Card, CardContent } from '../../components/ui/card';
 import { motion } from 'framer-motion';
-import { HeartPulse, AlertTriangle, Weight, Moon, ArrowRight } from 'lucide-react';
+import { HeartPulse, AlertTriangle, Weight, ArrowRight } from 'lucide-react';
 
 const NewMeasurement = () => {
   const navigate = useNavigate();
@@ -29,13 +29,6 @@ const NewMeasurement = () => {
       description: 'Calcula tu IMC y ve tu historial.',
       icon: Weight,
       path: '/mi-chequeo/peso',
-  color: 'text-vita-orange',
-    },
-    {
-      title: 'Calidad del Sueño',
-      description: 'Monitorea tus ronquidos.',
-      icon: Moon,
-      path: '/mi-chequeo/sueno',
   color: 'text-vita-orange',
     },
   ];

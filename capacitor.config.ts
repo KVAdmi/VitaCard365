@@ -3,12 +3,13 @@ import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
   appId: 'com.vitacard365.app',
-  appName: 'VitaCard 365',   // nombre EXACTO
+  appName: 'VitaCard365',
   webDir: 'dist',
+  // No server.url. Solo esquema si fuese necesario:
   server: { androidScheme: 'https' },
   plugins: {
     SplashScreen: {
-      launchAutoHide: true,
+      launchAutoHide: false,
       backgroundColor: '#0c1c3e',
       androidScaleType: 'CENTER_CROP',
       showSpinner: false

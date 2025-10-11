@@ -246,7 +246,7 @@ const MeasureSleep = () => {
         <Alert variant="default" className="bg-white/5 border-vita-orange/50 text-white">
           <AlertCircle className="h-4 w-4 text-vita-orange" />
           <AlertDescription>
-            Monitoreo de sueño: los datos se procesan en tu dispositivo. Este módulo no sustituye evaluación clínica. Actualmente no se guarda audio en tu galería; sólo se genera un resumen. Para guardar audio real en nativo, debemos habilitar permisos del micrófono y almacenamiento con Capacitor.
+            Monitoreo de sueño: los datos se procesan en tu dispositivo. Este módulo no sustituye evaluación clínica. Actualmente no se guarda audio en tu galería; sólo se genera un resumen. Para guardar audio real en nativo, debemos habilitar permisos del micrófono.
           </AlertDescription>
         </Alert>
 

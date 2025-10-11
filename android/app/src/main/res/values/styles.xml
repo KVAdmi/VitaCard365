@@ -7,6 +7,8 @@
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
+        <!-- NO permitir que Android “tinte” colores por modo oscuro -->
+        <item name="android:forceDarkAllowed">false</item>
         <!-- Pre-Android 12 fallback splash background -->
         <item name="android:windowBackground">@drawable/launch_splash</item>
     </style>
@@ -14,11 +16,13 @@
     <style name="AppTheme.NoActionBar" parent="Theme.AppCompat.DayNight.NoActionBar">
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
-        <item name="android:background">@null</item>
+        <!-- Asegura fondo azul después del splash hasta que WebView pinte -->
+        <item name="android:windowBackground">@color/vita_splash_bg</item>
     </style>
 
 
     <style name="AppTheme.NoActionBarLaunch" parent="Theme.SplashScreen">
+        <item name="android:forceDarkAllowed">false</item>
         <!-- Android 12+ splash attributes -->
         <item name="windowSplashScreenBackground">#0C1C3E</item>
         <item name="windowSplashScreenAnimatedIcon">@drawable/splash</item>

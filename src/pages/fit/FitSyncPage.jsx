@@ -5,13 +5,18 @@ function fmtTime(s) {
   return [h, m, ss].map(v => String(v).padStart(2, '0')).join(':');
 }
 
-function fmtPace(pace, dist) {
-  if (!dist || dist < 0.01 || !pace || !isFinite(pace) || pace <= 0) return '—';
+function fmtPace(pace) {
+  if (!pace || !isFinite(pace) || pace <= 0) return '—';
   let shownPace = pace;
   if (pace > 20) shownPace = 20;
   const min = Math.floor(shownPace);
   const sec = Math.round((shownPace % 1) * 60);
   return `${min}:${String(sec).padStart(2, '0')} min/km`;
+}
+function fmtDistance(km) {
+  if (!isFinite(km) || km < 0) return '—';
+  if (km < 1) return `${Math.max(0, Math.round(km * 1000))} m`;
+  return `${km.toFixed(2)} km`;
 }
 import { Geolocation } from '@capacitor/geolocation';
 import { Capacitor } from '@capacitor/core';
@@ -125,6 +130,17 @@ export default function FitSyncPage() {
     return () => clearInterval(id);
   }, [isTracking, isPaused]);
 
+  // Sincronizar métricas del hook de GPS (manual) al HUD desde el segundo 1
+  useEffect(() => {
+    if (!isTracking || isPaused) return;
+    setHud(h => ({
+      ...h,
+      distance_km: Number((tStats.distance_km || 0).toFixed(3)),
+      pace_min_km: tStats.pace_min_km || h.pace_min_km,
+      kcal: tStats.kcal || h.kcal,
+    }));
+  }, [tStats, isTracking, isPaused]);
+
   // Suscribirse al hub 1 Hz para enriquecer HUD sin romper flujo manual
   useEffect(() => {
     sessionHub.start();
@@ -178,9 +194,9 @@ export default function FitSyncPage() {
             <KeepAliveAccordion title="Running — Ruta libre" defaultOpen>
               <div data-flat="true" className="relative rounded-xl border border-cyan-300/40 bg-white/5 p-2 sm:p-3 overflow-hidden">
                 <div className="mt-3 grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
-                  <HUD label="Distancia" value={hud.distance_km.toFixed(2) + ' km'} />
+                  <HUD label="Distancia" value={fmtDistance(hud.distance_km)} />
                   <HUD label="Tiempo" value={fmtTime(hud.duration_s)} />
-                  <HUD label="Ritmo" value={fmtPace(hud.pace_min_km, hud.distance_km)} />
+                  <HUD label="Ritmo" value={fmtPace(hud.pace_min_km)} />
                   <HUD label="Calorías" value={Math.round(hud.kcal)} />
                   <HUD label="Pulso actual" value={pulsoActual ? pulsoActual + ' bpm' : '—'} />
                   <HUD label="Pulso promedio" value={hrAvg ? hrAvg + ' bpm' : '—'} />

@@ -28,7 +28,9 @@ import NutritionDetailPage from './pages/wellness/NutritionDetailPage';
 import NewMeasurement from './pages/michequeo/NewMeasurement';
 import TestAlerts from './pages/michequeo/TestAlerts';
 import MeasureWeight from './pages/michequeo/MeasureWeight';
-import MeasureSleep from './pages/michequeo/MeasureSleep';
+// Sleep module eliminado del router
+// import MeasureSleep from './pages/michequeo/MeasureSleep';
+// import { ENABLE_SLEEP_MODULE } from './config';
 import MeasureVitals from './pages/michequeo/MeasureVitals';
 import HistoryPage from './pages/michequeo/History';
 import Policy from './pages/Policy';
@@ -54,7 +56,8 @@ import Wallet from './pages/perfil/Wallet';
 function App() {
   useEffect(()=>{ initAuthDeepLinks(); },[]);
   try {
-    const isNative = typeof window !== 'undefined' && (typeof Capacitor?.isNativePlatform==='function' ? Capacitor.isNativePlatform() : false);
+    const protocol = (typeof window !== 'undefined' && window.location?.protocol) || '';
+    const isNative = (typeof Capacitor?.isNativePlatform==='function' && Capacitor.isNativePlatform()) || protocol === 'capacitor:' || protocol === 'file:';
     console.log('[Router] native?', isNative);
     console.log('[Router] href/hash', window.location?.href, window.location?.hash);
   } catch {}
@@ -72,7 +75,8 @@ function App() {
         <AuthProvider>
           <UserProvider>
             {(() => {
-              const isNative = typeof Capacitor?.isNativePlatform === 'function' && Capacitor.isNativePlatform();
+              const protocol = (typeof window !== 'undefined' && window.location?.protocol) || '';
+              const isNative = (typeof Capacitor?.isNativePlatform === 'function' && Capacitor.isNativePlatform()) || protocol === 'capacitor:' || protocol === 'file:';
               const RouterCmp = isNative ? HashRouter : BrowserRouter;
               const notFoundTarget = isNative ? '/' : '/dashboard';
               return (
@@ -113,7 +117,7 @@ function App() {
                     <Route path="/mi-chequeo/nueva" element={<ProtectedRoute><NewMeasurement /></ProtectedRoute>} />
                     <Route path="/mi-chequeo/test-alertas" element={<ProtectedRoute><TestAlerts /></ProtectedRoute>} />
                     <Route path="/mi-chequeo/peso" element={<ProtectedRoute><MeasureWeight /></ProtectedRoute>} />
-                    <Route path="/mi-chequeo/sueno" element={<ProtectedRoute><MeasureSleep /></ProtectedRoute>} />
+                    {/* Ruta de Sueño eliminada */}
                     <Route path="/mi-chequeo/vitals" element={<ProtectedRoute><MeasureVitals /></ProtectedRoute>} />
                     <Route path="/mi-chequeo/history" element={<ProtectedRoute><HistoryPage /></ProtectedRoute>} />
                     

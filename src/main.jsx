@@ -9,6 +9,8 @@ import { Capacitor } from '@capacitor/core';
 initReactFastclick();
 
 const isAndroid = Capacitor.getPlatform && Capacitor.getPlatform() === 'android';
+const protocol = (typeof window !== 'undefined' && window.location?.protocol) || '';
+const isNativeEnv = (Capacitor?.isNativePlatform?.() === true) || protocol === 'capacitor:' || protocol === 'file:';
 
 // En nativo: desregistrar cualquier Service Worker previo y limpiar CacheStorage
 try {
@@ -30,7 +32,7 @@ try {
 
 // Fuerza ruta de inicio a Intro en nativo (HashRouter)
 try {
-  if (typeof window !== 'undefined' && window.Capacitor) {
+  if (typeof window !== 'undefined' && isNativeEnv) {
     const hash = window.location.hash || '';
     const path = window.location.pathname || '';
     if (!hash || hash === '#' || hash === '#/index.html' || path.endsWith('/index.html')) {
@@ -48,9 +50,7 @@ console.log = (...args) => {
 };
 
 ReactDOM.createRoot(document.getElementById('root')).render(
-  isAndroid ? (
-    <App />
-  ) : (
+  isAndroid ? (<App />) : (
     <React.StrictMode>
       <App />
     </React.StrictMode>

@@ -117,8 +117,8 @@ const Perfil = () => {
   const handleAvatarChange = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > 1024 * 1024) {
-      toast({ title: 'Imagen muy grande', description: 'Máximo 1MB.', variant: 'destructive' });
+    if (file.size > 5 * 1024 * 1024) {
+      toast({ title: 'Imagen muy grande', description: 'Máximo 5MB.', variant: 'destructive' });
       return;
     }
     try {

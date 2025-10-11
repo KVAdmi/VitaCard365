@@ -1,6 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { SplashScreen } from '@capacitor/splash-screen';
 
 export default function IntroVideo() {
   const navigate = useNavigate();
@@ -9,21 +8,22 @@ export default function IntroVideo() {
   const [needsTap, setNeedsTap] = useState(false);
   const [isFading, setIsFading] = useState(false);
   const [starting, setStarting] = useState(false);
-  const [ready, setReady] = useState(false);
+  const [ready, setReady] = useState(false);         // El video ya puede pintar
+  const [posterVisible, setPosterVisible] = useState(true); // Poster visible hasta playing
   useEffect(()=>{ try{ console.log('[Intro] mounted'); }catch{} },[]);
 
-  // Usar rutas absolutas desde public/ para Capacitor
-  const primarySrc = '/landing-video.mp4';
-  // Fallback por si el archivo aún tiene espacios en el nombre
-  const legacySrc = '/Video%20intro.mp4';
-  const poster = '/landing-poster.jpg';
+  // Póster inmediato (ruta conocida en assets)
+  const poster = '/assets/landing-poster.jpg';
+  const srcCandidates = [
+    '/landing-video.mp4',
+    '/assets/landing-video.mp4',
+    '/Video%20intro.mp4',
+  ];
 
   useEffect(() => {
-    // Ocultar SplashScreen correctamente usando el plugin
-    SplashScreen.hide().catch(() => {});
-
+    // Mostramos 'Omitir' después de 3s. NO ocultamos el Splash aquí.
     const t = setTimeout(() => setShowSkip(true), 3000);
-    return () => clearTimeout(t);
+    return () => { clearTimeout(t); };
   }, []);
 
   useEffect(() => {
@@ -44,7 +44,10 @@ export default function IntroVideo() {
     const tryAutoplay = async () => {
       try {
         setInlineAttrs();
-        v.load();
+        // A) Empuja primer frame (~0.05s) para desbloquear pintura inicial en WebViews tercos
+        if (!Number.isFinite(v.currentTime) || v.currentTime < 0.01) {
+          try { v.currentTime = 0.05; } catch {}
+        }
         // Algunos navegadores requieren play() explícito incluso con autoplay
         await v.play();
         setNeedsTap(false);
@@ -56,6 +59,16 @@ export default function IntroVideo() {
 
     const onCanPlay = () => {
       setReady(true);
+      // Ocultar Splash apenas el video puede pintar, con micro-retardo para estabilidad
+      try {
+        const cap = typeof window !== 'undefined' ? window.Capacitor : undefined;
+        const hidePlugins = cap?.Plugins?.SplashScreen?.hide;
+        const hideGlobal = cap?.SplashScreen?.hide;
+        setTimeout(() => {
+          if (typeof hidePlugins === 'function') hidePlugins();
+          if (typeof hideGlobal === 'function') hideGlobal();
+        }, 60);
+      } catch {}
       // Intentar reproducción cuando esté listo
       tryAutoplay();
     };
@@ -65,6 +78,16 @@ export default function IntroVideo() {
     const onPlaying = () => {
       setStarting(false);
       setNeedsTap(false);
+      // Ocultar SplashScreen justo cuando el video realmente empieza
+      try {
+        const cap = typeof window !== 'undefined' ? window.Capacitor : undefined;
+        const hidePlugins = cap?.Plugins?.SplashScreen?.hide;
+        if (typeof hidePlugins === 'function') hidePlugins();
+        const hideGlobal = cap?.SplashScreen?.hide;
+        if (typeof hideGlobal === 'function') hideGlobal();
+      } catch {}
+      // Dar un breve margen para asegurar primer frame estable antes de retirar el póster
+      setTimeout(() => { if (posterVisible) setPosterVisible(false); }, 120);
     };
     const onWaiting = () => {
       // está cargando/buffering; no navegar aún
@@ -72,7 +95,16 @@ export default function IntroVideo() {
     };
     const onError = () => {
       setStarting(false);
-      setNeedsTap(true);
+      // Intenta el siguiente source si el actual falla
+      const idx = Number(v.dataset.idx || 0);
+      const next = srcCandidates[idx + 1];
+      if (next) {
+        v.dataset.idx = String(idx + 1);
+        v.src = next;
+        v.load();
+      } else {
+        setNeedsTap(true);
+      }
     };
     v.addEventListener('playing', onPlaying);
     v.addEventListener('waiting', onWaiting);
@@ -84,20 +116,20 @@ export default function IntroVideo() {
       // Si está reproduciendo, limpiamos cualquier stall
       if (v.currentTime > 0.3 && !v.paused) {
         if (stallTimer) { clearTimeout(stallTimer); stallTimer = null; }
+        if (posterVisible) setPosterVisible(false);
       }
     };
     v.addEventListener('timeupdate', onTimeUpdate);
 
     // Segundo intento por si 'canplay' no dispara en algunos WebViews
     const fallbackTimer = setTimeout(() => {
-      tryAutoplay();
-      // Si ni así avanza en 1.5s, mostrar tap (sin navegar)
+      // Si ni así avanza pronto, mostrar tap (sin navegar)
       stallTimer = setTimeout(() => {
         if (v.paused || v.currentTime < 0.2) {
           setNeedsTap(true);
         }
-      }, 1500);
-    }, 800);
+      }, 900);
+    }, 500);
 
     return () => {
       v.removeEventListener('canplay', onCanPlay);
@@ -113,7 +145,26 @@ export default function IntroVideo() {
   const goLoginWithFade = () => {
     if (isFading) return;
     setIsFading(true);
-    setTimeout(() => navigate('/login', { replace: true }), 250);
+    // Asegura ocultar splash al salir hacia Login
+    try {
+      const cap = typeof window !== 'undefined' ? window.Capacitor : undefined;
+      const hidePlugins = cap?.Plugins?.SplashScreen?.hide;
+      if (typeof hidePlugins === 'function') hidePlugins();
+      const hideGlobal = cap?.SplashScreen?.hide;
+      if (typeof hideGlobal === 'function') hideGlobal();
+    } catch {}
+    // Forzar hash en nativo para evitar edge cases de Router en file://
+    try {
+      const protocol = (typeof window !== 'undefined' && window.location?.protocol) || '';
+      const isNativeEnv = (typeof window !== 'undefined' && window.Capacitor && typeof window.Capacitor.isNativePlatform === 'function' && window.Capacitor.isNativePlatform()) || protocol === 'capacitor:' || protocol === 'file:';
+      if (isNativeEnv) {
+        // cinturón y tirantes: setear hash directamente
+        if (typeof window !== 'undefined') {
+          window.location.hash = '#/login';
+        }
+      }
+    } catch {}
+    setTimeout(() => navigate('/login', { replace: true }), 120);
   };
 
   const onTapToStart = async () => {
@@ -136,26 +187,23 @@ export default function IntroVideo() {
     }
   };
 
-  const handleError = (e) => {
-    // Si falla la carga de landing-video.mp4, intentamos con el nombre antiguo con espacios
-    const v = videoRef.current;
-    if (!v) return;
-    if (!v.dataset.fallbackTried) {
-      v.dataset.fallbackTried = '1';
-      v.src = legacySrc;
-      v.load();
-      setTimeout(() => {
-        v.play().catch(() => setNeedsTap(true));
-      }, 100);
-    } else {
-      setNeedsTap(true);
-    }
-  };
+  // Fallback duro: si tras 3.5s no arrancó, llevar a login
+  useEffect(() => {
+    const t = setTimeout(() => {
+      const v = videoRef.current;
+      const playing = v && !v.paused && v.currentTime > 0.2;
+      if (!playing) {
+        goLoginWithFade();
+      }
+    }, 3500);
+    return () => clearTimeout(t);
+  }, []);
 
   return (
     <div
-      className={`fixed inset-0 bg-black ${isFading ? 'opacity-0' : 'opacity-100'}`}
-      style={{ transition: 'opacity 250ms ease-in-out' }}
+      className={`fixed inset-0 ${isFading ? 'opacity-0' : 'opacity-100'}`}
+      // Fondo azul corporativo para evitar "pantalla tinta"
+      style={{ background: '#0c1c3e', transition: 'opacity 250ms ease-in-out' }}
     >
       <style>{`
         /* Oculta overlays de play en reproducción automática en WebView/nativo */
@@ -164,18 +212,26 @@ export default function IntroVideo() {
         video::-webkit-media-controls-play-button { display: none !important; }
         video { -webkit-appearance: none; appearance: none; }
       `}</style>
+      {/* Poster overlay: visible hasta que el video esté 'playing' */}
+      <img
+        src={poster}
+        alt="Intro"
+        className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-200 ${posterVisible ? 'opacity-100' : 'opacity-0'}`}
+        style={{ background: '#0c1c3e', zIndex: 2 }}
+      />
+
       <video
         ref={videoRef}
-        src={primarySrc}
+        src={srcCandidates[0]}
         poster={poster}
-        className={`w-full h-full object-cover transition-opacity duration-500 ${ready ? 'opacity-100' : 'opacity-0'}`}
+        className={`w-full h-full object-cover transition-opacity duration-200 ${ready ? 'opacity-100' : 'opacity-0'}`}
         autoPlay
         muted
         playsInline
         preload="auto"
         disablePictureInPicture
         onEnded={goLoginWithFade}
-        onError={handleError}
+        style={{ backgroundColor: 'transparent', zIndex: 1 }}
       />
 
       {/* Botón Omitir visible a los 3s */}
