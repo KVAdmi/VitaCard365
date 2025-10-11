@@ -4,8 +4,32 @@
   "androidPath": "android",
   "iosPath": "ios/App",
   "build": {
-    "android": [],
-    "ios": []
+    "android": {
+      "stack": "Android - 2025",
+      "packageManager": "npm",
+      "scripts": {
+        "prebuild": "npm ci",
+        "build": "vite build",
+        "postbuild": "npx cap copy android && npx cap sync android"
+      },
+      "env": {},
+      "secrets": {},
+      "hooks": [],
+      "plugins": []
+    },
+    "ios": {
+      "stack": "macOS - Xcode 15",
+      "packageManager": "npm",
+      "scripts": {
+        "prebuild": "npm ci",
+        "build": "vite build",
+        "postbuild": "npx cap copy ios && npx cap sync ios"
+      },
+      "env": {},
+      "secrets": {},
+      "hooks": [],
+      "plugins": []
+    }
   },
   "buildConfig": {
     "android": {
@@ -13,8 +37,8 @@
       "variants": []
     },
     "ios": {
-      "schemes": [],
-      "targets": []
+      "schemes": ["App"],
+      "targets": ["App"]
     }
   },
   "nativeConfigs": {
