@@ -30,5 +30,15 @@
       "hooks": [],
       "plugins": []
     }
-  }
+  },
+  "nativeConfigs": {
+    "android": [],
+    "ios": []
+  },
+  "signingCertificates": {
+    "android": [],
+    "ios": []
+  },
+  "environments": [],
+  "deploy": {"channels": []}
 }
