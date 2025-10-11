@@ -1,5 +1,18 @@
 {
   "projectName": "VitaCard365",
   "androidPath": "android",
-  "iosPath": "ios/App"
+  "iosPath": "ios/App",
+  "build": {
+    "android": [],
+    "ios": []
+  },
+  "nativeConfigs": {
+    "android": [],
+    "ios": []
+  },
+  "signingCertificates": {
+    "android": [],
+    "ios": []
+  },
+  "environments": []
 }
