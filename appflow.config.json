@@ -1,10 +1,17 @@
 {
   "projectName": "VitaCard365",
+  "appId": "f6c253d1",
   "androidPath": "android",
   "iosPath": "ios/App",
   "build": {
-    "android": [],
-    "ios": []
+    "android": {
+      "flavors": [],
+      "variants": []
+    },
+    "ios": {
+      "schemes": [],
+      "targets": []
+    }
   },
   "nativeConfigs": {
     "android": [],
@@ -14,5 +21,8 @@
     "android": [],
     "ios": []
   },
-  "environments": []
+  "environments": [],
+  "deploy": {
+    "channels": []
+  }
 }
