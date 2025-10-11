@@ -1,4 +1,4 @@
-{
+﻿{
   "name": "VitaCard365",
   "appId": "f6c253d1",
   "androidPath": "android",
@@ -30,15 +30,5 @@
       "hooks": [],
       "plugins": []
     }
-  },
-  "nativeConfigs": {
-    "android": [],
-    "ios": []
-  },
-  "signingCertificates": {
-    "android": [],
-    "ios": []
-  },
-  "environments": [],
-  "deploy": {"channels": []}
+  }
 }
