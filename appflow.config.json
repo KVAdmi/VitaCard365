@@ -18,7 +18,7 @@
       "plugins": []
     },
     "ios": {
-      "stack": "macOS - Xcode 15",
+      "stack": "macOS - 2025.06 - Apple silicon",
       "packageManager": "npm",
       "scripts": {
         "prebuild": "npm ci",
