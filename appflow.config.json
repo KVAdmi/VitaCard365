@@ -30,27 +30,5 @@
       "hooks": [],
       "plugins": []
     }
-  },
-  "buildConfig": {
-    "android": {
-      "flavors": [],
-      "variants": []
-    },
-    "ios": {
-      "schemes": ["App"],
-      "targets": ["App"]
-    }
-  },
-  "nativeConfigs": {
-    "android": [],
-    "ios": []
-  },
-  "signingCertificates": {
-    "android": [],
-    "ios": []
-  },
-  "environments": [],
-  "deploy": {
-    "channels": []
   }
 }
