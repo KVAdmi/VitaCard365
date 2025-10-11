@@ -8,10 +8,24 @@ workflows:
         IOS_PROJECT_PATH: ios/App
         XCODE_WORKSPACE: App.xcworkspace
         XCODE_SCHEME: App
+        BUNDLE_ID: com.vitacard365.app
+        EXPORT_METHOD: ad-hoc # opciones: development | ad-hoc | app-store | enterprise
+        CODE_SIGNING_TYPE: IOS_APP_ADHOC # alternativas: IOS_APP_DEVELOPMENT | IOS_APP_STORE | IOS_APP_ENTERPRISE
       node: 20.11.1
       xcode: 15.4
       cocoapods: default
     scripts:
+      - name: Prepare iOS code signing (automatic)
+        script: |
+          # Requiere configurar App Store Connect API key en Codemagic UI
+          # (Issuer ID, Key ID y archivo .p8 como variables seguras o integración)
+          # 1) Instala certificados subidos en Signing identities (si aplica)
+          keychain add-certificates
+          # 2) Descarga/crea perfiles de aprovisionamiento para el BUNDLE_ID
+          #    usando la API de App Store Connect y los instala en el entorno
+          app-store-connect fetch-signing-files "$BUNDLE_ID" --type "$CODE_SIGNING_TYPE" --create
+          # 3) Configura el proyecto Xcode para usar los perfiles instalados
+          xcode-project use-profiles --export-method "$EXPORT_METHOD"
       - name: Install dependencies
         script: |
           npm ci
@@ -29,7 +43,7 @@ workflows:
         script: |
           cd $IOS_PROJECT_PATH
           # Use signing identities/profiles configured in Codemagic UI
-          xcode-project use-profiles
+          xcode-project use-profiles --export-method "$EXPORT_METHOD"
           # Build IPA (outputs to $CM_BUILD_DIR/Build/IPA by default)
           xcode-project build-ipa \
             --workspace "$XCODE_WORKSPACE" \
