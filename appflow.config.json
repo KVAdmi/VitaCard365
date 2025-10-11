@@ -15,11 +15,7 @@
       "env": {},
       "secrets": {},
       "hooks": [],
-      "plugins": [],
-      "environments": [],
-      "deploy": [],
-      "nativeConfigs": [],
-      "signing": {}
+      "plugins": []
     },
     "ios": {
       "stack": "macOS - 2025.06 - Apple silicon",
@@ -32,11 +28,11 @@
       "env": {},
       "secrets": {},
       "hooks": [],
-      "plugins": [],
-      "environments": [],
-      "deploy": [],
-      "nativeConfigs": [],
-      "signing": {}
+      "plugins": []
     }
+  },
+  "environments": [],
+  "deploy": {
+    "channels": []
   }
 }
