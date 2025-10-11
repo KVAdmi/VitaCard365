@@ -4,6 +4,10 @@
   "androidPath": "android",
   "iosPath": "ios/App",
   "build": {
+    "android": [],
+    "ios": []
+  },
+  "buildConfig": {
     "android": {
       "flavors": [],
       "variants": []
