@@ -1,0 +1,49 @@
+workflows:
+  ios_capacitor:
+    name: iOS Capacitor (VitaCard365)
+    max_build_duration: 60
+    instance_type: mac_mini_m2
+    environment:
+      vars:
+        IOS_PROJECT_PATH: ios/App
+        XCODE_WORKSPACE: App.xcworkspace
+        XCODE_SCHEME: App
+      node: 20.11.1
+      xcode: 15.4
+      cocoapods: default
+    scripts:
+      - name: Install dependencies
+        script: |
+          npm ci
+      - name: Web build (Vite)
+        script: |
+          npm run build
+      - name: Sync Capacitor iOS
+        script: |
+          npx cap sync ios
+      - name: Install CocoaPods
+        script: |
+          cd $IOS_PROJECT_PATH
+          pod install --repo-update
+      - name: Build .ipa with automatic signing
+        script: |
+          cd $IOS_PROJECT_PATH
+          # Use signing identities/profiles configured in Codemagic UI
+          xcode-project use-profiles
+          # Build IPA (outputs to $CM_BUILD_DIR/Build/IPA by default)
+          xcode-project build-ipa \
+            --workspace "$XCODE_WORKSPACE" \
+            --scheme "$XCODE_SCHEME" \
+            --archive-xcargs "SKIP_INSTALL=NO"
+    artifacts:
+      - $CM_BUILD_DIR/**/IPA/*.ipa
+      - $CM_BUILD_DIR/**/Archive/*.xcarchive
+      - ios/App/build/**/*.ipa
+      - ios/App/build/**/*.xcarchive
+    publishing:
+      email:
+        recipients:
+          - contacto@kvcontrol.systems
+        notify:
+          success: true
+          failure: true
