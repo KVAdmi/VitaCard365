@@ -1,0 +1,34 @@
+{
+  "name": "VitaCard365",
+  "appId": "f6c253d1",
+  "androidPath": "android",
+  "iosPath": "ios/App",
+  "build": {
+    "android": {
+      "stack": "Android - 2025",
+      "packageManager": "npm",
+      "scripts": {
+        "prebuild": "npm ci",
+        "build": "vite build",
+        "postbuild": "npx cap copy android && npx cap sync android"
+      },
+      "env": {},
+      "secrets": {},
+      "hooks": [],
+      "plugins": []
+    },
+    "ios": {
+      "stack": "macOS - 2025.06 - Apple silicon",
+      "packageManager": "npm",
+      "scripts": {
+        "prebuild": "npm ci",
+        "build": "vite build",
+        "postbuild": "npx cap copy ios && npx cap sync ios"
+      },
+      "env": {},
+      "secrets": {},
+      "hooks": [],
+      "plugins": []
+    }
+  }
+}
