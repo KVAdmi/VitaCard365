@@ -36,16 +36,13 @@ export default function PlanView() {
   const [plan, setPlan] = useState<any|null>(null);
   const [dias, setDias] = useState<RutinaDia[]>([]);
   const [doneToday, setDoneToday] = useState<Record<string, boolean>>({});
+  const [allowed, setAllowed] = useState<boolean>(true);
 
   const load = async () => {
     setLoading(true);
-    // Guard de acceso
-    const { allowed } = await ensureAccess();
-    if (!allowed) {
-      setLoading(false);
-      alert('Tu acceso no está activo. Ve a la pasarela para activarlo.');
-      return;
-    }
+    // Guard de acceso suave: no bloqueamos la vista del plan
+    const { allowed: can } = await ensureAccess().catch(() => ({ allowed: false } as any));
+    setAllowed(!!can);
     // Usuario autenticado (RLS): cada uno ve solo lo suyo
     const { data: u } = await supabase.auth.getUser();
     const uid = u?.user?.id;
@@ -150,6 +147,11 @@ export default function PlanView() {
   return (
     <Layout title="Mi Plan" showBackButton>
       <div className="p-4 space-y-4">
+        {!allowed && (
+          <div className="rounded-xl border border-yellow-400/30 bg-yellow-400/10 text-yellow-100 px-3 py-2 text-sm">
+            Tu acceso no está activo. Puedes ver tu plan, pero para registrar progreso y recordatorios, activa tu membresía en Pago.
+          </div>
+        )}
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-extrabold tracking-tight text-cyan-200 drop-shadow-[0_2px_8px_rgba(0,255,255,0.18)]">Mi rutina — Semana 1</h1>
           <button onClick={load} className="px-3 py-1 rounded-xl border border-cyan-300/20 bg-cyan-400/10 text-cyan-100/90 hover:bg-cyan-400/20 hover:shadow-[0_0_16px_2px_rgba(0,255,255,0.12)] text-sm">Refrescar</button>

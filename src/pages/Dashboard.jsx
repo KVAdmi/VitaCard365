@@ -55,16 +55,10 @@ const Dashboard = () => {
 
       <Layout title="Inicio">
         <div className="p-4 space-y-6">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-          >
-            <Card className="bg-gradient-to-r from-vita-orange to-orange-500 text-white border-0 shadow-lg shadow-vita-orange/20">
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
+            <Card className="border border-cyan-300/20 bg-white/10 text-white" style={{boxShadow:'0 0 0 1px rgba(0,255,231,0.28)'}}>
               <CardContent className="p-6 pt-6">
-                <h2 className="text-2xl font-bold">
-                  ¡Hola, {alias}!
-                </h2>
+                <h2 className="text-2xl font-bold drop-shadow-[0_0_8px_rgba(0,255,231,0.3)]">¡Hola, {alias}!</h2>
                 <p className="text-white/80">Bienvenido a tu panel de control.</p>
               </CardContent>
             </Card>
@@ -76,6 +70,19 @@ const Dashboard = () => {
           >
             <Card className="glass-card flex items-center justify-center p-4 h-64">
                 <VitaCard365Logo className="h-56 w-auto" />
+            </Card>
+          </motion.div>
+
+          {/* Bienvenida calurosa bajo el logo (sin repetir el nombre) */}
+          <motion.div initial={{opacity:0,y:10}} animate={{opacity:1,y:0}} transition={{duration:0.5}}>
+            <style>{`@keyframes crystalGlow {0%,100%{box-shadow:0 0 0 1px rgba(0,255,231,0.28),0 0 16px rgba(0,255,231,0.14)}50%{box-shadow:0 0 0 1px rgba(0,255,231,0.5),0 0 24px rgba(0,255,231,0.24)}}`}</style>
+            <Card className="border border-cyan-300/25 bg-white/10 text-white" style={{animation:'crystalGlow 2.8s ease-in-out infinite', borderRadius: 16}}>
+              <CardContent className="px-6 py-7">
+                <h3 className="text-2xl sm:text-3xl font-extrabold mb-2 tracking-tight drop-shadow-[0_0_10px_rgba(0,255,231,0.35)]">¡Qué gusto tenerte aquí!</h3>
+                <p className="text-white/90 leading-relaxed text-base">
+                  Tienes todo en un solo lugar: mediciones, entrenamientos y coberturas que te respaldan 24/7. Esta app está diseñada para acompañarte y ayudarte a avanzar día a día.
+                </p>
+              </CardContent>
             </Card>
           </motion.div>
 
@@ -111,6 +118,18 @@ const Dashboard = () => {
             </div>
             {/* Eliminado botón extra, FIT ahora es card */}
           </div>
+
+          {/* Mensaje de valor agregado con neón azul marino */}
+          <motion.div initial={{opacity:0,y:10}} animate={{opacity:1,y:0}} transition={{duration:0.6}}>
+            <Card className="border border-cyan-300/20 bg-white/10 text-white" style={{boxShadow:'0 0 0 1px rgba(0,255,231,0.22)'}}>
+              <CardContent className="p-5">
+                <p className="text-sm leading-relaxed text-white/90">
+                  Esta app lo tiene todo: herramientas, acompañamiento y coberturas únicas pensadas para tu bienestar y alcance.
+                  Queremos ser parte de tus días; seguimos innovando para darte más. Explora, mide, entrena y cuídate con VitaCard 365.
+                </p>
+              </CardContent>
+            </Card>
+          </motion.div>
 
           <div className="mt-2 flex justify-center w-full">
             <Card className="bg-white/10 border border-white/10 shadow-lg flex flex-col items-center w-auto">

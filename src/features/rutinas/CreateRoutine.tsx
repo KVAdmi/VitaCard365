@@ -44,12 +44,20 @@ const focoLabel: Record<FocoDia, string> = {
   core: 'core',
 };
 const categorias: CategoriaEjercicio[] = ['empuje','tiron','rodilla','cadera','core','movilidad','cardio'];
+// Alias simples de equipo para evitar quedarnos sin resultados por nombres distintos
+const equipoAlias: Record<string,string> = {
+  toalla: 'ninguno',
+  tapete: 'ninguno',
+  alfombra: 'ninguno',
+};
 
 export default function CreateRoutine() {
   const navigate = useNavigate();
   const { success, error: toastError } = useToast();
   const [paso, setPaso] = useState<Paso>('objetivo');
-  const [lugar, setLugar] = useState<'Gym'|'Casa'>('Casa');
+  // Lugar quedó fijo a "Casa" por simplificación del flujo; no se expone al usuario
+  const [lugar] = useState<'Gym'|'Casa'>('Casa');
+  const [showHelp, setShowHelp] = useState(true);
 
   // Paso 1
   const [objetivo, setObjetivo] = useState<'musculo'|'grasa'|'movilidad'|'cardio'|'mixto'>('musculo');
@@ -62,7 +70,9 @@ export default function CreateRoutine() {
 
   // Paso 3
   const [diaActivo, setDiaActivo] = useState(1);
-  const [itemsPorDia, setItemsPorDia] = useState<Record<number, RutinaItemInput[]>>({});
+  // Tipo local para mostrar nombre en UI, sin afectar el payload del API
+  type RutinaItemLocal = RutinaItemInput & { displayName?: string };
+  const [itemsPorDia, setItemsPorDia] = useState<Record<number, RutinaItemLocal[]>>({});
 
   // Buscador + filtros
   const [query, setQuery] = useState('');
@@ -71,6 +81,13 @@ export default function CreateRoutine() {
   const [nivelFiltro, setNivelFiltro] = useState<0|1|2|3|undefined>(undefined);
   const [resultados, setResultados] = useState<any[]>([]);
   const [loadingSearch, setLoadingSearch] = useState(false);
+  // Catálogo guiado
+  const [showCatalog, setShowCatalog] = useState(false);
+  const [catalogCat, setCatalogCat] = useState<CategoriaEjercicio | 'todas'>('todas');
+  const [catalogEquipo, setCatalogEquipo] = useState<string>('');
+  const [catalogLoading, setCatalogLoading] = useState(false);
+  const [catalogRes, setCatalogRes] = useState<any[]>([]);
+  const [catalogNotice, setCatalogNotice] = useState<string>('');
 
   useEffect(()=>{
     const f = focoPorDia[diaActivo];
@@ -98,8 +115,38 @@ export default function CreateRoutine() {
     }
   }
 
-  function pushItem(dia: number, exId: string, preset?: Partial<RutinaItemInput>) {
-    const base: RutinaItemInput = { ejercicio_id: exId, series: 3, reps: 10, descanso_seg: 60, rpe: 7 };
+  async function loadCatalog(cat?: CategoriaEjercicio|'todas', equipo?: string) {
+    setCatalogLoading(true);
+    try {
+      const eqRaw = equipo ?? catalogEquipo;
+      const eqMapped = eqRaw ? (equipoAlias[eqRaw] ?? eqRaw) : '';
+      const res = await buscarEjercicios({
+        q: '',
+        categoria: cat ?? catalogCat,
+        // Si "equipo" viene null/undefined, usamos "catalogEquipo"; si es cadena vacía, lo mandamos como undefined
+        equipoIncluye: eqMapped || undefined,
+        nivelMax: 1,
+        limit: 60,
+      });
+      if ((res?.length ?? 0) === 0 && (eqRaw)) {
+        // Fallback: reintentar sin filtro de equipo para no dejar al usuario sin opciones
+        const res2 = await buscarEjercicios({
+          q: '',
+          categoria: cat ?? catalogCat,
+          nivelMax: 1,
+          limit: 60,
+        });
+        setCatalogRes(res2);
+        setCatalogNotice('Sin resultados con ese equipo. Mostramos alternativas sin equipo.');
+      } else {
+        setCatalogRes(res);
+        setCatalogNotice('');
+      }
+    } finally { setCatalogLoading(false); }
+  }
+
+  function pushItem(dia: number, exId: string, preset?: Partial<RutinaItemLocal>) {
+    const base: RutinaItemLocal = { ejercicio_id: exId, series: 3, reps: 10, descanso_seg: 60, rpe: 7 };
     setItemsPorDia(prev => ({ ...prev, [dia]: [ ...(prev[dia] ?? []), { ...base, ...preset } ] }));
   }
   function removeItem(dia: number, idx: number) {
@@ -111,6 +158,30 @@ export default function CreateRoutine() {
 
   const puedeContinuarObjetivo = semanas>=1 && semanas<=24 && diasSemana>=2 && diasSemana<=7;
   const dias = useMemo(() => Array.from({length: diasSemana}, (_,i)=>i+1), [diasSemana]);
+
+  // Persistencia suave del borrador (no perder progreso si recarga)
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem('vita-routine-draft');
+      if (raw) {
+        const parsed = JSON.parse(raw);
+  // ya no restauramos "lugar"; flujo fijo a Casa
+        if (parsed?.objetivo) setObjetivo(parsed.objetivo);
+        if (parsed?.semanas) setSemanas(parsed.semanas);
+        if (parsed?.diasSemana) setDiasSemana(parsed.diasSemana);
+        if (parsed?.minutos) setMinutos(parsed.minutos);
+        if (parsed?.focoPorDia) setFocoPorDia(parsed.focoPorDia);
+        if (parsed?.itemsPorDia) setItemsPorDia(parsed.itemsPorDia);
+      }
+    } catch {}
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  useEffect(() => {
+    try {
+      const draft = { objetivo, semanas, diasSemana, minutos, focoPorDia, itemsPorDia };
+      localStorage.setItem('vita-routine-draft', JSON.stringify(draft));
+    } catch {}
+  }, [objetivo, semanas, diasSemana, minutos, focoPorDia, itemsPorDia]);
 
   // Guardado
   const [saving, setSaving] = useState(false);
@@ -133,17 +204,20 @@ export default function CreateRoutine() {
     }
   }
 
+  // Ajusta los días sugeridos cuando cambia la frecuencia semanal
+  useEffect(()=>{
+    setDefaultReminderDays(suggestDays(diasSemana));
+  }, [diasSemana]);
+
   async function guardarTodo() {
     setSaving(true);
     try {
       const user_id = await getUserId();
       // Verificación de acceso (membresía) antes de guardar
-      const { allowed } = await ensureAccess();
+      const { allowed } = await ensureAccess().catch(() => ({ allowed: false } as any));
       if (!allowed) {
-        toastError('Tu acceso no está activo. Completa el pago para continuar.');
-        setSaving(false);
-        navigate('/pago'); // ajusta a tu ruta real de pasarela
-        return;
+        // Soft gate: permitimos guardar como borrador y ver el plan, pero avisamos.
+        toastError('Guardaremos tu plan. Para registrar progreso, activa tu acceso en Pago.');
       }
       if (!user_id) {
         // Si trabajas sin login no podrás pasar RLS en producción.
@@ -174,8 +248,18 @@ export default function CreateRoutine() {
       for (const d of dias) {
         const foco = focoPorDia[d] ?? 'full';
         const rutina_id = await crearRutinaDia({ plan_id, user_id: user_id as any, semana: 1, dia_semana: d, foco, minutos });
-        const items = itemsPorDia[d] ?? [];
-        if (items.length) await agregarEjerciciosARutina(rutina_id, user_id as any, items);
+        const items = (itemsPorDia[d] ?? []) as (RutinaItemLocal[]);
+        if (items.length) {
+          const cleanItems: RutinaItemInput[] = items.map(({ displayName: _omit, ...rest }) => ({
+            ejercicio_id: rest.ejercicio_id,
+            series: rest.series ?? 3,
+            reps: rest.tiempo_seg && rest.tiempo_seg > 0 ? null : (rest.reps ?? 10),
+            tiempo_seg: rest.tiempo_seg && rest.tiempo_seg > 0 ? rest.tiempo_seg : null,
+            descanso_seg: rest.descanso_seg ?? 60,
+            rpe: rest.rpe ?? 7,
+          }));
+          await agregarEjerciciosARutina(rutina_id, user_id as any, cleanItems);
+        }
       }
 
   success('Rutina creada ✔️');
@@ -211,6 +295,12 @@ export default function CreateRoutine() {
           <div className="flex items-center gap-2">
             <button
               type="button"
+              onClick={()=>setShowHelp(true)}
+              className="px-3 py-2 rounded-xl text-sm border border-white/10 bg-white/5 text-white/80 hover:bg-white/10"
+              aria-label="¿Cómo funciona?"
+            >¿Cómo funciona?</button>
+            <button
+              type="button"
               onClick={()=>navigate('/fit/progreso')}
               className="px-3 py-2 rounded-xl text-sm border border-cyan-300/20 bg-cyan-400/10 text-cyan-100/90 hover:bg-cyan-400/20 hover:shadow-[0_0_16px_2px_rgba(0,255,255,0.12)]"
               style={{ boxShadow: '0 0 0 1px rgba(0,255,231,0.28)', animation: 'neonPulseSoft 2.2s ease-in-out infinite' }}
@@ -242,18 +332,29 @@ export default function CreateRoutine() {
         </div>
       </Card>
 
+      {/* Ayuda inicial */}
+      {showHelp && (
+        <Card className="p-4" hoverable>
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <div className="text-xl font-bold mb-1">Así se crea tu rutina</div>
+              <ul className="list-disc pl-5 text-sm opacity-90 space-y-1">
+                <li>Paso 1: Elige tu objetivo.</li>
+                <li>Paso 2: Marca el <strong>Enfoque por día</strong> (ej. Superior, Piernas, Full).</li>
+                <li>Paso 3: En cada día, toca <strong>“Abrir catálogo”</strong> y selecciona ejercicios. Nosotros te sugerimos para principiantes.</li>
+                <li>Paso 4: Revisa el resumen y guarda el plan. Lo verás en <strong>“Mi Plan”</strong>.</li>
+              </ul>
+              <div className="text-xs opacity-70 mt-2">Tip: Si entrenas en casa, el catálogo prioriza ejercicios sin equipo.</div>
+            </div>
+            <button onClick={()=>setShowHelp(false)} className="px-2 py-1 rounded-lg border border-white/10 hover:bg-white/10">✕</button>
+          </div>
+        </Card>
+      )}
+
       {/* Paso 1 */}
       {paso==='objetivo' && (
         <Card className="p-4 space-y-4" hoverable>
-          <SectionTitle label="¿Dónde entrenarás?" />
-          <div className="flex gap-2 overflow-x-auto">
-            {(['Casa','Gym'] as const).map(loc => (
-              <button key={loc} onClick={()=>setLugar(loc)}
-                className={`px-3 py-2 rounded-xl border transition-colors ${
-                  lugar===loc ? 'bg-vita-orange text-white border-vita-orange' : 'border-white/10 hover:border-vita-orange hover:bg-vita-orange/20'
-                }`}>{loc}</button>
-            ))}
-          </div>
+          {/* Se removió la selección de "¿Dónde entrenarás?"; asumimos Casa */}
 
           <SectionTitle label="Objetivo del plan" />
           <div className="flex gap-2 overflow-x-auto">
@@ -312,7 +413,7 @@ export default function CreateRoutine() {
       {/* Paso 2 */}
       {paso==='estructura' && (
         <Card className="p-4 space-y-4" hoverable>
-          <SectionTitle label="Foco por día" hint={lugar==='Casa' ? 'Lenguaje sencillo y ejercicios sin equipo' : 'Upper/Lower/Full/Movilidad/Cardio/Core'} />
+          <SectionTitle label="Enfoque por día" hint={'Parte superior/Inferior/Full/Movilidad/Cardio/Core'} />
           <div className="grid grid-cols-1 gap-3">
             {Array.from({length: diasSemana}, (_,i)=>i+1).map(d=>(
               <div key={d} className="p-3 rounded-xl bg-white/10 border border-cyan-400/20"
@@ -326,14 +427,12 @@ export default function CreateRoutine() {
                           ? 'bg-vita-orange text-white border-vita-orange'
                           : 'border-white/10 hover:border-vita-orange hover:bg-vita-orange/20'
                       }`}>
-                      {lugar==='Casa' ? (
-                        f==='upper' ? 'Parte superior' :
+                      {f==='upper' ? 'Parte superior' :
                         f==='lower' ? 'Piernas y glúteos' :
                         f==='full' ? 'Todo el cuerpo' :
-                        f==='movilidad' ? 'Movilidad suave' :
-                        f==='cardio' ? 'Cardio sencillo' :
-                        'Centro (abdomen)'
-                      ) : focoLabel[f]}
+                        f==='movilidad' ? 'Movilidad' :
+                        f==='cardio' ? 'Cardio' :
+                        'Centro (abdomen)'}
                     </button>
                   ))}
                 </div>
@@ -351,7 +450,7 @@ export default function CreateRoutine() {
       {/* Paso 3 */}
       {paso==='dias' && (
         <Card className="p-4 space-y-4" hoverable>
-          <SectionTitle label="Ejercicios por día" hint={lugar==='Casa' ? 'Añade ejercicios fáciles sin equipo. Puedes usar tiempos en lugar de repeticiones.' : 'agrega sets/reps/tiempo/descanso'} />
+          <SectionTitle label="Ejercicios por día" hint={'Agrega series/reps/tiempo/descanso'} />
           <div className="flex items-center justify-between">
             <div className="text-xs opacity-70">Selecciona un día y agrega ejercicios.</div>
             {Object.values(itemsPorDia).some(arr => (arr?.length ?? 0) > 0) && (
@@ -379,11 +478,15 @@ export default function CreateRoutine() {
 
           {/* Lista de items */}
           <div className="space-y-2">
+            <div className="flex items-center justify-between mb-1">
+              <div className="text-xs opacity-70">Día {diaActivo}: añade ejercicios sugeridos del catálogo</div>
+              <button onClick={()=>{ setShowCatalog(true); setCatalogCat(catFiltro==='todas'? 'core' : (catFiltro as CategoriaEjercicio)); setCatalogEquipo('ninguno'); loadCatalog(catFiltro as any, 'ninguno'); }} className="px-3 py-1.5 rounded-lg border border-cyan-300/30 bg-cyan-400/10 text-cyan-100/90 hover:bg-cyan-400/20">Abrir catálogo</button>
+            </div>
             {(itemsPorDia[diaActivo] ?? []).map((it,idx)=>(
               <div key={idx} className="p-3 rounded-xl bg-black/20 border border-cyan-400/20"
                    style={{ boxShadow: '0 0 0 1px rgba(0,255,231,0.18)' }}>
                 <div className="flex items-center justify-between gap-2">
-                  <div className="text-sm opacity-80">Ejercicio: {it.ejercicio_id.slice(0,8)}… {lugar==='Casa' ? '(sin equipo)' : ''}</div>
+                  <div className="text-sm opacity-80">Ejercicio: {it.displayName ?? `${it.ejercicio_id.slice(0,8)}…`}</div>
                   <button onClick={()=>removeItem(diaActivo, idx)} className="text-xs opacity-70">Quitar</button>
                 </div>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-2 text-xs">
@@ -397,7 +500,7 @@ export default function CreateRoutine() {
                       className="mt-1 px-2 py-1 rounded-lg bg-white/5 border border-white/10 text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-[color:var(--vc-primary,#f06340)] focus:border-[color:var(--vc-primary,#f06340)]"/>
                   </label>
                   <label className="flex flex-col">
-                    <span className="opacity-60">{lugar==='Casa' ? 'Repeticiones' : 'Reps'}</span>
+                    <span className="opacity-60">Reps</span>
                     <input type="number" min={1} max={50} value={it.reps ?? 10}
                       onChange={e=>{
                         const v = parseInt(e.target.value||'10');
@@ -431,8 +534,28 @@ export default function CreateRoutine() {
           {/* Buscador + filtros */}
           <div className="p-3 rounded-xl bg-white/10 border border-cyan-400/20 overflow-hidden"
                style={{ boxShadow: '0 0 0 1px rgba(0,255,231,0.18)' }}>
+            {/* Parrilla de categorías claras para usuarios nuevos */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-3">
+              {[
+                {k:'empuje', t:'Empuje', d:'Pecho, hombros, tríceps'},
+                {k:'tiron', t:'Tirón', d:'Espalda, bíceps'},
+                {k:'rodilla', t:'Piernas (rodilla)', d:'Cuádriceps'},
+                {k:'cadera', t:'Piernas (cadera)', d:'Glúteos e isquios'},
+                {k:'core', t:'Centro (abdomen)', d:'Estabilidad y postura'},
+                {k:'cardio', t:'Cardio', d:'Sin impacto / suave'},
+              ].map(cat => (
+                <button key={cat.k}
+                  onClick={()=>{ setCatFiltro(cat.k as any); setQuery(''); }}
+                  className="p-3 rounded-xl bg-white/10 border border-cyan-400/20 text-left hover:bg-cyan-400/10 transition"
+                  style={{ boxShadow: '0 0 0 1px rgba(0,255,231,0.16)' }}>
+                  <div className="text-sm font-semibold">{cat.t}</div>
+                  <div className="text-[11px] opacity-70">{cat.d}</div>
+                </button>
+              ))}
+            </div>
+
             <div className="flex gap-2 flex-wrap">
-              <input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Buscar ejercicio (press, sentadilla…)"
+              <input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Busca por nombre (press, remo), músculo (pecho) o equipo (mancuernas)"
                      className="flex-1 min-w-0 px-3 py-2 rounded-xl bg-black/30 border border-white/10 text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-[color:var(--vc-primary,#f06340)] focus:border-[color:var(--vc-primary,#f06340)]" />
               <button onClick={search} disabled={loadingSearch}
                 className="px-4 rounded-xl bg-[color:var(--vc-primary,#f06340)]/90 text-white whitespace-nowrap shrink-0">
@@ -452,6 +575,12 @@ export default function CreateRoutine() {
                   {c}
                 </button>
               ))}
+              {/* Sugerencias rápidas */}
+              <div className="w-full flex flex-wrap gap-2 mt-1">
+                {['pecho','espalda','piernas','hombros','cardio suave','movilidad cadera'].map(s => (
+                  <button key={s} onClick={()=>{ setQuery(s); }} className="px-2 py-1 rounded-full text-xs bg-white/10 hover:bg-white/20 border border-white/10">{s}</button>
+                ))}
+              </div>
               <input
                 value={equipoFiltro}
                 onChange={e=>setEquipoFiltro(e.target.value)}
@@ -473,7 +602,7 @@ export default function CreateRoutine() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-3 max-h-64 overflow-y-auto">
               {resultados.map((r:any)=>(
-                <button key={r.id} onClick={()=>pushItem(diaActivo, r.id)}
+                <button key={r.id} onClick={()=>{ pushItem(diaActivo, r.id, { displayName: r.nombre }); success && success('Ejercicio añadido'); }}
                   className="p-3 text-left rounded-xl bg-black/20 border border-cyan-400/20 hover:bg-cyan-400/10 transition-colors"
                   style={{ boxShadow: '0 0 0 1px rgba(0,255,231,0.16)' }}>
                   <div className="text-sm font-medium">{r.nombre}</div>
@@ -507,7 +636,7 @@ export default function CreateRoutine() {
                   {(itemsPorDia[d]?.length ?? 0) > 0 ? (
                     <ul className="list-disc pl-5">
                       {itemsPorDia[d].map((it,idx)=>(
-                        <li key={idx}>ex {it.ejercicio_id.slice(0,6)}… — {it.series}×{it.reps ?? `${it.tiempo_seg}s`} / rest {it.descanso_seg ?? 60}s</li>
+                        <li key={idx}>{it.displayName ?? `ex ${it.ejercicio_id.slice(0,6)}…`} — {it.series}×{it.reps ?? `${it.tiempo_seg}s`} / rest {it.descanso_seg ?? 60}s</li>
                       ))}
                     </ul>
                   ) : (
@@ -543,7 +672,7 @@ export default function CreateRoutine() {
             <button onClick={()=>setPaso('objetivo')}
                     className="mt-2 px-4 py-2 rounded-xl bg-white/10">Crear otro</button>
           </Card>
-          <ReminderPanel />
+          <ReminderPanel defaultDays={defaultReminderDays} defaultTime={defaultReminderTime} />
         </>
       )}
 
@@ -568,6 +697,45 @@ export default function CreateRoutine() {
           defaultDays={defaultReminderDays}
           onActivated={()=>{ setShowReminders(false); success('Recordatorios activados ✔️'); }}
         />
+      </Modal>
+
+      {/* Catálogo de ejercicios */}
+      <Modal open={showCatalog} onClose={()=>setShowCatalog(false)} title="Catálogo de ejercicios">
+        <div className="space-y-3 rounded-2xl border border-cyan-300/20 bg-[#0b1626]/85 backdrop-blur-md p-3">
+          <div className="flex items-center justify-between">
+            <div className="text-sm font-semibold text-white/90">Catálogo de ejercicios</div>
+            <button onClick={()=>setShowCatalog(false)} className="text-sm px-3 py-1 rounded-lg border border-white/10 bg-white/5 hover:bg-white/10">Cerrar</button>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {(['todas',...categorias] as (CategoriaEjercicio|'todas')[]).map(c => (
+              <button key={c} onClick={()=>{ setCatalogCat(c); loadCatalog(c, catalogEquipo); }} className={`px-3 py-1 rounded-full border text-sm ${catalogCat===c?'bg-vita-orange/20 text-white border-vita-orange':'border-white/10 hover:border-vita-orange hover:bg-vita-orange/10'}`}>{c}</button>
+            ))}
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {['ninguno','tapete','toalla','mancuernas','barra','kettlebell','banda','maquina'].map(eq => (
+              <button key={eq} onClick={()=>{ setCatalogEquipo(eq); loadCatalog(catalogCat, eq); }} className={`px-3 py-1 rounded-full border text-sm ${catalogEquipo===eq?'bg-vita-orange/20 text-white border-vita-orange':'border-white/10 hover:border-vita-orange hover:bg-vita-orange/10'}`}>{eq}</button>
+            ))}
+            <button onClick={()=>{ setCatalogEquipo(''); loadCatalog(catalogCat, ''); }} className={`px-3 py-1 rounded-full border text-sm ${catalogEquipo===''?'bg-vita-orange/20 text-white border-vita-orange':'border-white/10 hover:border-vita-orange hover:bg-vita-orange/10'}`}>Todos los equipos</button>
+          </div>
+          {catalogNotice && (
+            <div className="rounded-lg border border-yellow-400/40 bg-yellow-400/10 text-yellow-200 text-xs px-3 py-2">
+              {catalogNotice}
+            </div>
+          )}
+          <div className="max-h-80 overflow-y-auto grid grid-cols-1 sm:grid-cols-2 gap-2">
+            {catalogLoading ? (
+              <div className="text-sm opacity-70">Cargando…</div>
+            ) : catalogRes.length===0 ? (
+              <div className="text-sm opacity-70">No encontramos ejercicios para esos filtros.</div>
+            ) : catalogRes.map((r:any) => (
+              <button key={r.id} onClick={()=>{ pushItem(diaActivo, r.id, { displayName: r.nombre }); success && success('Añadido'); }} className="p-3 text-left rounded-xl bg-white/10 border border-cyan-400/20 hover:bg-cyan-400/10 transition-colors" style={{ boxShadow: '0 0 0 1px rgba(0,255,231,0.16)' }}>
+                <div className="text-sm font-semibold">{r.nombre}</div>
+                <div className="text-[11px] opacity-60">{r.categoria} · nivel {r.nivel_base} · {r.equipo?.join(', ')}</div>
+              </button>
+            ))}
+          </div>
+          <div className="text-xs opacity-70">Tip: Toca varios y se agregarán al día {diaActivo}. Cierra el catálogo cuando termines.</div>
+        </div>
       </Modal>
     </div>
   );

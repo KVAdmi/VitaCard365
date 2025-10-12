@@ -4,6 +4,7 @@ import Layout from '../../components/Layout';
 
 import { Link, Outlet, useLocation } from "react-router-dom";
 import { Bluetooth, Dumbbell, ListChecks, Salad, LineChart, Play } from "lucide-react";
+import { Dumbbell as GymIcon } from "lucide-react";
 import { useRoutineSummary } from '@/hooks/useRoutineSummary';
 
 const iconGlow = {
@@ -12,6 +13,7 @@ const iconGlow = {
   plan: 'text-blue-400 drop-shadow-[0_0_8px_rgba(80,180,255,0.7)]',
   nutricion: 'text-pink-300 drop-shadow-[0_0_8px_rgba(255,80,200,0.7)]',
   progreso: 'text-violet-300 drop-shadow-[0_0_8px_rgba(180,80,255,0.7)]',
+  gym: 'text-violet-300 drop-shadow-[0_0_8px_rgba(180,80,255,0.7)]',
 };
 
 const Tile = ({ to, Icon, title, subtitle, glow }) => (
@@ -64,11 +66,7 @@ export default function FitPage() {
               <h1 className="text-[28px] font-extrabold tracking-tight text-cyan-200 drop-shadow-[0_2px_8px_rgba(0,255,255,0.18)]">Fitness</h1>
               <p className="text-cyan-100/80 text-sm -mt-1 tracking-tight">Tu entrenador inteligente, integrado con tu salud.</p>
             </div>
-            {/* Continuar entrenamiento */}
-            <Link to="/fit/plan"
-              className="hidden sm:flex items-center gap-2 rounded-full px-4 py-2 bg-cyan-400/10 border border-cyan-300/20 text-cyan-100/90 hover:bg-cyan-400/20 hover:shadow-[0_0_16px_2px_rgba(0,255,255,0.12)] transition">
-              <Play className="h-4 w-4" /> Continuar
-            </Link>
+            {/* (Removido) botón Continuar */}
           </div>
           {/* KPIs compactos */}
           <div className="max-w-[1100px] mx-auto grid grid-cols-3 gap-3 sm:gap-4 mb-12 relative z-10">
@@ -97,6 +95,7 @@ export default function FitPage() {
               <div className="absolute inset-0 rounded-2xl pointer-events-none border border-white/5 group-hover:border-cyan-300/30 transition-all" />
             </Link>
 
+            {/* Crear rutina en Casa (flujo existente) */}
             <Link
               to="/fit/create"
               className="group relative flex flex-col items-center justify-center h-[170px] w-full max-w-[320px] sm:h-[200px] sm:w-[260px] rounded-2xl border border-cyan-400/20 bg-white/10 backdrop-blur-md shadow-[0_20px_40px_rgba(0,40,80,0.45)] transition-all duration-200 hover:bg-cyan-400/10 hover:shadow-[0_0_32px_4px_rgba(0,255,255,0.18)] hover:-translate-y-1 active:scale-[0.97]"
@@ -105,10 +104,25 @@ export default function FitPage() {
               <div className="absolute -top-4 left-1/2 -translate-x-1/2 rounded-full border-2 border-cyan-300/30 bg-cyan-400/10 p-2 shadow-[0_0_16px_2px_rgba(0,255,255,0.18)] group-hover:scale-110 transition-transform">
                 <Dumbbell className={`h-6 w-6 ${iconGlow.create} transition-all duration-200`} />
               </div>
-              <div className="mt-4 text-base font-semibold text-white text-center tracking-tight drop-shadow-[0_1px_2px_rgba(0,0,0,0.25)]">Crear rutina</div>
-              <div className="mt-1 text-[12px] text-cyan-100/80 text-center tracking-tight">Objetivo • Gym/Casa • Nivel</div>
+              <div className="mt-4 text-base font-semibold text-white text-center tracking-tight drop-shadow-[0_1px_2px_rgba(0,0,0,0.25)]">Crear rutina (Casa)</div>
+              <div className="mt-1 text-[12px] text-cyan-100/80 text-center tracking-tight">Objetivo • Casa • Nivel</div>
               <div className="absolute inset-0 rounded-2xl pointer-events-none border border-white/5 group-hover:border-cyan-300/30 transition-all" />
             </Link>
+
+            <Link
+              to="/fit/gym/catalog"
+              className="group relative flex flex-col items-center justify-center h-[170px] w-full max-w-[320px] sm:h-[200px] sm:w-[260px] rounded-2xl border border-cyan-400/20 bg-white/10 backdrop-blur-md shadow-[0_20px_40px_rgba(0,40,80,0.45)] transition-all duration-200 hover:bg-cyan-400/10 hover:shadow-[0_0_32px_4px_rgba(0,255,255,0.18)] hover:-translate-y-1 active:scale-[0.97]"
+              style={{ boxShadow: '0 0 0 1.5px #00ffe7, 0 20px 40px rgba(0,40,80,0.35)' }}
+            >
+              <div className="absolute -top-4 left-1/2 -translate-x-1/2 rounded-full border-2 border-cyan-300/30 bg-cyan-400/10 p-2 shadow-[0_0_16px_2px_rgba(0,255,255,0.18)] group-hover:scale-110 transition-transform">
+                <GymIcon className={`h-6 w-6 ${iconGlow.gym} transition-all duration-200`} />
+              </div>
+              <div className="mt-4 text-base font-semibold text-white text-center tracking-tight drop-shadow-[0_1px_2px_rgba(0,0,0,0.25)]">Crear rutina (Gym)</div>
+              <div className="mt-1 text-[12px] text-cyan-100/80 text-center tracking-tight">Catálogo • Circuito • Runner</div>
+              <div className="absolute inset-0 rounded-2xl pointer-events-none border border-white/5 group-hover:border-cyan-300/30 transition-all" />
+            </Link>
+
+            {/* (Removido) Accesos directos Gym: Plan y Progreso — ahora viven dentro de Crear rutina (Gym) */}
 
             {/* Tarjeta: Asistencia Fitness 24/7 (nutrición) con mismo tamaño y estilo */}
             <Link

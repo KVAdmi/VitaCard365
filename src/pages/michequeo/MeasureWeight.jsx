@@ -23,6 +23,7 @@ import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Save, TrendingUp } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import BMIStageAvatar from '../../components/michequeo/BMIStageAvatar';
 
@@ -38,7 +39,8 @@ ChartJS.register(
 );
 
 const BMICard = ({ bmi }) => {
-  if (bmi === null || bmi === undefined || isNaN(bmi)) return null;
+  // Siempre visible: si no hay BMI aún, mostramos placeholder motivacional
+  const has = !(bmi === null || bmi === undefined || isNaN(bmi));
 
   const label =
     bmi < 18.5 ? "Bajo peso" :
@@ -59,14 +61,13 @@ const BMICard = ({ bmi }) => {
       exit={{ opacity: 0, y: -20 }}
       transition={{ duration: 0.5, type: 'spring' }}
     >
-      <div className="rounded-2xl bg-[#0c1c3e] p-4 text-white shadow-xl border border-vita-orange/20">
-        <h3 className="text-lg font-semibold mb-2 text-center">Tu Resultado</h3>
-        <p className="text-sm text-white mb-3 text-center">Índice de Masa Corporal (IMC)</p>
-
-        <div className="mt-4 text-center">
-          <div className="text-5xl font-extrabold">{bmi.toFixed(1)}</div>
-          <div className={`mt-1 text-xl font-bold ${getBmiColor(bmi)}`}>{label}</div>
-          <p className="mt-2 text-xs text-white">
+      <div className="rounded-2xl bg-white/10 p-4 text-white shadow-xl border border-pink-300/25" style={{boxShadow:'0 0 0 1px rgba(244,114,182,0.28)'}}>
+        <style>{`@keyframes neonPulseRose {0%,100%{box-shadow:0 0 0 1px rgba(244,114,182,0.38),0 0 18px rgba(244,114,182,0.18)}50%{box-shadow:0 0 0 1px rgba(244,114,182,0.65),0 0 26px rgba(244,114,182,0.32)}}`}</style>
+        <h3 className="text-lg font-semibold mb-2 text-center">Índice de Masa Corporal (IMC)</h3>
+        <div className="mt-2 text-center" style={{animation:'neonPulseRose 2.6s ease-in-out infinite'}}>
+          <div className="text-5xl font-extrabold">{has ? bmi.toFixed(1) : '—'}</div>
+          {has && <div className={`mt-1 text-xl font-bold ${getBmiColor(bmi)}`}>{label}</div>}
+          <p className="mt-2 text-xs text-white/90">
             Indicador estimado entre peso y talla. No sustituye una evaluación médica.
           </p>
         </div>
@@ -261,9 +262,14 @@ const MeasureWeight = () => {
           </CardContent>
         </Card>
 
-        <AnimatePresence>
-          {displayedBmi !== null && <BMICard bmi={displayedBmi} />}
-        </AnimatePresence>
+        <BMICard bmi={displayedBmi} />
+
+        {/* Mensajes motivacionales con rosa palo */}
+        <div className="rounded-2xl border border-pink-300/25 bg-white/10 p-4 text-white" style={{boxShadow:'0 0 0 1px rgba(244,114,182,0.28)'}}>
+          <motion.p initial={{opacity:0,y:10}} animate={{opacity:1,y:0}} transition={{duration:0.6}} className="text-center text-sm">
+            Pensamos en ti y en nosotros: juntos crearemos nuestra mejor versión en equilibrio.
+          </motion.p>
+        </div>
 
         <Card>
           <CardHeader>
@@ -286,6 +292,15 @@ const MeasureWeight = () => {
             )}
           </CardContent>
         </Card>
+
+        {/* Recordatorio de coberturas: Nutriólogo 24/7 */}
+        <div className="rounded-2xl border border-pink-300/20 bg-white/10 p-4 text-white shadow" style={{boxShadow:'0 0 0 1px rgba(244,114,182,0.22)'}}>
+          <div className="text-sm font-semibold mb-1">Acompañamiento 24/7</div>
+          <p className="text-sm text-white/90">En tu cobertura cuentas con Nutriólogo 24/7. Da el primer paso: agenda una charla y diseñemos tu plan alimenticio.</p>
+          <div className="mt-2">
+            <Link to="/coberturas?cat=fitness#asistencia-fitness" className="px-3 py-1 rounded-xl border border-pink-300/30 bg-pink-400/10 hover:bg-pink-400/20 text-pink-100">Hablar con un experto</Link>
+          </div>
+        </div>
       </div>
     </MeasureLayout>
   );

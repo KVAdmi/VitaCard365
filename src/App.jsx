@@ -3,6 +3,11 @@ import FitSyncPage from './pages/fit/FitSyncPage.jsx';
 import FitCreate from './pages/fit/create';
 import FitPlan from './pages/fit/plan';
 import FitNutricion from './pages/fit/nutricion';
+import GymCatalog from './pages/fit/gym/Catalog.jsx';
+import GymCircuit from './pages/fit/gym/CircuitBuilder.jsx';
+import GymRunner from './pages/fit/gym/Runner.jsx';
+import GymPlan from './pages/fit/gym/Plan.jsx';
+import GymProgreso from './pages/fit/gym/Progreso.jsx';
 import FitProgreso from './pages/fit/progreso';
 import React from 'react';
 import { BrowserRouter, HashRouter, Routes, Route, Navigate } from 'react-router-dom';
@@ -92,6 +97,14 @@ function App() {
             <Route path="plan" element={<FitPlan />} />
             <Route path="nutricion" element={<FitNutricion />} />
             <Route path="progreso" element={<FitProgreso />} />
+            {/* Gym module (additive, read-only) */}
+            <Route path="gym">
+              <Route path="catalog" element={<GymCatalog />} />
+              <Route path="circuit" element={<GymCircuit />} />
+              <Route path="run" element={<GymRunner />} />
+              <Route path="plan" element={<GymPlan />} />
+              <Route path="progreso" element={<GymProgreso />} />
+            </Route>
           </Route>
           {/* Intro: raíz muestra el video y luego navega a /login */}
           <Route path="/" element={<IntroVideo />} />

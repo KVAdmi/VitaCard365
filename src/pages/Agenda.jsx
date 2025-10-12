@@ -1,3 +1,4 @@
+import NeonSelect from '@/components/neon/NeonSelect';
 import React, { useMemo, useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, Plus } from 'lucide-react';
 import Layout from '../components/Layout';
@@ -181,11 +182,12 @@ export default function AgendaPage(){
               <form onSubmit={onSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div>
                   <Label>Tipo</Label>
-                  <select className="w-full bg-white/10 rounded px-3 py-2" value={form.type} onChange={e=>setForm({...form, type:e.target.value})}>
-                    <option value="medicamento">Medicamento</option>
-                    <option value="cita_medica">Cita médica</option>
-                    <option value="otro">Otro</option>
-                  </select>
+                  <NeonSelect variant="cyan" value={form.type} onChange={e=>setForm({...form, type:e.target.value})}
+                    options={[
+                      { value: 'medicamento', label: 'Medicamento' },
+                      { value: 'cita_medica', label: 'Cita médica' },
+                      { value: 'otro', label: 'Otro' },
+                    ]} placeholder="Tipo" />
                 </div>
                 <div className="md:col-span-1">
                   <Label>Título</Label>
@@ -205,12 +207,13 @@ export default function AgendaPage(){
                 </div>
                 <div>
                   <Label>Repetir</Label>
-                  <select className="w-full bg-white/10 rounded px-3 py-2" value={form.repeat_type} onChange={e=>setForm({...form, repeat_type:e.target.value})}>
-                    <option value="none">No repetir</option>
-                    <option value="daily">Diario</option>
-                    <option value="weekly">Semanal</option>
-                    <option value="monthly">Mensual</option>
-                  </select>
+                  <NeonSelect variant="cyan" value={form.repeat_type} onChange={e=>setForm({...form, repeat_type:e.target.value})}
+                    options={[
+                      { value: 'none', label: 'No repetir' },
+                      { value: 'daily', label: 'Diario' },
+                      { value: 'weekly', label: 'Semanal' },
+                      { value: 'monthly', label: 'Mensual' },
+                    ]} placeholder="Repetición" />
                 </div>
                 <div className="flex items-center gap-2">
                   <input id="notify" type="checkbox" className="accent-orange-500" checked={!!form.notify} onChange={e=>setForm({...form, notify:e.target.checked})} />

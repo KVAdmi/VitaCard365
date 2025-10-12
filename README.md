@@ -15,3 +15,8 @@
   - Scripts sugeridos: `npm run release:android` (ver package.json).
 - iOS (local):
   - Abrir en Xcode y archivar para TestFlight; o usar Fastlane con `npm run publish:ios:testflight`.
+
+## Módulo Gym (nuevo)
+
+- Catálogo, Constructor y Runner están disponibles bajo Fit.
+- Esquema opcional para persistir circuitos y progreso en Supabase: ver `docs/gym-schema.md`.
