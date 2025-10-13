@@ -9,6 +9,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
 import { useToast } from '../components/ui/use-toast';
 import { Eye, EyeOff, Mail, Lock, User, ArrowLeft, Ticket } from 'lucide-react';
+import { validateSellerCode, PromoStorage } from '@/lib/codes';
 import VitaCard365Logo from '../components/Vita365Logo';
 import GoogleLoginButton from '../components/ui/GoogleLoginButton';
 
@@ -93,6 +94,15 @@ const Register = () => {
             }
             toast({ title: '¡Registro exitoso!', description: 'Tu folio fue validado. Completa tu perfil.' });
             navigate('/perfil');
+            return;
+          }
+
+          // Si no es un folio pagado, intentamos validarlo como código de vendedor (AA999)
+          const v = await validateSellerCode(code);
+          if (v.valid) {
+            PromoStorage.save(code);
+            toast({ title: 'Código aplicado', description: `Se aplicará precio preferencial: $${v.discount_price} por persona/mes.` });
+            navigate('/payment-gateway');
             return;
           }
         } catch (e) {
@@ -202,10 +212,10 @@ const Register = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="activationCode">¿Tienes tu código VITACARD365? Ingrésalo aquí</Label>
+                  <Label htmlFor="activationCode">¿Tienes folio VITA o código de descuento? Ingrésalo aquí</Label>
                   <div className="relative">
                     <Ticket className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-white/80" />
-                    <Input id="activationCode" type="text" placeholder="Ej: VITAFAM-XXXX" className="pl-12" value={formData.activationCode} onChange={(e) => setFormData({ ...formData, activationCode: e.target.value.toUpperCase() })} />
+                    <Input id="activationCode" type="text" placeholder="Ej: VITAFAM-XXXX o AA999" className="pl-12" value={formData.activationCode} onChange={(e) => setFormData({ ...formData, activationCode: e.target.value.toUpperCase() })} />
                   </div>
                 </div>
 

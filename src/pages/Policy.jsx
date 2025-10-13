@@ -13,10 +13,10 @@ const Policy = () => {
            <h1 className="text-2xl md:text-3xl font-bold mb-6 text-vita-blue text-center">Políticas de Privacidad</h1>
            <div className="space-y-4">
           <p><strong>Última actualización:</strong> 03 de Septiembre de 2025</p>
-          <p>En VitaCard 365, operado por Kódigo Vivo S.A. de C.V. en conjunto con IGS Group Solution, valoramos y respetamos tu privacidad. Esta Política de Privacidad describe cómo recopilamos, usamos, protegemos y compartimos tu información personal de acuerdo con la Ley Federal de Protección de Datos Personales en Posesión de los Particulares (LFPDPPP) de México.</p>
+          <p>En VitaCard 365, operado por Azisted S.A. de C.V. en conjunto con IGS Group Solution, valoramos y respetamos tu privacidad. Esta Política de Privacidad describe cómo recopilamos, usamos, protegemos y compartimos tu información personal de acuerdo con la Ley Federal de Protección de Datos Personales en Posesión de los Particulares (LFPDPPP) de México.</p>
           
           <h2 className="text-2xl font-bold pt-4 text-vita-blue">1. Identidad y Domicilio del Responsable</h2>
-          <p>Kódigo Vivo S.A. de C.V. ("VitaCard 365"), con domicilio en [Dirección Fiscal en México], es el responsable del tratamiento de tus datos personales.</p>
+          <p>Azisted S.A. de C.V. ("VitaCard 365"), con domicilio en [Dirección Fiscal en México], es el responsable del tratamiento de tus datos personales.</p>
 
           <h2 className="text-2xl font-bold pt-4 text-vita-blue">2. Datos Personales que Recopilamos</h2>
           <p>Podemos recopilar las siguientes categorías de datos personales:</p>

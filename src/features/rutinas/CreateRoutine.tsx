@@ -243,6 +243,10 @@ export default function CreateRoutine() {
         minutos_sesion: minutos
       });
       setSavedPlanId(plan_id);
+      try {
+        localStorage.setItem('vita-last-plan-id', plan_id);
+        localStorage.setItem('vita-last-plan-ts', String(Date.now()));
+      } catch {}
 
       // Rutinas semana 1 + detalle
       for (const d of dias) {
@@ -283,41 +287,40 @@ export default function CreateRoutine() {
         `}
       </style>
       {/* Logo superior */}
-      <div className="w-full flex justify-center mt-2">
+      <div className="w-full flex flex-col items-center mt-2">
         <img src="/branding/Logo 2 Vita.png" alt="VitaCard 365" className="h-20 sm:h-24 object-contain drop-shadow-[0_0_24px_rgba(240,99,64,0.55)]" />
+        {/* Título neon centrado */}
+        <div className="mt-2 text-xl sm:text-2xl font-extrabold text-cyan-200 drop-shadow-[0_0_12px_rgba(0,255,255,0.5)]" style={{ animation: 'neonPulseSoft 2.2s ease-in-out infinite' }}>
+          Diseña tu plan
+        </div>
       </div>
+      {/* Acciones centradas */}
       <div className="sticky top-0 z-10 backdrop-blur-sm">
-        <div className="flex items-end justify-between">
-          <div>
-            <h1 className="text-2xl font-extrabold tracking-tight">Crear mi rutina</h1>
-            <p className="text-sm opacity-70">Diseña tu plan.</p>
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={()=>setShowHelp(true)}
-              className="px-3 py-2 rounded-xl text-sm border border-white/10 bg-white/5 text-white/80 hover:bg-white/10"
-              aria-label="¿Cómo funciona?"
-            >¿Cómo funciona?</button>
-            <button
-              type="button"
-              onClick={()=>navigate('/fit/progreso')}
-              className="px-3 py-2 rounded-xl text-sm border border-cyan-300/20 bg-cyan-400/10 text-cyan-100/90 hover:bg-cyan-400/20 hover:shadow-[0_0_16px_2px_rgba(0,255,255,0.12)]"
-              style={{ boxShadow: '0 0 0 1px rgba(0,255,231,0.28)', animation: 'neonPulseSoft 2.2s ease-in-out infinite' }}
-              aria-label="Ver mi progreso"
-            >
-              Ver Progreso
-            </button>
-            <button
-              type="button"
-              onClick={()=>navigate('/fit/plan')}
-              className="px-3 py-2 rounded-xl text-sm border border-cyan-300/20 bg-cyan-400/10 text-cyan-100/90 hover:bg-cyan-400/20 hover:shadow-[0_0_16px_2px_rgba(0,255,255,0.12)]"
-              style={{ boxShadow: '0 0 0 1px rgba(0,255,231,0.28)', animation: 'neonPulseSoft 2.2s ease-in-out infinite' }}
-              aria-label="Ver mi plan"
-            >
-              Ver Plan
-            </button>
-          </div>
+        <div className="flex items-center justify-center gap-2 py-1 flex-wrap">
+          <button
+            type="button"
+            onClick={()=>setShowHelp(true)}
+            className="px-3 py-2 rounded-xl text-sm border border-white/10 bg-white/5 text-white/80 hover:bg-white/10"
+            aria-label="¿Cómo funciona?"
+          >¿Cómo funciona?</button>
+          <button
+            type="button"
+            onClick={()=>navigate('/fit/progreso')}
+            className="px-3 py-2 rounded-xl text-sm border border-cyan-300/20 bg-cyan-400/10 text-cyan-100/90 hover:bg-cyan-400/20 hover:shadow-[0_0_16px_2px_rgba(0,255,255,0.12)]"
+            style={{ boxShadow: '0 0 0 1px rgba(0,255,231,0.28)', animation: 'neonPulseSoft 2.2s ease-in-out infinite' }}
+            aria-label="Ver mi progreso"
+          >
+            Ver Progreso
+          </button>
+          <button
+            type="button"
+            onClick={()=>navigate('/fit/plan')}
+            className="px-3 py-2 rounded-xl text-sm border border-cyan-300/20 bg-cyan-400/10 text-cyan-100/90 hover:bg-cyan-400/20 hover:shadow-[0_0_16px_2px_rgba(0,255,255,0.12)]"
+            style={{ boxShadow: '0 0 0 1px rgba(0,255,231,0.28)', animation: 'neonPulseSoft 2.2s ease-in-out infinite' }}
+            aria-label="Ver mi plan"
+          >
+            Ver Plan
+          </button>
         </div>
       </div>
 
@@ -413,7 +416,7 @@ export default function CreateRoutine() {
       {/* Paso 2 */}
       {paso==='estructura' && (
         <Card className="p-4 space-y-4" hoverable>
-          <SectionTitle label="Enfoque por día" hint={'Parte superior/Inferior/Full/Movilidad/Cardio/Core'} />
+          <SectionTitle label="Enfoque por día" />
           <div className="grid grid-cols-1 gap-3">
             {Array.from({length: diasSemana}, (_,i)=>i+1).map(d=>(
               <div key={d} className="p-3 rounded-xl bg-white/10 border border-cyan-400/20"

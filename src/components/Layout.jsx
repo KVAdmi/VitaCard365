@@ -28,7 +28,8 @@ const RobotIcon = (props) => (
 import { Button } from './ui/button';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '@/lib/supabaseClient';
-import { getAvatarUrl } from '@/lib/avatar';
+import { getAvatarUrlCached } from '@/lib/avatar';
+import { UserAvatar } from './ui/UserAvatar';
 import { Card, CardHeader, CardTitle, CardDescription } from './ui/card';
 import {
   DropdownMenu,
@@ -126,13 +127,14 @@ const Layout = ({ children, title, showBackButton = false }) => {
 
   // Avatar firmado y refresco para evitar expiración
   const [signedAvatar, setSignedAvatar] = useState(null);
+  const [metaAvatarValid, setMetaAvatarValid] = useState(true);
   useEffect(() => {
     let timer;
     (async () => {
       try {
         const { data: u } = await supabase.auth.getUser();
         const uid = u?.user?.id;
-        if (!uid) { setSignedAvatar(null); return; }
+        if (!uid) { return; }
         // Primero intentamos en profiles_certificado_v2 (prod)
         const { data: cert } = await supabase
           .from('profiles_certificado_v2')
@@ -151,14 +153,13 @@ const Layout = ({ children, title, showBackButton = false }) => {
             .single();
           path = prof?.avatar_url;
         }
+        // Mantener último avatar mientras se obtiene uno nuevo para evitar flicker
         if (path) {
-          const url = await getAvatarUrl(path);
-          setSignedAvatar(url);
-        } else {
-          setSignedAvatar(null);
+          const url = await getAvatarUrlCached(path);
+          if (url) setSignedAvatar(url);
         }
       } catch {
-        setSignedAvatar(null);
+        // no limpiar imagen para evitar parpadeo
       } finally {
         // refrescar cada 50 minutos aprox para evitar expirar (firma 60m)
         timer = setTimeout(() => {
@@ -235,19 +236,15 @@ const Layout = ({ children, title, showBackButton = false }) => {
               </DropdownMenuContent>
             </DropdownMenu>
 
-            <div 
-              className="w-8 h-8 bg-vita-orange rounded-full flex items-center justify-center cursor-pointer overflow-hidden"
+            <div
+              className="w-8 h-8 rounded-full cursor-pointer"
               onClick={() => navigate('/perfil')}
             >
-              {signedAvatar ? (
-                <img src={signedAvatar} alt="Avatar" className="w-full h-full object-cover" />
-              ) : user?.user_metadata?.avatarUrl ? (
-                <img src={user.user_metadata.avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
-              ) : (
-                <span className="text-white text-sm font-bold">
-                  {(user?.user_metadata?.alias || user?.user_metadata?.name)?.charAt(0)?.toUpperCase() || 'U'}
-                </span>
-              )}
+              <UserAvatar
+                src={signedAvatar || (metaAvatarValid && user?.user_metadata?.avatarUrl && /^https?:\/\//i.test(user.user_metadata.avatarUrl) ? user.user_metadata.avatarUrl : undefined)}
+                name={user?.user_metadata?.alias || user?.user_metadata?.name || 'U'}
+                className="w-8 h-8 rounded-full"
+              />
             </div>
           </div>
         </div>

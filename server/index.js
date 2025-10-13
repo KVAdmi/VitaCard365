@@ -49,29 +49,37 @@ app.use(express.json({ limit: "1mb" }));
 
 app.post("/api/mercadopago/preference", async (req, res) => {
   try {
-    const { plan, frequency, familySize, unit_price } = req.body;
-    // Asegura número con 2 decimales
-    const price = Math.round(Number(unit_price) * 100) / 100;
+    const { plan, frequency, familySize, unit_price, amount, orderId } = req.body;
+    // Asegura número con 2 decimales (acepta amount o unit_price por compatibilidad)
+    const numeric = amount ?? unit_price;
+    const price = Math.round(Number(numeric) * 100) / 100;
     if (!price || price <= 0 || !isFinite(price)) {
-      console.error("[MP] invalid price from FE:", unit_price);
+      console.error("[MP] invalid price from FE:", { unit_price, amount });
       return res.status(400).json({ error: "invalid_price" });
     }
+    // Validación simple de UUID (no rompe si falla, solo no usa external_reference del cliente)
+    const uuidV4Regex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    const extRef = (typeof orderId === 'string' && uuidV4Regex.test(orderId)) ? orderId : `VITA_${Date.now()}`;
+
+    // Webhook en Supabase Edge (proporcionado)
+    const notificationUrl = 'https://ymwhgkeomyuevsckljdw.functions.supabase.co/mercadopago-webhook';
     const prefBody = {
       items: [{
-        title: `VitaCard365 - ${plan} ${frequency}`,
+        title: `VitaCard365 Plan`,
         description: `plan=${plan}, freq=${frequency}, family=${familySize}`,
         quantity: 1,
         currency_id: 'MXN',
         unit_price: price,
       }],
       // ¡NO pongas purpose!
-      external_reference: `VITA_${Date.now()}`,
+      external_reference: extRef,
       binary_mode: true,
       auto_return: 'approved',
+      notification_url: notificationUrl,
       back_urls: {
-        success: 'https://vitacard365.com/payment/success',
-        failure: 'https://vitacard365.com/payment/failure',
-        pending: 'https://vitacard365.com/payment/pending',
+        success: 'vitacard365://mp-return?status=success',
+        failure: 'vitacard365://mp-return?status=failure',
+        pending: 'vitacard365://mp-return?status=pending',
       },
       metadata: { plan, frequency, familySize, price }
     };
@@ -82,7 +90,13 @@ app.post("/api/mercadopago/preference", async (req, res) => {
     console.log("[MP] preferenceId:", preferenceId, "init_point:", init_point, "unit_price:", price);
     res.json({ preferenceId, init_point, price });
   } catch (err) {
-    console.error("[MP] preference error:", err);
+    try {
+      const status = err?.status || err?.response?.status;
+      const data = err?.response?.data || err?.message || err;
+      console.error("[MP] preference error:", { status, data });
+    } catch (_) {
+      console.error("[MP] preference error:", err);
+    }
     return res.status(500).json({ error: "mp_error" });
   }
 });

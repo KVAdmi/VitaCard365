@@ -15,9 +15,9 @@ export default function BlePanelUnified({ onHr }) {
         <GymBlePanel onHr={onHr} />
       </div>
 
-      {/* Panel de reloj/monitor (HRS nativo) */}
+      {/* Panel de reloj/banda (HRS nativo) */}
       <div className="rounded-xl border border-cyan-300/30 bg-white/5 p-3">
-        <div className="text-sm text-white/80 mb-2">Reloj o monitor de pulso (BLE nativo)</div>
+        <div className="text-sm text-white/80 mb-2">Reloj/banda de pulso (BLE nativo)</div>
         <div className="text-sm text-white/80 mb-2">Estado: {hrStatus}{hrError?` — ${hrError}`:''}</div>
         <div className="flex gap-2">
           <button onClick={scanAndConnect} className="px-3 py-1.5 rounded-lg border border-cyan-300/30 bg-cyan-400/10 hover:bg-cyan-400/20">Buscar y conectar</button>
@@ -29,7 +29,7 @@ export default function BlePanelUnified({ onHr }) {
             <div className="text-lg font-semibold">{hr!=null?`${hr} bpm`:'—'}</div>
           </div>
         </div>
-        <div className="text-xs text-white/60 mt-2">Al conectar, el pulso del reloj alimenta el HUD y tu sesión.</div>
+        <div className="text-xs text-white/60 mt-2">Al conectar, el pulso del reloj/banda alimenta el HUD y tu sesión.</div>
       </div>
     </div>
   );

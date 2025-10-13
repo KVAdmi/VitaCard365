@@ -2,15 +2,15 @@ apply plugin: 'com.android.application'
 
 android {
     namespace "com.vitacard365.app"
-    // SDKs y versión de la app
-    compileSdkVersion 35
+    // SDK and app version
+    compileSdkVersion rootProject.ext.compileSdkVersion
     def appVersionCode = project.hasProperty('APP_VERSION_CODE') ? APP_VERSION_CODE.toInteger() : 2
     def appVersionName = project.hasProperty('APP_VERSION_NAME') ? APP_VERSION_NAME : "1.0.1"
 
     defaultConfig {
         applicationId "com.vitacard365.app"
-    minSdkVersion 26
-    targetSdkVersion 35
+        minSdkVersion rootProject.ext.minSdkVersion
+        targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode appVersionCode
         versionName appVersionName
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
@@ -24,7 +24,6 @@ android {
         targetCompatibility JavaVersion.VERSION_17
     }
 
-
     signingConfigs {
         release {
             storeFile file("..\\" + VITA_STORE_FILE)
@@ -37,21 +36,23 @@ android {
     buildTypes {
         release {
             signingConfig signingConfigs.release
-            // Mantener desactivado para evitar sorpresas; activar en pruebas controladas
-            minifyEnabled false // true recomendado para release tras validar reglas
-            shrinkResources false // true recomendado si minifyEnabled true
+            // Keep disabled by default; enable and tune after validation
+            minifyEnabled false
+            shrinkResources false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
         debug {
-            // Opcional: firmar debug con release para probar instalando encima
-            // signingConfig signingConfigs.release
+            // Asegura firma de debug por defecto y sin ofuscación
+            signingConfig signingConfigs.debug
+            minifyEnabled false
+            shrinkResources false
         }
     }
 
-    // Evitar conflictos de recursos META-INF
+    // Avoid META-INF resource conflicts and exclude sourcemaps from APK
     packagingOptions {
         resources {
-            excludes += [ "META-INF/DEPENDENCIES", "META-INF/INDEX.LIST" ]
+            excludes += ["META-INF/DEPENDENCIES", "META-INF/INDEX.LIST", "**/*.map"]
         }
     }
 }
@@ -65,34 +66,32 @@ dependencies {
     testImplementation "junit:junit:$junitVersion"
     androidTestImplementation "androidx.test.ext:junit:$androidxJunitVersion"
     androidTestImplementation "androidx.test.espresso:espresso-core:$androidxEspressoCoreVersion"
-    // Cordova plugins se cargan vía settings.gradle con guard; no referenciar aquí directamente
 }
 
 apply from: 'capacitor.build.gradle'
 
-try {
-    def servicesJSON = file('google-services.json')
-    if (servicesJSON.text) {
-        apply plugin: 'com.google.gms.google-services'
-    }
-} catch(Exception e) {
-    logger.info("google-services.json not found, google-services plugin not applied. Push Notifications won't work")
+// Aplica Google Services solo si existe el archivo en el módulo app
+def hasGS = file('google-services.json').exists()
+if (hasGS) {
+    apply plugin: 'com.google.gms.google-services'
+} else {
+    logger.lifecycle("[app] google-services.json no encontrado; no se aplica com.google.gms.google-services (solo afecta features Firebase)")
 }
 
-// Plugin para publicación en Google Play (no ejecuta nada por sí mismo)
+// Google Play publisher plugin
 apply plugin: 'com.github.triplet.play'
 
 play {
-    // Ruta relativa desde app/ al archivo de credenciales
     serviceAccountCredentials.set(file("../play-service-account.json"))
     track.set("internal")
     defaultToAppBundles.set(true)
     releaseStatus.set(com.github.triplet.gradle.androidpublisher.ReleaseStatus.COMPLETED)
 }
 
-// Utilidad para imprimir versión desde Gradle
+// Utility to print version from Gradle
 tasks.register('printVersion') {
     doLast {
         println("versionName=${android.defaultConfig.versionName}, versionCode=${android.defaultConfig.versionCode}")
     }
 }
+

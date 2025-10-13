@@ -23,7 +23,7 @@
       "scripts": {
         "prebuild": "npm ci",
         "build": "vite build",
-        "postbuild": "npx cap copy ios && npx cap sync ios"
+        "postbuild": "npx cap copy ios && npx cap sync ios && node scripts/ios-set-gms-key.js"
       },
       "env": {},
       "secrets": {},

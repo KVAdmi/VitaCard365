@@ -39,13 +39,14 @@ ChartJS.register(
 );
 
 const BMICard = ({ bmi }) => {
-  // Siempre visible: si no hay BMI aún, mostramos placeholder motivacional
-  const has = !(bmi === null || bmi === undefined || isNaN(bmi));
+  // Normalizar (localStorage puede guardar string)
+  const n = typeof bmi === 'string' ? parseFloat(bmi) : bmi;
+  const has = Number.isFinite(n);
 
   const label =
-    bmi < 18.5 ? "Bajo peso" :
-    bmi < 25   ? "Normal" :
-    bmi < 30   ? "Sobrepeso" : "Obesidad";
+    n < 18.5 ? "Bajo peso" :
+    n < 25   ? "Normal" :
+    n < 30   ? "Sobrepeso" : "Obesidad";
 
   const getBmiColor = (bmiValue) => {
     if (bmiValue < 18.5) return 'text-blue-400';
@@ -65,8 +66,8 @@ const BMICard = ({ bmi }) => {
         <style>{`@keyframes neonPulseRose {0%,100%{box-shadow:0 0 0 1px rgba(244,114,182,0.38),0 0 18px rgba(244,114,182,0.18)}50%{box-shadow:0 0 0 1px rgba(244,114,182,0.65),0 0 26px rgba(244,114,182,0.32)}}`}</style>
         <h3 className="text-lg font-semibold mb-2 text-center">Índice de Masa Corporal (IMC)</h3>
         <div className="mt-2 text-center" style={{animation:'neonPulseRose 2.6s ease-in-out infinite'}}>
-          <div className="text-5xl font-extrabold">{has ? bmi.toFixed(1) : '—'}</div>
-          {has && <div className={`mt-1 text-xl font-bold ${getBmiColor(bmi)}`}>{label}</div>}
+          <div className="text-5xl font-extrabold">{has ? n.toFixed(1) : '—'}</div>
+          {has && <div className={`mt-1 text-xl font-bold ${getBmiColor(n)}`}>{label}</div>}
           <p className="mt-2 text-xs text-white/90">
             Indicador estimado entre peso y talla. No sustituye una evaluación médica.
           </p>
@@ -85,14 +86,66 @@ const MeasureWeight = () => {
   const [lastBmi, setLastBmi] = useLocalStorage('vita-last-bmi', null);
   const { toast } = useToast();
   
+  const [weightHistory, setWeightHistory] = useState([]);
+  const latestWeight = useMemo(() => {
+    if (!weightHistory?.length) return null;
+    const last = weightHistory[weightHistory.length - 1];
+    return Number(last?.peso_kg) || null;
+  }, [weightHistory]);
+
+  // Intentar autocompletar talla desde perfiles si no existe en localStorage
+  useEffect(() => {
+    (async () => {
+      if (height && Number(height) > 0) return; // ya hay talla local
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        const uid = user?.id;
+        if (!uid) return;
+        const { data: prof } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', uid)
+          .maybeSingle();
+        if (prof && typeof prof === 'object') {
+          const keys = ['height_cm','talla_cm','altura_cm','estatura_cm','altura','estatura','height','talla'];
+          for (const k of keys) {
+            const raw = prof[k];
+            if (raw == null) continue;
+            const val = typeof raw === 'string' ? parseFloat(raw.replace(/[^\d.]/g,'')) : Number(raw);
+            if (Number.isFinite(val) && val >= 90 && val <= 250) { setHeight(String(val)); try{localStorage.setItem('vita-user-height', String(val));}catch{} break; }
+          }
+        }
+      } catch {}
+    })();
+  }, [height, setHeight]);
+
   const bmi = useMemo(() => {
-    const weightToUse = currentWeight ? parseFloat(currentWeight) : null;
-    const heightInMeters = parseFloat(height) / 100;
-    if (weightToUse > 0 && heightInMeters > 0) {
-      return weightToUse / (heightInMeters * heightInMeters);
-    }
+    const heightValue = Number(height);
+    const hM = heightValue > 0 ? (heightValue / 100) : 0;
+    const w = currentWeight ? Number(currentWeight) : latestWeight;
+    if (w > 0 && hM > 0) return w / (hM * hM);
     return null;
-  }, [currentWeight, height]);
+  }, [currentWeight, latestWeight, height]);
+
+  // Siempre que se pueda calcular BMI en vivo, persistimos como último BMI
+  useEffect(() => {
+    if (bmi !== null && Number.isFinite(bmi)) {
+      setLastBmi(bmi);
+    }
+  }, [bmi, setLastBmi]);
+
+  // Si hay historial y talla, garantizamos persistir el IMC del último peso
+  useEffect(() => {
+    const h = Number(height);
+    if (!Number.isFinite(h) || h <= 0) return;
+    if (!weightHistory || weightHistory.length === 0) return;
+    const last = weightHistory[weightHistory.length - 1];
+    const w = Number(last?.peso_kg);
+    if (Number.isFinite(w) && w > 0) {
+      const calc = w / ((h/100)*(h/100));
+      if (Number.isFinite(calc)) setLastBmi(calc);
+    }
+  }, [weightHistory, height, setLastBmi]);
 
   useEffect(() => {
     const lastWeightMeasurement = measurements
@@ -100,7 +153,8 @@ const MeasureWeight = () => {
       .sort((a, b) => new Date(b.date) - new Date(a.date))[0];
 
     if (lastWeightMeasurement) {
-      setLastBmi(lastWeightMeasurement.vitals.bmi);
+      const n = Number(lastWeightMeasurement.vitals.bmi);
+      if (Number.isFinite(n)) setLastBmi(n);
     }
   }, [measurements, setLastBmi]);
 
@@ -127,6 +181,7 @@ const MeasureWeight = () => {
     }
 
     const calculatedBmi = weightValue / ((heightValue / 100) * (heightValue / 100));
+    // Persistir como último BMI para que quede estático tras recargar
     setLastBmi(calculatedBmi);
 
     // Guardar en Supabase
@@ -141,6 +196,7 @@ const MeasureWeight = () => {
     const payload = {
       usuario_id,
       peso_kg: weightValue,
+      height_cm: heightValue,
       tipo: 'peso',
       source: 'manual',
       ts: new Date().toISOString(),
@@ -151,7 +207,7 @@ const MeasureWeight = () => {
       return;
     }
     // Refrescar estado local para ver el cambio inmediatamente
-    setWeightHistory(prev => [...prev, payload]);
+  setWeightHistory(prev => [...prev, payload]);
     setCurrentWeight('');
     toast({
       title: '¡Guardado en la nube!',
@@ -160,7 +216,6 @@ const MeasureWeight = () => {
   };
 
   // Leer historial real de Supabase
-  const [weightHistory, setWeightHistory] = useState([]);
   useEffect(() => {
     async function fetchWeight() {
       let usuario_id = null;
@@ -172,11 +227,22 @@ const MeasureWeight = () => {
       }
       const { data, error } = await supabase
         .from('mediciones')
-        .select('*')
+        .select('id, ts, peso_kg, height_cm, bmi, tipo')
         .eq('usuario_id', usuario_id)
         .eq('tipo', 'peso')
         .order('ts', { ascending: true });
-      if (!error && data) setWeightHistory(data);
+      if (!error && data) {
+        setWeightHistory(data);
+        // Actualiza talla local si viene desde DB
+        const last = data[data.length - 1];
+        if (last?.height_cm && (!height || Number(height) <= 0)) {
+          try { setHeight(String(last.height_cm)); } catch {}
+        }
+        // Si hay BMI en DB, persiste como último
+        if (last?.bmi) {
+          setLastBmi(Number(last.bmi));
+        }
+      }
     }
     fetchWeight();
   }, []);
@@ -218,7 +284,8 @@ const MeasureWeight = () => {
     },
   };
 
-  const displayedBmi = bmi !== null ? bmi : lastBmi;
+  // displayed BMI prioriza el último persistido para estabilidad; si no hay, usa cálculo en vivo
+  const displayedBmi = (lastBmi !== null && lastBmi !== undefined) ? lastBmi : bmi;
 
   return (
     <MeasureLayout
@@ -226,6 +293,12 @@ const MeasureWeight = () => {
       subtitle="Registra tu evolución para un seguimiento de tu salud y dieta."
     >
       <div className="space-y-6">
+        {/* IMC SIEMPRE VISIBLE */}
+        <div>
+          <div className="text-sm font-semibold text-white/90 mb-2">IMC (Índice de Masa Corporal)</div>
+          <BMICard bmi={displayedBmi} />
+        </div>
+
         <Card>
           <CardHeader>
             <CardTitle>Nuevo Registro</CardTitle>
@@ -260,9 +333,7 @@ const MeasureWeight = () => {
               Guardar Peso
             </Button>
           </CardContent>
-        </Card>
-
-        <BMICard bmi={displayedBmi} />
+  </Card>
 
         {/* Mensajes motivacionales con rosa palo */}
         <div className="rounded-2xl border border-pink-300/25 bg-white/10 p-4 text-white" style={{boxShadow:'0 0 0 1px rgba(244,114,182,0.28)'}}>

@@ -1,3 +1,4 @@
+import React from 'react';
 import VitaCard365Logo from '../../components/Vita365Logo';
 import Layout from '../../components/Layout';
 // Página principal de FIT
@@ -33,13 +34,34 @@ const Tile = ({ to, Icon, title, subtitle, glow }) => (
   </Link>
 );
 
+class FitErrorBoundary extends React.Component { 
+  constructor(props){ super(props); this.state = { hasError:false, error:null }; }
+  static getDerivedStateFromError(error){ return { hasError:true, error }; }
+  componentDidCatch(error, info){ console.error('[FIT] render error', error, info); }
+  render(){
+    if (this.state.hasError) {
+      return (
+        <Layout title="Fitness" showBackButton>
+          <div className="p-4">
+            <div className="rounded-xl border border-white/10 bg-white/5 p-4 text-white">
+              <div className="font-semibold">Estamos restableciendo Fitness…</div>
+              <div className="text-sm opacity-80">Intenta regresar a esta pantalla. Si persiste, reinicia la app.</div>
+            </div>
+          </div>
+        </Layout>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 export default function FitPage() {
   const location = useLocation();
   const isRoot = location.pathname === "/fit";
   const { streakDias, sesionesSemana, diasSemana, kcalHoy } = useRoutineSummary();
   if (!isRoot) return <Outlet />;
   return (
-    <>
+    <FitErrorBoundary>
       <Layout title="Fitness" showBackButton>
         <div className="px-4 pb-24 min-h-screen bg-gradient-to-br from-[#0E1A2B] via-[#101a2e] to-[#0a1120] relative overflow-hidden">
           {/* NASA grid lines */}
@@ -145,6 +167,6 @@ export default function FitPage() {
           </div>
         </div>
       </Layout>
-    </>
+    </FitErrorBoundary>
   );
 }

@@ -53,8 +53,9 @@ export default function GymBlePanel({ onHr }) {
   const [connectedInfo, setConnectedInfo] = useState(null); // {deviceId, hasHr, hasFtms, type, batteryPct}
   const [hrLive, setHrLive] = useState(null);
   const [batteryPct, setBatteryPct] = useState(undefined);
+  const [ftmsLive, setFtmsLive] = useState({}); // {vel_kmh, cad_rpm, pot_w, distancia_m, kcal, pace_s_km, res_nivel, inc_pct}
   const [autoReconnect, setAutoReconnect] = useState(() => {
-    try { return localStorage.getItem('ble_auto_reconnect') === '1'; } catch { return false; }
+    try { const v = localStorage.getItem('ble_auto_reconnect'); if (v == null) { localStorage.setItem('ble_auto_reconnect', '1'); return true; } return v === '1'; } catch { return true; }
   });
   const [onlyFitness, setOnlyFitness] = useState(() => {
     try { return localStorage.getItem('ble_only_fitness') === '1'; } catch { return false; }
@@ -69,11 +70,19 @@ export default function GymBlePanel({ onHr }) {
   const [samples, setSamples] = useState(0);
   const [deviceName, setDeviceName] = useState('');
   const [connected, setConnected] = useState(false);
+  const [lastAgo, setLastAgo] = useState('');
+  const ftmsCountRef = useRef(0);
+  // HealthKit (solo iOS): lectura opcional
+  const isIOS = useMemo(() => Capacitor.getPlatform?.() === 'ios', []);
+  let hk;
+  try { hk = require('@/hooks/useHealthHeartRate'); } catch { hk = null; }
+  const health = hk && typeof hk.useHealthHeartRate === 'function' ? hk.useHealthHeartRate(isIOS && !isNative) : { bpm: null, ready: false };
 
   // Refs Web Bluetooth
   const deviceRef = useRef(null);
   const serverRef = useRef(null);
   const hrCharRef = useRef(null);
+  const autoScanTimerRef = useRef(null);
 
   // Import estático: BLE bridge siempre disponible, solo se usa en nativo
 
@@ -88,6 +97,50 @@ export default function GymBlePanel({ onHr }) {
       if (disconnectFnRef.current) { disconnectFnRef.current().catch(() => {}); disconnectFnRef.current = null; }
     };
   }, []);
+
+  // Escaneo silencioso periódico para auto-reconexión
+  useEffect(() => {
+    if (!autoReconnect) return;
+    // limpia anterior
+    if (autoScanTimerRef.current) { clearInterval(autoScanTimerRef.current); autoScanTimerRef.current = null; }
+    autoScanTimerRef.current = setInterval(async () => {
+      try {
+        const lastId = (() => { try { return localStorage.getItem('ble_last_device_id') || ''; } catch { return ''; } })();
+        if (!lastId) return;
+        if (getConnectedDeviceId() || getIsConnecting()) return;
+        // Evitar chocar con un escaneo manual
+        if (getIsScanning()) return;
+        // Escaneo corto silencioso (reusa startScan, no toca 'status')
+        await startScan((d) => {
+          if (d?.deviceId === lastId) {
+            // cortar escaneo y conectar
+            try { stopBleScan(); } catch {}
+            setSelected({ id: d.deviceId, name: d.name, rssi: d.rssi });
+            // conecta sin abrir manualmente, reusa handler
+            setTimeout(() => { if (!getConnectedDeviceId() && !getIsConnecting()) { handleConnect(); } }, 100);
+          }
+        });
+      } catch { /* silencioso */ }
+    }, 25000); // cada 25s
+    return () => { if (autoScanTimerRef.current) { clearInterval(autoScanTimerRef.current); autoScanTimerRef.current = null; } };
+  }, [autoReconnect, handleConnect]);
+
+  // Indicador de frescura de muestras FTMS
+  useEffect(() => {
+    let t;
+    const fn = () => {
+      try {
+        const { getLastCharUpdatedAt } = require('@/ble/ble');
+        const ts = typeof getLastCharUpdatedAt === 'function' ? getLastCharUpdatedAt() : null;
+        if (!ts) { setLastAgo(''); return; }
+        const sec = Math.max(0, Math.floor((Date.now() - ts) / 1000));
+        setLastAgo(sec === 0 ? 'justo ahora' : `hace ${sec}s`);
+      } catch { /* noop */ }
+    };
+    fn();
+    t = setInterval(fn, 1000);
+    return () => { if (t) clearInterval(t); };
+  }, [connState]);
 
   // --- Handlers Web Bluetooth ---
   const onHrValue = useCallback((e) => {
@@ -244,6 +297,7 @@ export default function GymBlePanel({ onHr }) {
     setError('');
     setHrLive(null);
     setBatteryPct(undefined);
+    setFtmsLive({});
     try {
       const res = await connectFlow({
         deviceId: selected.id,
@@ -264,6 +318,24 @@ export default function GymBlePanel({ onHr }) {
       disconnectFnRef.current = res.disconnect;
       // persistencia
       try { localStorage.setItem('ble_last_device_id', res.deviceId); } catch {}
+
+      // Si el dispositivo soporta FTMS, suscribir a características principales
+      if (res.hasFtms) {
+        try {
+          const { subscribeFtms, FTMS } = await import('@/ble/ble');
+          // 2AD2: Bike, 2ACD: Treadmill, 2AD1: Rower, 2ACE: Cross Trainer
+          const chars = ['2AD2', '2ACD', '2AD1', '2ACE'];
+          await subscribeFtms(res.deviceId, chars, (sample) => {
+            setFtmsLive((prev) => ({ ...prev, ...sample }));
+            // routing a métricas si aplica
+            try { sessionHub.onFtms?.(sample); } catch {}
+            ftmsCountRef.current += 1;
+          });
+        } catch (e) {
+          // ignorar errores de FTMS para no bloquear la conexión
+          console.log('[BLE] FTMS subscribe error', e?.message || e);
+        }
+      }
     } catch (e) {
       const msg = String(e?.message || e);
       if (msg.includes('BLE_CONNECT_TIMEOUT')) setError('BLE_CONNECT_TIMEOUT');
@@ -288,6 +360,7 @@ export default function GymBlePanel({ onHr }) {
     setConnState('Idle');
     setHrLive(null);
     setBatteryPct(undefined);
+    setFtmsLive({});
     setModalOpen(false);
   }, []);
 
@@ -400,6 +473,11 @@ export default function GymBlePanel({ onHr }) {
                   Tu navegador/dispositivo no soporta <strong>Web Bluetooth</strong>.
                   En Android/Chrome funciona la demo. En iOS/Safari no está disponible.
                 </p>
+                {isIOS && health?.bpm != null && (
+                  <p className="mt-2">
+                    En iOS puedes usar Salud/Apple Watch: <span className="font-semibold">{health.bpm} bpm</span> (HealthKit).
+                  </p>
+                )}
               </div>
             ) : (
               <>
@@ -481,6 +559,49 @@ export default function GymBlePanel({ onHr }) {
                   <div className="rounded border border-white/10 p-2">
                     <div className="text-xs opacity-70">Batería</div>
                     <div className="text-lg font-bold">{batteryPct}%</div>
+                  </div>
+                )}
+                {/* Métricas FTMS (condicionales) */}
+                {ftmsLive?.vel_kmh != null && (
+                  <div className="rounded border border-white/10 p-2">
+                    <div className="text-xs opacity-70">Velocidad</div>
+                    <div className="text-lg font-bold">{ftmsLive.vel_kmh} km/h</div>
+                  </div>
+                )}
+                {ftmsLive?.cad_rpm != null && (
+                  <div className="rounded border border-white/10 p-2">
+                    <div className="text-xs opacity-70">Cadencia</div>
+                    <div className="text-lg font-bold">{ftmsLive.cad_rpm} rpm</div>
+                  </div>
+                )}
+                {ftmsLive?.pot_w != null && (
+                  <div className="rounded border border-white/10 p-2">
+                    <div className="text-xs opacity-70">Potencia</div>
+                    <div className="text-lg font-bold">{ftmsLive.pot_w} W</div>
+                  </div>
+                )}
+                {ftmsLive?.distancia_m != null && (
+                  <div className="rounded border border-white/10 p-2">
+                    <div className="text-xs opacity-70">Distancia</div>
+                    <div className="text-lg font-bold">{(ftmsLive.distancia_m/1000).toFixed(2)} km</div>
+                  </div>
+                )}
+                {ftmsLive?.kcal != null && (
+                  <div className="rounded border border-white/10 p-2">
+                    <div className="text-xs opacity-70">Calorías</div>
+                    <div className="text-lg font-bold">{ftmsLive.kcal} kcal</div>
+                  </div>
+                )}
+                {ftmsLive?.inc_pct != null && (
+                  <div className="rounded border border-white/10 p-2">
+                    <div className="text-xs opacity-70">Inclinación</div>
+                    <div className="text-lg font-bold">{ftmsLive.inc_pct}%</div>
+                  </div>
+                )}
+                {(lastAgo || ftmsCountRef.current>0) && (
+                  <div className="rounded border border-white/10 p-2 col-span-2">
+                    <div className="text-xs opacity-70">FTMS</div>
+                    <div className="text-sm opacity-80">{ftmsCountRef.current} muestras • {lastAgo || 'sin datos recientes'}</div>
                   </div>
                 )}
               </div>

@@ -6,9 +6,12 @@ import { usePayment } from "../hooks/usePayment";
 import { createPreference } from "../lib/api";
 import Layout from "../components/Layout";
 // import MPWallet from "../components/payments/MPWallet.jsx";
+// Nota: pantalla estabilizada sin lógica de códigos aplicada
 
 export default function PaymentGateway() {
   const navigate = useNavigate();
+  // Definir membership ANTES de usePayment para evitar undefined en render
+  const [membership, setMembership] = useState({ acceso_activo: false, periodicidad: null, membresia: null });
   const {
     planType, setPlanType,
     familySize, setFamilySize,
@@ -26,9 +29,11 @@ export default function PaymentGateway() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [showUpsell, setShowUpsell] = useState(false);
+  // Preferencia: recibir certificado por correo
+  const [sendCertByEmail, setSendCertByEmail] = useState(true);
+  // Sin campos de código promocional en esta versión
 
   // Cargar estado de membresía y mostrar mensajes especiales
-  const [membership, setMembership] = useState({ acceso_activo: false, periodicidad: null, membresia: null });
   useEffect(() => { (async()=>{
     try{
       const { data: u } = await supabase.auth.getUser();
@@ -74,14 +79,17 @@ export default function PaymentGateway() {
     return () => { if (timer) clearTimeout(timer); };
   }, [planType, familySize, frequency, totalAmount, showVitalicio]);
 
+  // Total como estaba originalmente
+  const amountToCharge = Number(totalAmount);
+
   const onGenerate = async () => {
     try {
       setError(null);
       setLoading(true);
 
-      // Validar y procesar monto
-      const rawAmount = String(totalAmount).replace(/[^\d.]/g, '');
-      const finalAmount = parseFloat(rawAmount);
+  // Validar y procesar monto (comportamiento original)
+  const baseRaw = String(totalAmount).replace(/[^\d.]/g, '');
+  const finalAmount = parseFloat(baseRaw);
       
       if (!Number.isFinite(finalAmount) || finalAmount <= 0) {
         console.error("[Gateway] Monto inválido:", totalAmount);
@@ -93,12 +101,14 @@ export default function PaymentGateway() {
       const amount = Math.round(finalAmount * 100) / 100;
       console.log("[PAY] amount:", amount, typeof amount);
 
-      // Payload para el backend: usamos amount (NO unit_price)
+      // Payload para el backend (original): enviamos amount calculado en cliente
       const requestData = {
         plan: planType,
         frequency: paymentFrequencies[frequency].label,
         familySize: Number(familySize || 1),
-        amount
+        amount,
+        // Campo informativo no disruptivo; backend puede ignorar si no lo soporta
+        sendCertByEmail: !!sendCertByEmail
       };
 
       const res = await createPreference(requestData);
@@ -109,7 +119,7 @@ export default function PaymentGateway() {
       }
 
       // Redirigimos directo al checkout
-      window.location.assign(res.init_point);
+  window.location.assign(res.init_point);
     } catch (err) {
       console.error("[Gateway] Error al generar preferencia:", err);
       setError("No se pudo procesar el pago. Intenta nuevamente en unos momentos.");
@@ -217,7 +227,21 @@ export default function PaymentGateway() {
 
         {/* Total */}
         <div className="text-lg font-semibold mb-4">
-          Total a pagar: <span className="text-[#f06340]">${totalAmount} MXN</span>
+          Total a pagar: <span className="text-[#f06340]">${amountToCharge} MXN</span>
+        </div>
+
+        {/* Preferencia de envío de certificado por correo */}
+        <div className="mb-4 flex items-start gap-2">
+          <input
+            id="sendCertByEmail"
+            type="checkbox"
+            className="mt-1 h-4 w-4"
+            checked={sendCertByEmail}
+            onChange={(e) => setSendCertByEmail(e.target.checked)}
+          />
+          <label htmlFor="sendCertByEmail" className="text-sm text-white/90">
+            Quiero recibir mi certificado VitaCard 365 por correo electrónico.
+          </label>
         </div>
 
         {/* Desglose / Ahorros */}
@@ -249,7 +273,9 @@ export default function PaymentGateway() {
           <div className="mt-1 text-xs text-white/60">
             {breakdown.months} {breakdown.months === 1 ? "mes" : "meses"} • ${individualPrice} por persona/mes
           </div>
+          {/* Info de promo removida para estabilidad */}
         </div>
+        {/* Código promocional: no visible en esta versión */}
 
         {/* Pago */}
         <div className="flex flex-col items-center mt-6 gap-3">
@@ -282,6 +308,21 @@ export default function PaymentGateway() {
           <p className="mt-4 text-xs text-white/60 text-center">
             Al confirmar el pago, aceptas los Términos de Servicio y la Política de Privacidad de VitaCard 365.
           </p>
+
+          {/* Facturación */}
+          <div className="w-full max-w-2xl mt-6 rounded-xl border border-white/10 bg-white/5 p-4 text-sm text-white/90">
+            <div className="font-semibold mb-1">¿Requieres factura?</div>
+            <p className="text-white/80">
+              Envíanos tus datos a <a href="mailto:contacto@vitacard365.com" className="text-[#f06340] underline">contacto@vitacard365.com</a> con:
+            </p>
+            <ul className="list-disc pl-5 mt-2 space-y-1 text-white/75">
+              <li>Nombre completo o razón social</li>
+              <li>Folio iVita</li>
+              <li>Monto de compra</li>
+              <li>Fecha de pago</li>
+            </ul>
+            <p className="text-xs text-white/60 mt-2">Te enviaremos tu CFDI conforme a la normativa vigente.</p>
+          </div>
         </div>
       </div>
     </Layout>

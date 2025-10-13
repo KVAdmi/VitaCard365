@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { Award } from 'lucide-react';
 import Layout from '@/components/Layout';
 import { supabase } from '@/lib/supabaseClient';
 import { Line, Doughnut, Radar } from 'react-chartjs-2';
@@ -208,7 +209,7 @@ export default function GymProgreso() {
             <div className="mt-3 grid grid-cols-3 gap-3">
               {[{ t: 'Constancia 7', c: '7 días seguidos' }, { t: 'Cardio+', c: 'HR > 25 min' }, { t: 'Fuerza', c: '5 sesiones' }].map((b, i) => (
                 <div key={i} className="group relative flex flex-col items-center justify-center p-3 rounded-xl bg-white/5 border border-violet-300/20 hover:bg-violet-400/10 transition">
-                  <div className="h-6 w-6 rounded-full bg-violet-300/20 border border-violet-300/40" />
+                  <Award className="h-6 w-6 text-amber-300 drop-shadow-[0_0_8px_rgba(255,170,0,0.7)]" />
                   <div className="mt-1 text-[11px] text-center text-violet-100/90 font-semibold">{b.t}</div>
                   <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 whitespace-nowrap text-[10px] text-violet-100/80 opacity-0 group-hover:opacity-100 transition">{b.c}</div>
                 </div>

@@ -14,6 +14,8 @@ export default defineConfig({
   },
   build: {
     outDir: 'dist',
-    sourcemap: true
+    // Evita incluir sourcemaps en builds móviles para no inflar el APK
+    // Activa VITE_MOBILE=1 en el script de build móvil
+    sourcemap: (process.env.VITE_MOBILE === '1') ? false : true
   },
 });

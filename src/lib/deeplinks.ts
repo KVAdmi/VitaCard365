@@ -48,6 +48,25 @@ export function initAuthDeepLinks() {
           }
         }
       }
+      // MercadoPago return: vitacard365://mp-return?status=success|failure|pending
+      else if (u.protocol === 'vitacard365:' && u.host === 'mp-return') {
+        const status = (u.searchParams.get('status') || '').toLowerCase();
+        try {
+          // Feedback mínimo sin bloquear el flujo
+          // TODO: reemplazar por tu sistema de toasts si existe
+          console.log('[MP Return] status =', status);
+        } catch {}
+        // Navegación no bloqueante según estado
+        if (typeof window !== 'undefined') {
+          if (status === 'success') {
+            window.location.hash = '#/recibo'; // TODO: ajustar ruta de recibo real si aplica
+          } else if (status === 'pending') {
+            window.location.hash = '#/payment-pending'; // TODO
+          } else {
+            window.location.hash = '#/payment-failure'; // TODO
+          }
+        }
+      }
     } catch (e) {
       // ignore
     }

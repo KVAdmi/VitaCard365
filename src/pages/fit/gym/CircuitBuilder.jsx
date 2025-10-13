@@ -111,26 +111,26 @@ export default function CircuitBuilder() {
 
   return (
     <Layout title="Armar circuito (Gym)" showBackButton>
-      <div className="p-4 space-y-4">
+      <div className="p-4 space-y-4 max-w-full relative">
         <style>{`
           @keyframes neonPulseViolet { 0%,100% { box-shadow: 0 0 0 1px rgba(179,136,255,0.38), 0 0 18px rgba(179,136,255,0.18);} 50% { box-shadow: 0 0 0 1px rgba(179,136,255,0.65), 0 0 26px rgba(179,136,255,0.32);} }
         `}</style>
         {/* Header con logo centrado y aro neón sutil */}
-        <div className="w-full flex items-center justify-center mb-6">
+        <div className="w-full flex items-center justify-center mb-6 overflow-hidden">
           <div className="relative">
-            <div className="absolute inset-[-10px] rounded-3xl border border-violet-300/25" style={{boxShadow:'0 0 24px rgba(180,80,255,0.25)'}}></div>
-            <img src="/branding/Logo 2 Vita.png" alt="VitaCard 365" className="w-[360px] sm:w-[460px] object-contain drop-shadow-[0_16px_56px_rgba(180,80,255,0.40)]" />
+            <div className="absolute inset-0 rounded-3xl border border-violet-300/25" style={{boxShadow:'0 0 24px rgba(180,80,255,0.25)'}}></div>
+            <img src="/branding/Logo 2 Vita.png" alt="VitaCard 365" className="w-[300px] sm:w-[420px] object-contain drop-shadow-[0_16px_56px_rgba(180,80,255,0.40)]" />
           </div>
         </div>
-        <div className="flex justify-center gap-3 mt-2 mb-4">
+        <div className="flex justify-center gap-3 mt-2 mb-4 flex-wrap">
           <Link to="/fit/gym/plan" className="px-4 py-2 rounded-2xl border border-violet-300/30 bg-violet-400/15 text-violet-100/95 hover:bg-violet-400/25 transition-all" style={{ animation: 'neonPulseViolet 2.4s ease-in-out infinite' }}>Ver plan</Link>
           <Link to="/fit/gym/progreso" className="px-4 py-2 rounded-2xl border border-violet-300/30 bg-violet-400/15 text-violet-100/95 hover:bg-violet-400/25 transition-all" style={{ animation: 'neonPulseViolet 2.4s ease-in-out infinite', animationDelay: '0.6s' }}>Ver progreso</Link>
         </div>
-        <div className="grid sm:grid-cols-2 gap-4">
+  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <div className="space-y-3">
             <input value={draft.name} onChange={(e)=>setDraft(d=>({ ...d, name: e.target.value }))} className="w-full px-3 py-2 rounded-xl bg-white/10 border border-violet-300/25 text-white placeholder-white/70 focus:outline-none focus:ring-2 focus:ring-violet-300/60 focus:border-violet-200/70 transition-all" />
-            <div className="rounded-xl border border-white/10 overflow-hidden">
-              <table className="w-full text-sm">
+            <div className="rounded-xl border border-white/10 overflow-x-auto">
+              <table className="w-full min-w-[640px] text-sm">
                 <thead className="bg-white/5">
                   <tr>
                     <th className="text-left p-2">Ejercicio</th>
@@ -143,10 +143,12 @@ export default function CircuitBuilder() {
                 <tbody>
                   {draft.items.map((it, idx) => (
                     <tr key={idx} className="border-t border-white/10">
-                      <td className="p-2">{it.nombre}</td>
-                      <td className="p-2"><input type="number" min={1} value={it.series} onChange={(e)=>update(idx,{ series: Number(e.target.value) })} className="w-16 px-2 py-1 rounded bg-white/10 border border-violet-300/25 focus:outline-none focus:ring-2 focus:ring-violet-300/60 focus:border-violet-200/70 transition-all"/></td>
-                      <td className="p-2"><input type="number" min={1} value={it.reps} onChange={(e)=>update(idx,{ reps: Number(e.target.value) })} className="w-20 px-2 py-1 rounded bg-white/10 border border-violet-300/25 focus:outline-none focus:ring-2 focus:ring-violet-300/60 focus:border-violet-200/70 transition-all"/></td>
-                      <td className="p-2"><input type="number" min={10} step={5} value={it.descanso} onChange={(e)=>update(idx,{ descanso: Number(e.target.value) })} className="w-20 px-2 py-1 rounded bg-white/10 border border-violet-300/25 focus:outline-none focus:ring-2 focus:ring-violet-300/60 focus:border-violet-200/70 transition-all"/></td>
+                      <td className="p-2 max-w-[50vw] sm:max-w-none">
+                        <div className="truncate">{it.nombre}</div>
+                      </td>
+                      <td className="p-2"><input type="number" min={1} value={it.series} onChange={(e)=>update(idx,{ series: Number(e.target.value) })} className="w-20 px-3 py-1 rounded bg-white/10 border border-violet-300/25 focus:outline-none focus:ring-2 focus:ring-violet-300/60 focus:border-violet-200/70 transition-all"/></td>
+                      <td className="p-2"><input type="number" min={1} value={it.reps} onChange={(e)=>update(idx,{ reps: Number(e.target.value) })} className="w-24 px-3 py-1 rounded bg-white/10 border border-violet-300/25 focus:outline-none focus:ring-2 focus:ring-violet-300/60 focus:border-violet-200/70 transition-all"/></td>
+                      <td className="p-2"><input type="number" min={10} step={5} value={it.descanso} onChange={(e)=>update(idx,{ descanso: Number(e.target.value) })} className="w-24 px-3 py-1 rounded bg-white/10 border border-violet-300/25 focus:outline-none focus:ring-2 focus:ring-violet-300/60 focus:border-violet-200/70 transition-all"/></td>
                       <td className="p-2 text-right"><button onClick={()=>remove(idx)} className="px-2 py-1 text-xs rounded bg-red-500/20 border border-red-500/30">Quitar</button></td>
                     </tr>
                   ))}

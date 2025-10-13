@@ -47,14 +47,29 @@ export default function PlanView() {
     const { data: u } = await supabase.auth.getUser();
     const uid = u?.user?.id;
 
-    // Último plan del usuario
-    const { data: planRow } = await supabase
-      .from('planes')
-      .select('*')
-      .eq('user_id', uid)
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .single();
+    // Preferir el último plan creado (persistido en localStorage)
+    let planRow: any | null = null;
+    try {
+      const lastId = localStorage.getItem('vita-last-plan-id');
+      if (lastId) {
+        const { data } = await supabase.from('planes').select('*').eq('id', lastId).single();
+        // Verificamos que pertenezca al usuario actual
+        if (data && (!uid || data.user_id === uid)) {
+          planRow = data;
+        }
+      }
+    } catch {}
+    // Si no hay local o no coincide, usar el más reciente del usuario
+    if (!planRow) {
+      const { data } = await supabase
+        .from('planes')
+        .select('*')
+        .eq('user_id', uid)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+      planRow = data ?? null;
+    }
     if (!planRow) { setPlan(null); setDias([]); setLoading(false); return; }
     setPlan(planRow);
 

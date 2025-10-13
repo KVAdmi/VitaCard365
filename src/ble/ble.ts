@@ -33,6 +33,8 @@ let isConnecting = false;
 let connectedDeviceId: string | null = null;
 let hrSubscribed = false;
 let adapterPollTimer: ReturnType<typeof setInterval> | null = null;
+// FTMS subscriptions tracking per session
+let ftmsSubscribedChars: Set<string> = new Set();
 
 export function getSamplesCount() {
   return samplesCount;
@@ -223,11 +225,29 @@ export async function subscribeFtms(
           }
         }
       );
+      // Track active FTMS characteristic to allow safe cleanup
+      ftmsSubscribedChars.add(char);
     } catch (e) {
       devLog('subscribe FTMS error', char, e);
       throw new Error(ERRORS.SUBSCRIBE_FAILED(char));
     }
   }
+}
+
+/**
+ * Unsubscribe all FTMS notifications that were tracked in this session
+ */
+export async function unsubscribeFtmsAll(deviceId: string): Promise<void> {
+  if (!ftmsSubscribedChars.size) return;
+  const chars = Array.from(ftmsSubscribedChars);
+  for (const ch of chars) {
+    try {
+      await stopNotifications(deviceId, FTMS, ch);
+    } catch (e) {
+      devLog('unsubscribe FTMS error', ch, e);
+    }
+  }
+  ftmsSubscribedChars.clear();
 }
 
 /**
@@ -450,6 +470,8 @@ export async function connectFlow(opts: ConnectFlowOpts): Promise<ConnectFlowRes
 
 async function safeDisconnect(deviceId: string) {
   try {
+    // Detener notificaciones FTMS si estaban activas
+    try { await unsubscribeFtmsAll(deviceId); } catch {}
     // Detener notificaciones HR si estaban activas
     if (hrSubscribed) {
       try { await stopNotifications(deviceId, UUIDS.HRS, UUIDS.HR_MEAS); } catch {}

@@ -48,6 +48,7 @@ import ResetPassword from './pages/ResetPassword';
 import AuthCallback from './pages/AuthCallback';
 import { useEffect } from 'react';
 import { initAuthDeepLinks } from '@/lib/deeplinks';
+import '@/lib/auth'; // inicializa listener de deep link (auth-callback)
 import IntroVideo from './pages/IntroVideo';
 import ScrollToTop from './components/ScrollToTop';
 import { Capacitor } from '@capacitor/core';

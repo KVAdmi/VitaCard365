@@ -68,8 +68,9 @@ const Dashboard = () => {
             className="cursor-pointer"
             onClick={() => navigate('/mi-plan')}
           >
-            <Card className="glass-card flex items-center justify-center p-4 h-64">
-                <VitaCard365Logo className="h-56 w-auto" />
+            <style>{`@keyframes navyGlow {0%,100%{filter:drop-shadow(0 0 10px rgba(0,150,255,0.18))}50%{filter:drop-shadow(0 0 16px rgba(0,150,255,0.28))}}`}</style>
+            <Card className="glass-card flex items-center justify-center p-6" style={{border:'1px solid rgba(0,150,255,0.25)'}}>
+              <img src="/branding/Logo 2 Vita.png" alt="VitaCard 365" className="w-full max-w-[720px] sm:max-w-[820px] object-contain" style={{animation:'navyGlow 2.8s ease-in-out infinite'}} />
             </Card>
           </motion.div>
 
@@ -80,7 +81,7 @@ const Dashboard = () => {
               <CardContent className="px-6 py-7">
                 <h3 className="text-2xl sm:text-3xl font-extrabold mb-2 tracking-tight drop-shadow-[0_0_10px_rgba(0,255,231,0.35)]">¡Qué gusto tenerte aquí!</h3>
                 <p className="text-white/90 leading-relaxed text-base">
-                  Tienes todo en un solo lugar: mediciones, entrenamientos y coberturas que te respaldan 24/7. Esta app está diseñada para acompañarte y ayudarte a avanzar día a día.
+                  Tienes todo en un solo lugar: mediciones, entrenamientos y coberturas que te respaldan 24/7. Esta app está diseñada para acompañarte y ayudarte siempre.
                 </p>
               </CardContent>
             </Card>
@@ -119,17 +120,7 @@ const Dashboard = () => {
             {/* Eliminado botón extra, FIT ahora es card */}
           </div>
 
-          {/* Mensaje de valor agregado con neón azul marino */}
-          <motion.div initial={{opacity:0,y:10}} animate={{opacity:1,y:0}} transition={{duration:0.6}}>
-            <Card className="border border-cyan-300/20 bg-white/10 text-white" style={{boxShadow:'0 0 0 1px rgba(0,255,231,0.22)'}}>
-              <CardContent className="p-5">
-                <p className="text-sm leading-relaxed text-white/90">
-                  Esta app lo tiene todo: herramientas, acompañamiento y coberturas únicas pensadas para tu bienestar y alcance.
-                  Queremos ser parte de tus días; seguimos innovando para darte más. Explora, mide, entrena y cuídate con VitaCard 365.
-                </p>
-              </CardContent>
-            </Card>
-          </motion.div>
+          {/** Tarjeta de texto promocional removida por solicitud del usuario **/}
 
           <div className="mt-2 flex justify-center w-full">
             <Card className="bg-white/10 border border-white/10 shadow-lg flex flex-col items-center w-auto">
@@ -140,6 +131,11 @@ const Dashboard = () => {
                 <AnimatedStats />
               </CardContent>
             </Card>
+          </div>
+
+          {/* Firma del desarrollador (fuera de la tarjeta, sobre el fondo) */}
+          <div className="w-full flex justify-center mt-6 mb-8">
+            <p className="text-[12px] leading-none text-white/90 tracking-wide">® Kódigo Vivo.</p>
           </div>
 
         </div>

@@ -1,14 +1,18 @@
- 
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd"> 
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-    <key>GMSApiKey</key>
-    <string>AIzaSyBg5PGOY4R91A2u9BW_eu6021p7gNJR7pk</string>
-    <key>NSLocationWhenInUseUsageDescription</key>
-    <string>Usamos tu ubicación para registrar tus recorridos y centrar el mapa.</string>
-    <key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-    <string>Usamos tu ubicación para registrar tus recorridos y centrar el mapa.</string>
+	<!-- Google Maps SDK Key (iOS) -->
+	<key>GMSApiKey</key>
+	<string>AIzaSyBg5PGOY4R91A2u9BW_eu6021p7gNJR7pk</string>
+
+	<!-- Privacy usage descriptions -->
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Usamos tu ubicación para registrar tus recorridos y centrar el mapa.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>Usamos tu ubicación para registrar tus recorridos y centrar el mapa.</string>
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>Usamos tu ubicación para registrar tus recorridos y centrar el mapa.</string>
 	<key>NSCameraUsageDescription</key>
 	<string>VitaCard necesita acceso a la cámara para encender la linterna y tomar imágenes opcionales dentro de la app.</string>
 	<key>NSBluetoothPeripheralUsageDescription</key>
@@ -16,11 +20,19 @@
 	<key>NSBluetoothAlwaysUsageDescription</key>
 	<string>VitaCard usa Bluetooth para conectar aparatos de gimnasio y registrar tu entrenamiento.</string>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>VitaCard necesita acceso al micrófono para grabar sesiones de sueño y generar tu resumen.</string>
+	<string>VitaCard necesita acceso al micrófono para funciones opcionales dentro de la app.</string>
+
+	<!-- HealthKit permissions descriptions -->
+	<key>NSHealthShareUsageDescription</key>
+	<string>VitaCard usa Salud para leer tu frecuencia cardiaca y métricas de entrenamiento.</string>
+	<key>NSHealthUpdateUsageDescription</key>
+	<string>VitaCard puede escribir métricas de entrenamiento si lo autorizas.</string>
+
+	<!-- Bundle metadata -->
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
 	<key>CFBundleDisplayName</key>
-        <string>VitaCard365</string>
+	<string>VitaCard365</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -33,10 +45,10 @@
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
 	<string>$(MARKETING_VERSION)</string>
-	    <key>GMSApiKey</key>
-	    <string>$(GMS_API_KEY)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+
+	<!-- UI setup -->
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>
@@ -55,25 +67,27 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
+
+	<!-- Background modes required by BLE and location features -->
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>location</string>
 		<string>bluetooth-central</string>
 	</array>
+
+	<!-- Export compliance -->
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
-		<key>CFBundleURLTypes</key>
-		<array>
-			<dict>
-				<key>CFBundleURLSchemes</key>
-				<array>
-					<string>vitacard365</string>
-				</array>
-			</dict>
-		</array>
+
+	<!-- Custom URL scheme for deep links (e.g. Supabase OAuth redirects) -->
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>vitacard365</string>
+			</array>
+		</dict>
+	</array>
 </dict>
 </plist>
-	    <key>UISupportedInterfaceOrientations</key>
-	    <array>
-	        <string>UIInterfaceOrientationPortrait</string>
-	    </array>
