@@ -1,0 +1,95 @@
+name: IGS CSV to SFTP
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "30 5 * * *"  # 05:30 UTC ≈ 23:30 CDMX (lo puedes dejar, corre solo si habilitas el cron)
+
+jobs:
+  upload:
+    runs-on: ubuntu-latest
+    permissions: {}  # no necesita permisos especiales
+    env:
+      IGS_EXPORT_URL: ${{ secrets.IGS_EXPORT_URL }}
+      IGS_SFTP_HOST: ${{ secrets.IGS_SFTP_HOST }}
+      IGS_SFTP_PORT: ${{ secrets.IGS_SFTP_PORT }}
+      IGS_SFTP_USER: ${{ secrets.IGS_SFTP_USER }}
+      IGS_SFTP_PASS: ${{ secrets.IGS_SFTP_PASS }}
+      IGS_SFTP_DIR:  ${{ secrets.IGS_SFTP_DIR }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+
+      - name: Install deps
+        run: |
+          npm init -y >/dev/null 2>&1 || true
+          npm i ssh2-sftp-client@9 node-fetch@3
+
+      - name: Download CSV from Edge Function
+        run: |
+          node - <<'NODE'
+          import fetch from 'node-fetch';
+          import fs from 'fs';
+          const url = process.env.IGS_EXPORT_URL;
+          const r = await fetch(url);
+          if (!r.ok) throw new Error(`Export failed ${r.status}`);
+          const csv = await r.text();
+          const today = new Date().toISOString().slice(0,10).replace(/-/g,'');
+          const fname = `IGS_${today}.csv`;
+          fs.writeFileSync(fname, csv, 'utf8');
+          console.log('CSV:', fname);
+          NODE
+
+      - name: Upload via SFTP
+        run: |
+          node - <<'NODE'
+          import SFTP from 'ssh2-sftp-client';
+          import fs from 'fs';
+          const sftp = new SFTP();
+          const host = process.env.IGS_SFTP_HOST;
+          const port = parseInt(process.env.IGS_SFTP_PORT || '22', 10);
+          const username = process.env.IGS_SFTP_USER;
+          const password = process.env.IGS_SFTP_PASS;
+          const remoteDir = process.env.IGS_SFTP_DIR || '/BDD';
+          const file = fs.readdirSync('.').find(f => /^IGS_\d{8}\.csv$/.test(f));
+          if (!file) throw new Error('CSV not found');
+          await sftp.connect({ host, port, username, password });
+          await sftp.put(file, `${remoteDir}/${file}`);
+          console.log(`Uploaded: ${remoteDir}/${file}`);
+          await sftp.end();
+          NODE
+name: IGS CSV to SFTP
+on:
+  schedule:
+    - cron: '30 5 * * *'  # 23:30 MX-CDMX aprox (UTC 05:30)
+  workflow_dispatch: {}
+
+jobs:
+  upload:
+    runs-on: ubuntu-latest
+    env:
+      IGS_CRON_ENABLED: ${{ secrets.IGS_CRON_ENABLED }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 18
+      - run: npm i ssh2-sftp-client node-fetch@3
+      - name: Upload CSV to SFTP
+        # Keep cron effectively disabled until approved: require a toggle secret to be 'true'.
+        if: ${{ github.event_name != 'schedule' || env.IGS_CRON_ENABLED == 'true' }}
+        env:
+          IGS_EXPORT_URL: ${{ secrets.IGS_EXPORT_URL }}
+          IGS_SFTP_HOST: ${{ secrets.IGS_SFTP_HOST }}
+          IGS_SFTP_PORT: ${{ secrets.IGS_SFTP_PORT }}
+          IGS_SFTP_USER: ${{ secrets.IGS_SFTP_USER }}
+          IGS_SFTP_PASS: ${{ secrets.IGS_SFTP_PASS }}
+          IGS_SFTP_DIR: ${{ secrets.IGS_SFTP_DIR }}
+        run: node scripts/igs-sftp-upload.mjs
+
