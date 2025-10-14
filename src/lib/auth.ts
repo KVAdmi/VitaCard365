@@ -15,8 +15,12 @@ const DEBUG_AUTH: boolean = ((): boolean => {
 })();
 const dlog = (...args: unknown[]) => { if (DEBUG_AUTH) console.log('[AUTH-DL]', ...args); };
 
-// Nuevo deep link estándar solicitado
-export const DEEP_LINK = 'vitacard365://auth-callback';
+// Deep link de retorno (por compatibilidad usamos alias antiguo por defecto).
+// Puedes forzar el nuevo con VITE_DEEP_LINK=vitacard365://auth-callback
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore - import.meta puede no estar tipado en todos los contextos
+export const DEEP_LINK: string = (typeof import.meta !== 'undefined' && (import.meta as any)?.env?.VITE_DEEP_LINK)
+  || 'vitacard365://auth/callback';
 
 export async function signInWithGoogle() {
   const { error } = await supabase.auth.signInWithOAuth({
