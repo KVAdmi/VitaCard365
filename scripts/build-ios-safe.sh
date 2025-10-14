@@ -1,37 +1,19 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-CFG="appflow.config.json"
-SAFE="appflow.safe.json"
-SANITIZE_IN_PLACE="${SANITIZE_IN_PLACE:-1}"  # if 1, overwrite original CFG with SAFE after generating
+CFG="${CFG:-appflow.config.json}"
+SAFE="${SAFE:-appflow.safe.json}"
 ENV="${ENV:-prod}"
 
-echo "[build-ios-safe] Using ENV=$ENV (will sanitize $CFG -> $SAFE)"
+echo "[build-ios-safe] ENV=$ENV - preparando lectura segura desde $SAFE (fallback $CFG)"
 
-# 1. Sanitize original config into SAFE, ensuring no null arrays/objects for iterated fields
-jq --arg env "$ENV" '
-  .environments |= (. // {}) |
-  .environments.default |= (. // {}) |
-  .environments.default.ios |= (. // {}) |
-  .environments.default.ios.profiles |= (. // []) |
-  .environments.default.ios.certificates |= (. // []) |
-  .environments.default.ios.exportOptions |= (. // {}) |
-  .environments.default.hooks |= (. // {}) |
-  .environments.default.hooks.prebuild |= (. // []) |
-  .environments.default.hooks.build |= (. // []) |
-  .environments.default.hooks.postbuild |= (. // []) |
-  .environments[$env] |= (. // .environments.default)
-' "$CFG" > "$SAFE"
-
-if [ "$SANITIZE_IN_PLACE" = "1" ]; then
-  mv "$SAFE" "$CFG"
-  SAFE="$CFG"
-  echo "[build-ios-safe] Sanitized in place (overwrote $CFG)."
-else
-  echo "[build-ios-safe] Generated SAFE copy at $SAFE (original preserved)."
+# Garantiza que si SAFE no existe aún, se genera vía ios-prebuild-safe
+if [ ! -f "$SAFE" ]; then
+  echo "[build-ios-safe] SAFE no existe; invocando ios-prebuild-safe.sh"
+  bash scripts/ios-prebuild-safe.sh
 fi
 
-# 2. Scope filter for subsequent queries (always referencing SAFE)
+# Filtro de alcance
 SCOPE_FILTER='(.environments[$env] // .environments.default // {})'
 
 # Helper to run jq safely against SAFE
@@ -43,7 +25,7 @@ echo "[build-ios-safe] Null path audit (should be empty or benign):"
 jq -r 'paths | select(getpath(.)==null) | map(tostring) | join(".")' "$SAFE" || true
 
 # Example: list profile names (will output nothing if none)
-PROFILES=$(jq_env "$SCOPE_FILTER | (.ios.profiles // [])[] | .name // empty") || true
+PROFILES=$(jq_env "$SCOPE_FILTER | (.ios.profiles // [])[] | (.name // .id // empty)") || true
 if [ -n "$PROFILES" ]; then
   echo "Profiles:"; printf '%s\n' "$PROFILES"
 else
@@ -83,8 +65,7 @@ for phase in prebuild build postbuild; do
     [ -z "$cmd" ] && continue
     echo "> $cmd"
     bash -lc "$cmd"
-  done < <(jq -r ".build.ios.scripts.$phase[]" "$SAFE" 2>/dev/null || echo "")
-
+  done < <(jq -r ".build.ios.scripts.$phase // [] | .[]" "$SAFE" 2>/dev/null || echo "")
 done
 
 echo "[build-ios-safe] Completed script phase execution. Hand off to Xcode build next."

@@ -2,28 +2,35 @@
 set -euo pipefail
 
 ENV="${ENV:-prod}"
-CFG="appflow.config.json"
-SAFE="appflow.safe.json"
+CFG="${CFG:-appflow.config.json}"
+SAFE="${SAFE:-appflow.safe.json}"
 
-echo "[ios-prebuild-safe] ENV=$ENV - sanitizing $CFG -> $SAFE"
+echo "[ios-prebuild-safe] ENV=$ENV - sanitizando $CFG -> $SAFE"
 
+# Genera JSON saneado en SAFE
 jq --arg env "$ENV" '
   .environments |= (. // {}) |
   .environments.default |= (. // {}) |
   .environments.default.ios |= (. // {}) |
+  .environments.default.ios.exportOptions |= (. // {}) |
   .environments.default.ios.profiles |= (. // []) |
   .environments.default.ios.certificates |= (. // []) |
-  .environments.default.ios.exportOptions |= (. // {}) |
   .environments.default.hooks |= (. // {}) |
   .environments.default.hooks.prebuild |= (. // []) |
-  .environments.default.hooks.build |= (. // []) |
   .environments.default.hooks.postbuild |= (. // []) |
-  .environments[$env] |= (. // .environments.default)
+  .environments[$env] |= (. // .environments.default) |
+  .environments[$env].ios |= (. // {}) |
+  .environments[$env].ios.exportOptions |= (. // {}) |
+  .environments[$env].ios.profiles |= (. // []) |
+  .environments[$env].ios.certificates |= (. // []) |
+  .environments[$env].hooks |= (. // {}) |
+  .environments[$env].hooks.prebuild |= (. // []) |
+  .environments[$env].hooks.postbuild |= (. // [])
 ' "$CFG" > "$SAFE"
 
-# Overwrite original so any legacy jq still reading CFG gets safe data
-mv "$SAFE" "$CFG"
-echo "[ios-prebuild-safe] Sanitization complete (in-place)."
+# Sobrescribe el original para legacy, pero mantenemos SAFE separado
+cp "$SAFE" "$CFG"
+echo "[ios-prebuild-safe] Listo: creado SAFE y sobreescrito original." 
 
-# Basic null path audit (should be empty)
-jq -r 'paths | select(getpath(.)==null) | map(tostring) | join(".")' "$CFG" || true
+# Auditoría de rutas null (informativa)
+jq -r 'paths | select(getpath(.)==null) | map(tostring) | join(".")' "$SAFE" || true
