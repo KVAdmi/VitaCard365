@@ -3,6 +3,7 @@ set -euo pipefail
 
 CFG="appflow.config.json"
 SAFE="appflow.safe.json"
+SANITIZE_IN_PLACE="${SANITIZE_IN_PLACE:-1}"  # if 1, overwrite original CFG with SAFE after generating
 ENV="${ENV:-prod}"
 
 echo "[build-ios-safe] Using ENV=$ENV (will sanitize $CFG -> $SAFE)"
@@ -21,6 +22,14 @@ jq --arg env "$ENV" '
   .environments.default.hooks.postbuild |= (. // []) |
   .environments[$env] |= (. // .environments.default)
 ' "$CFG" > "$SAFE"
+
+if [ "$SANITIZE_IN_PLACE" = "1" ]; then
+  mv "$SAFE" "$CFG"
+  SAFE="$CFG"
+  echo "[build-ios-safe] Sanitized in place (overwrote $CFG)."
+else
+  echo "[build-ios-safe] Generated SAFE copy at $SAFE (original preserved)."
+fi
 
 # 2. Scope filter for subsequent queries (always referencing SAFE)
 SCOPE_FILTER='(.environments[$env] // .environments.default // {})'
