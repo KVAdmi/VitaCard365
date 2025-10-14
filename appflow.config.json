@@ -55,7 +55,8 @@
         "method": "app-store",
         "uploadSymbols": true,
         "destination": "export",
-        "signingStyle": "manual"
+        "signingStyle": "manual",
+        "provisioningProfiles": []
       },
       "plugins": []
     }
@@ -73,7 +74,9 @@
         },
         "env": {},
         "secrets": {},
-        "exportOptions": {}
+        "exportOptions": {
+          "provisioningProfiles": []
+        }
       },
       "android": {
         "profiles": [],
@@ -100,7 +103,9 @@
         },
         "env": {},
         "secrets": {},
-        "exportOptions": {}
+        "exportOptions": {
+          "provisioningProfiles": []
+        }
       },
       "android": {
         "profiles": [],
@@ -127,7 +132,9 @@
         },
         "env": {},
         "secrets": {},
-        "exportOptions": {}
+        "exportOptions": {
+          "provisioningProfiles": []
+        }
       },
       "android": {
         "profiles": [],
