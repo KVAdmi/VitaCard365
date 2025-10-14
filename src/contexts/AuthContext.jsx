@@ -197,20 +197,20 @@ export const AuthProvider = ({ children }) => {
           name,
           alias: name?.split(' ')[0] || '',
           avatar_url: picture,
-          vita_card_id: profile?.vita_card_id || generateId('VITA'),
+          vita_card_id: profile?.vita_card_id || makeVitaId('VITA'),
           plan_status: profile?.plan_status || 'inactive',
           created_at: profile?.created_at || new Date().toISOString(),
         }, { onConflict: ['user_id'] });
       if (upsertError) throw upsertError;
 
-      setUser({ id, email, user_metadata: { name, alias: name?.split(' ')[0] || '', avatarUrl: picture, vita_card_id: profile?.vita_card_id || generateId('VITA') } });
+  setUser({ id, email, user_metadata: { name, alias: name?.split(' ')[0] || '', avatarUrl: picture, vita_card_id: profile?.vita_card_id || makeVitaId('VITA') } });
       return { id, email, name, picture };
     } else {
       // Mock login Google
       const mockUser = {
         id,
         email,
-        user_metadata: { name, alias: name?.split(' ')[0] || '', avatarUrl: picture, vita_card_id: generateId('VITA') },
+  user_metadata: { name, alias: name?.split(' ')[0] || '', avatarUrl: picture, vita_card_id: makeVitaId('VITA') },
         app_metadata: { provider: 'google' },
         aud: 'authenticated',
         created_at: new Date().toISOString(),
