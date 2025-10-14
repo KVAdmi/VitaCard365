@@ -59,6 +59,7 @@
       "ios": {
         "profiles": [],
         "perfiles": [],
+        "certificates": [],
         "hooks": {
           "prebuild": [],
           "build": [],
@@ -70,6 +71,7 @@
       "android": {
         "profiles": [],
         "perfiles": [],
+        "certificates": [],
         "hooks": {
           "prebuild": [],
           "build": [],
@@ -83,6 +85,7 @@
       "ios": {
         "profiles": [],
         "perfiles": [],
+        "certificates": [],
         "hooks": {
           "prebuild": [],
           "build": [],
@@ -94,6 +97,7 @@
       "android": {
         "profiles": [],
         "perfiles": [],
+        "certificates": [],
         "hooks": {
           "prebuild": [],
           "build": [],
