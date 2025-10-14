@@ -7,30 +7,50 @@
     "android": {
       "stack": "Android - 2025",
       "packageManager": "npm",
-      "scripts": [
-        "npm ci",
-        "vite build",
-        "npx cap copy android && npx cap sync android"
-      ],
+      "scripts": {
+        "prebuild": [
+          "npm ci"
+        ],
+        "build": [
+          "vite build"
+        ],
+        "postbuild": [
+          "npx cap copy android && npx cap sync android"
+        ]
+      },
       "env": {},
       "secrets": {},
-      "hooks": [],
+      "hooks": {
+        "prebuild": [],
+        "build": [],
+        "postbuild": []
+      },
       "plugins": []
     },
     "ios": {
       "stack": "macOS - 2025.06 - Apple silicon",
       "packageManager": "npm",
-      "scripts": [
-        "npm ci",
-        "npm i --no-save capacitor-healthkit@latest",
-        "vite build",
-        "npx cap copy ios && npx cap sync ios",
-        "node scripts/ios-set-gms-key.js",
-        "cd ios/App && pod install --repo-update"
-      ],
+      "scripts": {
+        "prebuild": [
+          "npm ci",
+          "npm i --no-save capacitor-healthkit@latest"
+        ],
+        "build": [
+          "vite build"
+        ],
+        "postbuild": [
+          "npx cap copy ios && npx cap sync ios",
+          "node scripts/ios-set-gms-key.js",
+          "cd ios/App && pod install --repo-update"
+        ]
+      },
       "env": {},
       "secrets": {},
-      "hooks": [],
+      "hooks": {
+        "prebuild": [],
+        "build": [],
+        "postbuild": []
+      },
       "plugins": []
     }
   },
@@ -39,14 +59,22 @@
       "ios": {
         "profiles": [],
         "perfiles": [],
-        "hooks": [],
+        "hooks": {
+          "prebuild": [],
+          "build": [],
+          "postbuild": []
+        },
         "env": {},
         "secrets": {}
       },
       "android": {
         "profiles": [],
         "perfiles": [],
-        "hooks": [],
+        "hooks": {
+          "prebuild": [],
+          "build": [],
+          "postbuild": []
+        },
         "env": {},
         "secrets": {}
       }
