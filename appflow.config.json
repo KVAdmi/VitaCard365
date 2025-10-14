@@ -78,6 +78,30 @@
         "env": {},
         "secrets": {}
       }
+    },
+    "prod": {
+      "ios": {
+        "profiles": [],
+        "perfiles": [],
+        "hooks": {
+          "prebuild": [],
+          "build": [],
+          "postbuild": []
+        },
+        "env": {},
+        "secrets": {}
+      },
+      "android": {
+        "profiles": [],
+        "perfiles": [],
+        "hooks": {
+          "prebuild": [],
+          "build": [],
+          "postbuild": []
+        },
+        "env": {},
+        "secrets": {}
+      }
     }
   },
   "deploy": {
