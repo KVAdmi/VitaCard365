@@ -35,65 +35,82 @@ export async function signInWithGoogle() {
 App.addListener('appUrlOpen', async ({ url }) => {
   if (!url) return;
   dlog('Inbound deep link', url);
-  const normalized = url.split('?')[0];
-  const isNew = url.startsWith(DEEP_LINK);
-  const isOld = normalized === 'vitacard365://auth/callback';
-  if (!isNew && !isOld) { dlog('Ignoring non-auth URL'); return; }
-  try {
-    // Close in-app browser if present (Capacitor Browser plugin) – best‑effort
-    try {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const maybeBrowser: any = (globalThis as any).Capacitor?.Plugins?.Browser;
-      if (maybeBrowser?.close) {
-        dlog('Closing in-app browser');
-        await maybeBrowser.close();
-      } else {
-        dlog('No Browser plugin available to close');
-      }
-    } catch (closeErr) {
-      dlog('Browser close attempt failed (non-fatal)', closeErr);
-    }
+  const base = url.split('?')[0];
+  const isTarget = url.startsWith(DEEP_LINK) || base === 'vitacard365://auth/callback';
+  if (!isTarget) { dlog('Ignoring non-auth URL'); return; }
 
-    dlog('Exchanging code for session...');
-    const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(url);
-    if (exchangeError) {
-      console.error('exchangeCodeForSession', exchangeError.message);
-      dlog('Exchange failed', exchangeError);
+  // Best-effort: close in-app browser
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const maybeBrowser: any = (globalThis as any).Capacitor?.Plugins?.Browser;
+    if (maybeBrowser?.close) {
+      dlog('Closing in-app browser');
+      await maybeBrowser.close();
+    }
+  } catch (closeErr) {
+    dlog('Browser close attempt failed (non-fatal)', closeErr);
+  }
+
+  try {
+    const u = new URL(url);
+    const hasCode = !!u.searchParams.get('code');
+    const hasHash = !!u.hash && u.hash.includes('access_token=');
+
+    if (hasCode) {
+      dlog('PKCE code detected, exchanging...');
+      const { error } = await supabase.auth.exchangeCodeForSession(u.toString());
+      if (error) {
+        console.error('exchangeCodeForSession', error.message);
+        dlog('Exchange failed', error);
+        if (typeof window !== 'undefined') window.location.hash = '#/login';
+        return;
+      }
+      dlog('PKCE exchange success');
+    } else if (hasHash) {
+      dlog('Implicit hash detected, using setSession');
+      const params = new URLSearchParams(u.hash.slice(1)); // remove '#'
+      const access_token = params.get('access_token') || '';
+      const refresh_token = params.get('refresh_token') || '';
+      if (access_token && refresh_token) {
+        const { error } = await supabase.auth.setSession({ access_token, refresh_token });
+        if (error) {
+          console.error('setSession error', error.message);
+          dlog('setSession failed', error);
+          if (typeof window !== 'undefined') window.location.hash = '#/login';
+          return;
+        }
+        dlog('setSession success');
+      } else {
+        dlog('Implicit hash missing tokens');
+        if (typeof window !== 'undefined') window.location.hash = '#/login';
+        return;
+      }
+    } else {
+      dlog('No usable auth params in URL');
+      if (typeof window !== 'undefined') window.location.hash = '#/login';
       return;
     }
-    dlog('Exchange success');
 
-    // Optional: Inspect immediate session (may rely on internal listeners)
-    try {
-      const { data: sessionData } = await supabase.auth.getSession();
-      dlog('Post-exchange getSession()', !!sessionData?.session, sessionData?.session?.user?.id);
-    } catch (sessErr) {
-      dlog('getSession() error (non-fatal)', sessErr);
-    }
-
-    // Fetch user explicitly
+    // Verify session and route
     try {
       const { data } = await supabase.auth.getUser();
       const uid = data?.user?.id || null;
       dlog('getUser()', uid ? 'uid=' + uid : 'no-user');
       if (!uid) {
-        if (typeof window !== 'undefined') {
-          dlog('Redirecting to /login (hash) due to missing uid');
-          window.location.hash = '#/login';
-        }
+        if (typeof window !== 'undefined') window.location.hash = '#/login';
         return;
       }
-      // NOTE: Keep existing hash routing to avoid breaking current navigation while debugging
       if (typeof window !== 'undefined') {
         dlog('Redirecting to /dashboard (hash)');
         window.location.hash = '#/dashboard';
       }
     } catch (userErr) {
-      dlog('getUser() threw, fallback redirect to /dashboard', userErr);
+      dlog('getUser() error, redirect to /dashboard anyway', userErr);
       if (typeof window !== 'undefined') window.location.hash = '#/dashboard';
     }
   } catch (e) {
     console.error('appUrlOpen handler', e);
     dlog('Fatal error in deep link handler', e);
+    if (typeof window !== 'undefined') window.location.hash = '#/login';
   }
 });
