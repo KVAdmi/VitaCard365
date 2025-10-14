@@ -51,6 +51,12 @@
         "build": [],
         "postbuild": []
       },
+      "exportOptions": {
+        "method": "app-store",
+        "uploadSymbols": true,
+        "destination": "export",
+        "signingStyle": "manual"
+      },
       "plugins": []
     }
   },
@@ -66,7 +72,8 @@
           "postbuild": []
         },
         "env": {},
-        "secrets": {}
+        "secrets": {},
+        "exportOptions": {}
       },
       "android": {
         "profiles": [],
@@ -92,7 +99,35 @@
           "postbuild": []
         },
         "env": {},
+        "secrets": {},
+        "exportOptions": {}
+      },
+      "android": {
+        "profiles": [],
+        "perfiles": [],
+        "certificates": [],
+        "hooks": {
+          "prebuild": [],
+          "build": [],
+          "postbuild": []
+        },
+        "env": {},
         "secrets": {}
+      }
+    },
+    "staging": {
+      "ios": {
+        "profiles": [],
+        "perfiles": [],
+        "certificates": [],
+        "hooks": {
+          "prebuild": [],
+          "build": [],
+          "postbuild": []
+        },
+        "env": {},
+        "secrets": {},
+        "exportOptions": {}
       },
       "android": {
         "profiles": [],
