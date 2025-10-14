@@ -2,9 +2,9 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<!-- Google Maps SDK Key (iOS) -->
+	<!-- Google Maps SDK Key (iOS) - injected via scripts/ios-set-gms-key.js from env (GMS_API_KEY) -->
 	<key>GMSApiKey</key>
-	<string>AIzaSyBg5PGOY4R91A2u9BW_eu6021p7gNJR7pk</string>
+	<string>__INJECTED_BY_APPFLOW__</string>
 
 	<!-- Privacy usage descriptions -->
 	<key>NSLocationWhenInUseUsageDescription</key>

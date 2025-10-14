@@ -54,6 +54,7 @@ import ScrollToTop from './components/ScrollToTop';
 import { Capacitor } from '@capacitor/core';
 import Eco from './pages/Eco';
 import Wallet from './pages/perfil/Wallet';
+import '@/lib/sessionHydrator';
 
 
 

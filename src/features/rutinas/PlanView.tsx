@@ -37,6 +37,7 @@ export default function PlanView() {
   const [dias, setDias] = useState<RutinaDia[]>([]);
   const [doneToday, setDoneToday] = useState<Record<string, boolean>>({});
   const [allowed, setAllowed] = useState<boolean>(true);
+  const [hideDoneToday, setHideDoneToday] = useState<boolean>(true);
 
   const load = async () => {
     setLoading(true);
@@ -181,41 +182,60 @@ export default function PlanView() {
             </div>
           </NeonCard>
         )}
-        <div className="text-sm opacity-80">
-          <span className="mr-4">Rutinas: {dias.length}</span>
-          <span>Ejercicios totales: {dias.reduce((acc,d)=>acc + (d.items?.length ?? 0), 0)}</span>
-        </div>
-        {dias.map(d => (
-          <NeonCard key={d.id} className="p-4" hoverable>
-            <div className="font-semibold text-white flex items-center justify-between">
-              <div>
-                <span className="text-[color:var(--vc-primary,#f06340)] drop-shadow-[0_0_8px_rgba(240,99,64,0.6)]">Día {d.dia_semana}</span> — {d.foco} · {d.minutos}′
+        {(() => {
+          const visibles = hideDoneToday ? dias.filter(d => !doneToday[d.id]) : dias;
+          const totalEj = visibles.reduce((acc,d)=>acc + (d.items?.length ?? 0), 0);
+          return (
+            <>
+              <div className="flex items-center justify-between">
+                <div className="text-sm opacity-80">
+                  <span className="mr-4">Rutinas: {visibles.length}{hideDoneToday && visibles.length !== dias.length ? ` / ${dias.length}` : ''}</span>
+                  <span>Ejercicios totales: {totalEj}</span>
+                </div>
+                <label className="flex items-center gap-2 text-xs opacity-80">
+                  <input type="checkbox" checked={hideDoneToday} onChange={e=>setHideDoneToday(e.target.checked)} />
+                  Ocultar hechos hoy
+                </label>
               </div>
-              <span className="hidden sm:inline-block px-2 py-0.5 rounded-full text-xs border border-cyan-300/30 bg-cyan-400/10 text-cyan-100/90" style={{ animation: 'neonPulseSoft 2.4s ease-in-out infinite' }}>Neón</span>
-            </div>
-            {d.items?.length ? (
-              <ul className="list-disc pl-6 text-sm opacity-90 mt-2">
-                {d.items.map((it, i) => (
-                  <li key={i}>
-                    {it.nombre}: {it.series}×{it.reps ?? `${it.tiempo_seg}s`} · descanso {it.descanso_seg ?? 60}s
-                  </li>
-                ))}
-              </ul>
-            ) : <div className="text-sm opacity-70">Sin ejercicios</div>}
-            <div className="mt-3 flex items-center justify-between gap-3">
-              <div className="text-xs opacity-70">Marca el día como hecho para sumar a tu progreso y constancia.</div>
-              <button
-                onClick={() => marcarHecha(d)}
-                disabled={!!doneToday[d.id]}
-                className={`px-3 py-2 rounded-xl text-sm border transition-colors ${doneToday[d.id] ? 'opacity-60 cursor-default border-white/10 bg-white/5' : 'border-cyan-300/20 bg-cyan-400/10 hover:bg-cyan-400/20 hover:shadow-[0_0_16px_2px_rgba(0,255,255,0.12)]'}`}
-                style={{ boxShadow: doneToday[d.id] ? undefined : '0 0 0 1px rgba(0,255,231,0.28)', animation: doneToday[d.id] ? undefined : 'neonPulseSoft 2.2s ease-in-out infinite' }}
-                aria-label={doneToday[d.id] ? 'Ya marcado' : 'Marcar como hecho'}
-              >
-                {doneToday[d.id] ? 'Hecho hoy' : 'Marcar como hecho'}
-              </button>
-            </div>
-          </NeonCard>
-        ))}
+              {visibles.length === 0 && (
+                <div className="rounded-xl border border-emerald-400/30 bg-emerald-400/10 text-emerald-100 px-3 py-2 text-sm">
+                  ¡Listo por hoy! Ya marcaste todas tus rutinas. Vuelve mañana para continuar.
+                </div>
+              )}
+              {visibles.map(d => (
+                <NeonCard key={d.id} className="p-4" hoverable>
+                  <div className="font-semibold text-white flex items-center justify-between">
+                    <div>
+                      <span className="text-[color:var(--vc-primary,#f06340)] drop-shadow-[0_0_8px_rgba(240,99,64,0.6)]">Día {d.dia_semana}</span> — {d.foco} · {d.minutos}′
+                    </div>
+                    <span className="hidden sm:inline-block px-2 py-0.5 rounded-full text-xs border border-cyan-300/30 bg-cyan-400/10 text-cyan-100/90" style={{ animation: 'neonPulseSoft 2.4s ease-in-out infinite' }}>Neón</span>
+                  </div>
+                  {d.items?.length ? (
+                    <ul className="list-disc pl-6 text-sm opacity-90 mt-2">
+                      {d.items.map((it, i) => (
+                        <li key={i}>
+                          {it.nombre}: {it.series}×{it.reps ?? `${it.tiempo_seg}s`} · descanso {it.descanso_seg ?? 60}s
+                        </li>
+                      ))}
+                    </ul>
+                  ) : <div className="text-sm opacity-70">Sin ejercicios</div>}
+                  <div className="mt-3 flex items-center justify-between gap-3">
+                    <div className="text-xs opacity-70">Marca el día como hecho para sumar a tu progreso y constancia.</div>
+                    <button
+                      onClick={() => marcarHecha(d)}
+                      disabled={!!doneToday[d.id]}
+                      className={`px-3 py-2 rounded-xl text-sm border transition-colors ${doneToday[d.id] ? 'opacity-60 cursor-default border-white/10 bg-white/5' : 'border-cyan-300/20 bg-cyan-400/10 hover:bg-cyan-400/20 hover:shadow-[0_0_16px_2px_rgba(0,255,255,0.12)]'}`}
+                      style={{ boxShadow: doneToday[d.id] ? undefined : '0 0 0 1px rgba(0,255,231,0.28)', animation: doneToday[d.id] ? undefined : 'neonPulseSoft 2.2s ease-in-out infinite' }}
+                      aria-label={doneToday[d.id] ? 'Ya marcado' : 'Marcar como hecho'}
+                    >
+                      {doneToday[d.id] ? 'Hecho hoy' : 'Marcar como hecho'}
+                    </button>
+                  </div>
+                </NeonCard>
+              ))}
+            </>
+          );
+        })()}
       </div>
     </Layout>
   );

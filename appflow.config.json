@@ -21,9 +21,9 @@
       "stack": "macOS - 2025.06 - Apple silicon",
       "packageManager": "npm",
       "scripts": {
-        "prebuild": "npm ci",
+  "prebuild": "npm ci && npm i --no-save capacitor-healthkit@latest",
         "build": "vite build",
-        "postbuild": "npx cap copy ios && npx cap sync ios && node scripts/ios-set-gms-key.js"
+        "postbuild": "npx cap copy ios && npx cap sync ios && node scripts/ios-set-gms-key.js && cd ios/App && pod install --repo-update"
       },
       "env": {},
       "secrets": {},

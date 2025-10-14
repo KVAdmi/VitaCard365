@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Capacitor } from '@capacitor/core';
+import { requestPermissions as requestHealthPermissions } from '@/lib/healthkit';
 import KeepAliveAccordion from '@/components/ui/KeepAliveAccordion';
 import { sessionHub } from '@/fit/sessionHub';
 import {
@@ -76,7 +77,19 @@ export default function GymBlePanel({ onHr }) {
   const isIOS = useMemo(() => Capacitor.getPlatform?.() === 'ios', []);
   let hk;
   try { hk = require('@/hooks/useHealthHeartRate'); } catch { hk = null; }
-  const health = hk && typeof hk.useHealthHeartRate === 'function' ? hk.useHealthHeartRate(isIOS && !isNative) : { bpm: null, ready: false };
+  // Habilitar lectura desde Apple Salud (HealthKit) en iOS nativo (y no romper en otras plataformas)
+  // Antes estaba limitado a iOS web (!isNative); lo abrimos en iOS nativo para que pueda leerse el pulso del Apple Watch
+  const health = hk && typeof hk.useHealthHeartRate === 'function' ? hk.useHealthHeartRate(isIOS) : { bpm: null, ready: false };
+  const askHealthPerm = useCallback(async () => {
+    try { await requestHealthPermissions(['heartRate']); } catch {}
+  }, []);
+
+  // Si llega pulso desde Apple Salud (iOS), enrutarlo al hub para que el HUD/tarjetas reaccionen
+  useEffect(() => {
+    if (isIOS && health && typeof health.bpm === 'number') {
+      try { sessionHub.onHr?.(health.bpm); } catch {}
+    }
+  }, [isIOS, health?.bpm]);
 
   // Refs Web Bluetooth
   const deviceRef = useRef(null);
@@ -98,32 +111,7 @@ export default function GymBlePanel({ onHr }) {
     };
   }, []);
 
-  // Escaneo silencioso periódico para auto-reconexión
-  useEffect(() => {
-    if (!autoReconnect) return;
-    // limpia anterior
-    if (autoScanTimerRef.current) { clearInterval(autoScanTimerRef.current); autoScanTimerRef.current = null; }
-    autoScanTimerRef.current = setInterval(async () => {
-      try {
-        const lastId = (() => { try { return localStorage.getItem('ble_last_device_id') || ''; } catch { return ''; } })();
-        if (!lastId) return;
-        if (getConnectedDeviceId() || getIsConnecting()) return;
-        // Evitar chocar con un escaneo manual
-        if (getIsScanning()) return;
-        // Escaneo corto silencioso (reusa startScan, no toca 'status')
-        await startScan((d) => {
-          if (d?.deviceId === lastId) {
-            // cortar escaneo y conectar
-            try { stopBleScan(); } catch {}
-            setSelected({ id: d.deviceId, name: d.name, rssi: d.rssi });
-            // conecta sin abrir manualmente, reusa handler
-            setTimeout(() => { if (!getConnectedDeviceId() && !getIsConnecting()) { handleConnect(); } }, 100);
-          }
-        });
-      } catch { /* silencioso */ }
-    }, 25000); // cada 25s
-    return () => { if (autoScanTimerRef.current) { clearInterval(autoScanTimerRef.current); autoScanTimerRef.current = null; } };
-  }, [autoReconnect, handleConnect]);
+  // NOTE: auto-reconnect timer moved below handleConnect to avoid TDZ issues
 
   // Indicador de frescura de muestras FTMS
   useEffect(() => {
@@ -364,6 +352,33 @@ export default function GymBlePanel({ onHr }) {
     setModalOpen(false);
   }, []);
 
+  // Escaneo silencioso periódico para auto-reconexión
+  useEffect(() => {
+    if (!autoReconnect) return;
+    // limpia anterior
+    if (autoScanTimerRef.current) { clearInterval(autoScanTimerRef.current); autoScanTimerRef.current = null; }
+    autoScanTimerRef.current = setInterval(async () => {
+      try {
+        const lastId = (() => { try { return localStorage.getItem('ble_last_device_id') || ''; } catch { return ''; } })();
+        if (!lastId) return;
+        if (getConnectedDeviceId() || getIsConnecting()) return;
+        // Evitar chocar con un escaneo manual
+        if (getIsScanning()) return;
+        // Escaneo corto silencioso (reusa startScan, no toca 'status')
+        await startScan((d) => {
+          if (d?.deviceId === lastId) {
+            // cortar escaneo y conectar
+            try { stopBleScan(); } catch {}
+            setSelected({ id: d.deviceId, name: d.name, rssi: d.rssi });
+            // conecta sin abrir manualmente, reusa handler
+            setTimeout(() => { if (!getConnectedDeviceId() && !getIsConnecting()) { handleConnect(); } }, 100);
+          }
+        });
+      } catch { /* silencioso */ }
+    }, 25000); // cada 25s
+    return () => { if (autoScanTimerRef.current) { clearInterval(autoScanTimerRef.current); autoScanTimerRef.current = null; } };
+  }, [autoReconnect, handleConnect]);
+
   // Persistencia toggles
   const onToggleAutoReconnect = useCallback(() => {
     setAutoReconnect((v) => {
@@ -404,7 +419,7 @@ export default function GymBlePanel({ onHr }) {
   return (
   <KeepAliveAccordion title="Dispositivos Bluetooth" defaultOpen>
       <div className="rounded-xl border border-white/10 bg-white/5 p-4">
-        {/* Rama Nativa (APK) */}
+        {/* Interfaz principal para usar Bluetooth desde la app */}
         {isNative ? (
           <>
             <div className="mb-3 flex flex-col gap-2">
@@ -455,6 +470,19 @@ export default function GymBlePanel({ onHr }) {
                     <span className="opacity-60"> (muestras: {samples})</span>
                   </p>
                 )}
+                {/* iOS nativo: mostrar pulso desde Salud/Apple Watch si está disponible, aunque no haya HR BLE */}
+                {isIOS && isNative && health?.bpm != null && (
+                  <p className="text-sm mt-1">
+                    <span className="opacity-80">Pulso (Salud): </span>
+                    <span className="font-semibold">{health.bpm} bpm</span>
+                    {!health.ready && <span className="opacity-60"> (solicitando permisos…)</span>}
+                  </p>
+                )}
+                {isIOS && isNative && !health?.ready && (
+                  <div className="mt-2">
+                    <button onClick={askHealthPerm} className="px-3 py-1 rounded bg-white/10 hover:bg-white/20 text-xs">Permitir Salud (iOS)</button>
+                  </div>
+                )}
                 {/* Aquí puedes renderizar métricas FTMS del buffer */}
               </div>
               {error && <div className="mt-2 text-red-300 text-xs">Error: {error}</div>}
@@ -464,7 +492,7 @@ export default function GymBlePanel({ onHr }) {
             </div>
           </>
         ) : (
-          // Rama Web
+          // Soporte en navegador (solo pruebas)
           <>
             {!webBleOk ? (
               <div className="text-sm opacity-80">
@@ -502,7 +530,7 @@ export default function GymBlePanel({ onHr }) {
                         onClick={handleScanWeb}
                         className="px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 transition"
                       >
-                        Buscar / Conectar (Web)
+                        Buscar / Conectar
                       </button>
                     ) : (
                       <button
@@ -516,10 +544,7 @@ export default function GymBlePanel({ onHr }) {
                 </div>
 
                 <div className="text-xs opacity-70 mt-2">
-                  <p>
-                    Si tu banda/cinta expone el servicio de <em>Frecuencia Cardíaca</em> (UUID HR), verás el pulso en vivo.<br/>
-                    Las máquinas FTMS (caminadora/bicicleta) pueden anunciarse pero no siempre permiten lectura sin control propietario.
-                  </p>
+                  <p>Si tu banda o máquina comparte el servicio de Frecuencia Cardíaca, verás el pulso en vivo. Algunas máquinas de gimnasio pueden requerir apps del fabricante.</p>
                   {error && <p className="mt-2 text-red-300">Error: {error}</p>}
                 </div>
               </>
@@ -553,6 +578,13 @@ export default function GymBlePanel({ onHr }) {
                   <div className="rounded border border-white/10 p-2">
                     <div className="text-xs opacity-70">Pulso actual</div>
                     <div className="text-lg font-bold">{hrLive ?? '—'} {hrLive != null ? 'bpm' : ''}</div>
+                  </div>
+                )}
+                {/* Fallback/Complemento iOS nativo: Pulso desde Salud si no hay HR BLE */}
+                {(!connectedInfo?.hasHr && isIOS && isNative && health?.bpm != null) && (
+                  <div className="rounded border border-white/10 p-2">
+                    <div className="text-xs opacity-70">Pulso (Salud)</div>
+                    <div className="text-lg font-bold">{health.bpm} bpm</div>
                   </div>
                 )}
                 {typeof batteryPct === 'number' && (

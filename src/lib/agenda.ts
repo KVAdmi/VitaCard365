@@ -1,5 +1,5 @@
 import { supabase } from './supabaseClient';
-import { programarUna, programarSemanales, asegurarPermisoNotificaciones } from './notifications';
+import { programarUna, programarSemanales, asegurarPermisoNotificaciones, asegurarCanalFitness } from './notifications';
 import { LocalNotifications, PendingLocalNotificationSchema } from '@capacitor/local-notifications';
 
 export type AgendaEvent = {
@@ -92,6 +92,8 @@ export async function deleteAgendaEvent(id: string) {
 
 export async function scheduleNotificationForEvent(ev: AgendaEvent) {
   if (!ev.notify) return;
+  // En Android, aseguremos canal primero
+  try { await asegurarCanalFitness(); } catch {}
   const ok = await asegurarPermisoNotificaciones();
   if (!ok) return;
   const when = toLocalDate(ev.event_date, ev.event_time);
