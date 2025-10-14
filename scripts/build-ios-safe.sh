@@ -2,19 +2,38 @@
 set -euo pipefail
 
 CFG="appflow.config.json"
+SAFE="appflow.safe.json"
 ENV="${ENV:-prod}"
 
-# Define scope with environment fallback
+echo "[build-ios-safe] Using ENV=$ENV (will sanitize $CFG -> $SAFE)"
+
+# 1. Sanitize original config into SAFE, ensuring no null arrays/objects for iterated fields
+jq --arg env "$ENV" '
+  .environments |= (. // {}) |
+  .environments.default |= (. // {}) |
+  .environments.default.ios |= (. // {}) |
+  .environments.default.ios.profiles |= (. // []) |
+  .environments.default.ios.certificates |= (. // []) |
+  .environments.default.ios.exportOptions |= (. // {}) |
+  .environments.default.hooks |= (. // {}) |
+  .environments.default.hooks.prebuild |= (. // []) |
+  .environments.default.hooks.build |= (. // []) |
+  .environments.default.hooks.postbuild |= (. // []) |
+  .environments[$env] |= (. // .environments.default)
+' "$CFG" > "$SAFE"
+
+# 2. Scope filter for subsequent queries (always referencing SAFE)
 SCOPE_FILTER='(.environments[$env] // .environments.default // {})'
 
-# Helper to run jq safely with environment
+# Helper to run jq safely against SAFE
 jq_env() {
-  jq -r --arg env "$ENV" "$1" "$CFG"
+  jq -r --arg env "$ENV" "$1" "$SAFE"
 }
 
-echo "[build-ios-safe] Using ENV=$ENV"
+echo "[build-ios-safe] Null path audit (should be empty or benign):"
+jq -r 'paths | select(getpath(.)==null) | map(tostring) | join(".")' "$SAFE" || true
 
-# Example: list profile names (will output nothing if none, without crashing)
+# Example: list profile names (will output nothing if none)
 PROFILES=$(jq_env "$SCOPE_FILTER | (.ios.profiles // [])[] | .name // empty") || true
 if [ -n "$PROFILES" ]; then
   echo "Profiles:"; printf '%s\n' "$PROFILES"
@@ -37,7 +56,7 @@ for phase in prebuild build postbuild; do
     [ -z "$hook" ] && continue
     echo "> $hook"
     bash -lc "$hook"
-  done < <(jq -r "(.hooks.$phase // [])[]" "$CFG")
+  done < <(jq -r "(.hooks.$phase // [])[]" "$SAFE")
 
   echo "Running env $phase hooks (if any)"
   while IFS= read -r hook; do
@@ -55,7 +74,7 @@ for phase in prebuild build postbuild; do
     [ -z "$cmd" ] && continue
     echo "> $cmd"
     bash -lc "$cmd"
-  done < <(jq -r ".build.ios.scripts.$phase[]" "$CFG" 2>/dev/null || echo "")
+  done < <(jq -r ".build.ios.scripts.$phase[]" "$SAFE" 2>/dev/null || echo "")
 
 done
 
