@@ -34,7 +34,24 @@
       "plugins": []
     }
   },
-  "environments": [],
+  "environments": {
+    "default": {
+      "ios": {
+        "profiles": [],
+        "perfiles": [],
+        "hooks": [],
+        "env": {},
+        "secrets": {}
+      },
+      "android": {
+        "profiles": [],
+        "perfiles": [],
+        "hooks": [],
+        "env": {},
+        "secrets": {}
+      }
+    }
+  },
   "deploy": {
     "channels": [ ]
   },
