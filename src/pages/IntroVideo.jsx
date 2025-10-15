@@ -160,11 +160,11 @@ export default function IntroVideo() {
       if (isNativeEnv) {
         // cinturón y tirantes: setear hash directamente
         if (typeof window !== 'undefined') {
-          window.location.hash = '#/login';
+          window.location.hash = '#/descubre';
         }
       }
     } catch {}
-    setTimeout(() => navigate('/login', { replace: true }), 120);
+    setTimeout(() => navigate('/descubre', { replace: true }), 120);
   };
 
   const onTapToStart = async () => {

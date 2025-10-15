@@ -93,13 +93,13 @@ try {
       content.includes('href="./assets/index-');
 
     if (looksExternal) {
-      const viteIndex = `<!doctype html>\n<html lang="es">\n  <head>\n    <meta charset="UTF-8" />\n    <meta name="viewport" content="width=device-width, initial-scale=1.0" />\n    <title>VitaCard 365</title>\n    <link rel="manifest" href="/manifest.json" />\n    <meta name="theme-color" content="#0c1c3e" />\n  </head>\n  <body>\n    <div id="root"></div>\n    <script type="module" src="/src/main.jsx"></script>\n  </body>\n</html>\n`;
+  const viteIndex = `<!doctype html>\n<html lang="es">\n  <head>\n    <meta charset="UTF-8" />\n    <meta name="viewport" content="width=device-width, initial-scale=1.0" />\n    <title>VitaCard 365</title>\n    <link rel="manifest" href="/manifest.json" />\n    <meta name="theme-color" content="#0d2041" />\n  </head>\n  <body>\n    <div id="root"></div>\n    <script type="module" src="/src/main.jsx"></script>\n  </body>\n</html>\n`;
       fs.writeFileSync(idxRoot, viteIndex, 'utf8');
       console.log('[prebuild] Rewrote root index.html to Vite entry');
     }
   } else {
     // Si no existe por alguna razón, crear uno válido para Vite
-    const viteIndex = `<!doctype html>\n<html lang="es">\n  <head>\n    <meta charset="UTF-8" />\n    <meta name="viewport" content="width=device-width, initial-scale=1.0" />\n    <title>VitaCard 365</title>\n    <link rel="manifest" href="/manifest.json" />\n    <meta name="theme-color" content="#0c1c3e" />\n  </head>\n  <body>\n    <div id="root"></div>\n    <script type="module" src="/src/main.jsx"></script>\n  </body>\n</html>\n`;
+  const viteIndex = `<!doctype html>\n<html lang="es">\n  <head>\n    <meta charset="UTF-8" />\n    <meta name="viewport" content="width=device-width, initial-scale=1.0" />\n    <title>VitaCard 365</title>\n    <link rel="manifest" href="/manifest.json" />\n    <meta name="theme-color" content="#0d2041" />\n  </head>\n  <body>\n    <div id="root"></div>\n    <script type="module" src="/src/main.jsx"></script>\n  </body>\n</html>\n`;
     fs.writeFileSync(idxRoot, viteIndex, 'utf8');
     console.log('[prebuild] Created missing root index.html (Vite entry)');
   }

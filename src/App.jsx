@@ -50,11 +50,14 @@ import { useEffect } from 'react';
 import { initAuthDeepLinks } from '@/lib/deeplinks';
 import '@/lib/auth'; // inicializa listener de deep link (auth-callback)
 import IntroVideo from './pages/IntroVideo';
+import OnboardingShowcase from './pages/OnboardingShowcase';
 import ScrollToTop from './components/ScrollToTop';
 import { Capacitor } from '@capacitor/core';
 import Eco from './pages/Eco';
 import Wallet from './pages/perfil/Wallet';
 import '@/lib/sessionHydrator';
+import '@/lib/nativeGuards';
+import '@/lib/backGuard';
 
 
 
@@ -90,6 +93,7 @@ function App() {
                 <RouterCmp>
                   <ScrollToTop />
                   <div className="min-h-screen bg-vita-background">
+                    {/* Debug overlays removidos */}
                     <Routes>
           {/* Rutas FIT (Fitness) */}
           <Route path="/fit" element={<ProtectedRoute><FitIndex /></ProtectedRoute>}>
@@ -108,12 +112,14 @@ function App() {
               <Route path="progreso" element={<GymProgreso />} />
             </Route>
           </Route>
-          {/* Intro: raíz muestra el video y luego navega a /login */}
+          {/* Intro: raíz muestra el video y luego navega a /descubre */}
           <Route path="/" element={<IntroVideo />} />
           {/* Hash vacío (#) en Android puede no resolver a '/': servir Intro */}
           <Route path="" element={<IntroVideo />} />
           {/* Android WebView puede iniciar en /index.html; mapearlo a IntroVideo */}
           <Route path="/index.html" element={<IntroVideo />} />
+          {/* Onboarding público antes de login/registro */}
+          <Route path="/descubre" element={<OnboardingShowcase />} />
           {/* En este flujo, home = login */}
           <Route path="/home" element={<Navigate to="/login" replace />} />
                     <Route path="/login" element={<Login />} />

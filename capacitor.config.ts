@@ -14,17 +14,17 @@ const config: CapacitorConfig = {
   plugins: {
     SplashScreen: {
       launchAutoHide: false,
-      backgroundColor: '#0c1c3e',
+      backgroundColor: '#0d2041',
       androidScaleType: 'CENTER_CROP',
       showSpinner: false
     }
   },
   android: {
-    backgroundColor: '#FF0C1C3E',
+    backgroundColor: '#FF0D2041',
     allowMixedContent: true
   },
   ios: {
-    backgroundColor: '#FF0C1C3E'
+    backgroundColor: '#FF0D2041'
   }
 };
 

@@ -1390,6 +1390,117 @@
 			"command": "npm run build",
 			"isBackground": false,
 			"group": "build"
+		},
+		{
+			"label": "assembleDebug after MainActivity fix",
+			"type": "shell",
+			"command": "cd android; .\\gradlew.bat assembleDebug",
+			"isBackground": false,
+			"problemMatcher": [
+				"$gcc"
+			],
+			"group": "build"
+		},
+		{
+			"label": "build:web (fresh debug)",
+			"type": "shell",
+			"command": "npm run build",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "build:web (fresh debug)",
+			"type": "shell",
+			"command": "npm run build",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "build:web (after CTA restore)",
+			"type": "shell",
+			"command": "npm run build",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "cap copy android (after CTA restore)",
+			"type": "shell",
+			"command": "npx cap copy android",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "Clean dist and build (fresh) [rerun]",
+			"type": "shell",
+			"command": "powershell -NoProfile -Command \"if (Test-Path dist) { attrib -r -h -s -force dist -Recurse -ErrorAction SilentlyContinue; Remove-Item -Recurse -Force dist }; exit 0\"; npm run build",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "Clean dist and build (fresh) [agent]",
+			"type": "shell",
+			"command": "powershell -NoProfile -Command \"if (Test-Path dist) { attrib -r -h -s -force dist -Recurse -ErrorAction SilentlyContinue; Remove-Item -Recurse -Force dist }; exit 0\"; npm run build",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "cap copy android (fresh) [agent]",
+			"type": "shell",
+			"command": "npx cap copy android",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "gradle assembleDebug (fresh) [agent]",
+			"type": "shell",
+			"command": "cd android; .\\gradlew.bat --stop; .\\gradlew.bat clean assembleDebug",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "Clean dist and build (fresh) [agent 2]",
+			"type": "shell",
+			"command": "powershell -NoProfile -Command \"if (Test-Path dist) { attrib -r -h -s -force dist -Recurse -ErrorAction SilentlyContinue; Remove-Item -Recurse -Force dist }; exit 0\"; npm run build",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "Clean dist and build (fresh) [agent 2]",
+			"type": "shell",
+			"command": "powershell -NoProfile -Command \"if (Test-Path dist) { attrib -r -h -s -force dist -Recurse -ErrorAction SilentlyContinue; Remove-Item -Recurse -Force dist }; exit 0\"; npm run build",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "cap copy android (fresh) [agent 2]",
+			"type": "shell",
+			"command": "npx cap copy android",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "gradle assembleDebug (fresh) [agent 2]",
+			"type": "shell",
+			"command": "cd android; .\\gradlew.bat --stop; .\\gradlew.bat clean assembleDebug",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "Clean dist and build (fresh) [agent]",
+			"type": "shell",
+			"command": "powershell -NoProfile -Command \"if (Test-Path dist) { attrib -r -h -s -force dist -Recurse -ErrorAction SilentlyContinue; Remove-Item -Recurse -Force dist }; exit 0\"; npm run build",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "gradle: bundleRelease (v46)",
+			"type": "shell",
+			"command": "cd android; .\\gradlew.bat --stop; .\\gradlew.bat --no-daemon --no-build-cache clean bundleRelease -PAPP_VERSION_CODE=46 -PAPP_VERSION_NAME=1.0.8",
+			"isBackground": false,
+			"problemMatcher": [
+				"$gcc"
+			],
+			"group": "build"
 		}
 	]
 }

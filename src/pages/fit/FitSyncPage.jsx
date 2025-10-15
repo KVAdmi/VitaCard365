@@ -28,6 +28,7 @@ import { sessionHub } from '@/fit/sessionHub';
 import KeepAliveAccordion from '../../components/ui/KeepAliveAccordion';
 import BlePanelUnified from '../../components/fit/BlePanelUnified';
 import Layout from '../../components/Layout';
+import VitaCard365Logo from '../../components/Vita365Logo';
 import { useNativeHeartRate } from '@/hooks/useNativeHeartRate';
 
 
@@ -191,32 +192,37 @@ export default function FitSyncPage() {
       <div className="min-h-screen w-full flex justify-center items-start fit-sync-page">
         <div className="w-full max-w-4xl px-2 sm:px-6 py-6 sm:py-10">
           <div data-flat="true" className="rounded-2xl border border-teal-400/30 bg-white/5 ring-1 ring-teal-300/10 p-2 sm:p-6 space-y-3 sm:space-y-4 no-blur-children">
-            {/* Tarjeta informativa de USO (antes de Running) */}
-            <div className="rounded-2xl border border-cyan-300/30 bg-white/5 p-3 sm:p-4 shadow-[0_0_24px_rgba(0,255,255,0.12)]">
-              <div className="flex items-center justify-between">
-                <div className="text-white font-semibold tracking-wide">USO</div>
-              </div>
-              <div className="mt-2 text-sm text-white/80 space-y-2">
-                <p>
-                  Este panel se conecta exclusivamente a dispositivos de fitness compatibles:
-                  <span className="font-semibold"> monitores de pulso (HRM, servicio 0x180D)</span> y
-                  <span className="font-semibold"> máquinas de gimnasio FTMS (servicio 0x1826)</span>.
-                </p>
-                <ul className="list-disc pl-5 space-y-1">
-                  <li>
-                    <span className="font-semibold">Android:</span> soporta HRM y equipos FTMS por Bluetooth LE. Si ves celulares, TVs u otros en el escaneo,
-                    no son compatibles con este módulo.
-                  </li>
-                  <li>
-                    <span className="font-semibold">iOS:</span> soporta HRM BLE estándar y, además, puede tomar el pulso desde Salud/Apple Watch (si autorizas permisos de Salud).
-                  </li>
-                </ul>
-                <p className="text-white/70">
-                  Activa la opción “Solo fitness” para filtrar el listado y evitar confusiones. Si un dispositivo no expone esos servicios,
-                  no se podrá conectar aquí aunque aparezca en la lista.
-                </p>
-              </div>
+            {/* Logo moderado arriba de la tarjeta informativa */}
+            <div className="flex items-center justify-center" data-probe="fit-sync-logo-v2">
+              <VitaCard365Logo className="h-40 sm:h-48 md:h-56 w-auto object-contain mb-3" />
             </div>
+
+            {/* Tarjeta informativa de USO (colapsable) */}
+            <KeepAliveAccordion title="Uso" defaultOpen={false}>
+              <div className="rounded-2xl border border-cyan-300/30 bg-white/5 p-3 sm:p-4 shadow-[0_0_24px_rgba(0,255,255,0.12)]" data-build-stamp="fit-sync-uso-accordion-20251015-2">
+                <div className="sr-only">build: fit-sync v2 2025-10-15-2</div>
+                <div className="mt-0 text-sm text-white/80 space-y-2">
+                  <p>
+                    Este panel se conecta exclusivamente a dispositivos de fitness compatibles:
+                    <span className="font-semibold"> monitores de pulso (HRM, servicio 0x180D)</span> y
+                    <span className="font-semibold"> máquinas de gimnasio FTMS (servicio 0x1826)</span>.
+                  </p>
+                  <ul className="list-disc pl-5 space-y-1">
+                    <li>
+                      <span className="font-semibold">Android:</span> soporta HRM y equipos FTMS por Bluetooth LE. Si ves celulares, TVs u otros en el escaneo,
+                      no son compatibles con este módulo.
+                    </li>
+                    <li>
+                      <span className="font-semibold">iOS:</span> soporta HRM BLE estándar y, además, puede tomar el pulso desde Salud/Apple Watch (si autorizas permisos de Salud).
+                    </li>
+                  </ul>
+                  <p className="text-white/70">
+                    Activa la opción “Solo fitness” para filtrar el listado y evitar confusiones. Si un dispositivo no expone esos servicios,
+                    no se podrá conectar aquí aunque aparezca en la lista.
+                  </p>
+                </div>
+              </div>
+            </KeepAliveAccordion>
             <KeepAliveAccordion title="Running — Ruta libre" defaultOpen>
               <div data-flat="true" className="relative rounded-xl border border-cyan-300/40 bg-white/5 p-2 sm:p-3 overflow-hidden">
                 <div className="mt-3 grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">

@@ -8,12 +8,14 @@ const ProtectedRoute = ({ children }) => {
   const location = useLocation();
   const [checkingAccess, setCheckingAccess] = useState(true);
   const [accessActive, setAccessActive] = useState(true);
+  // Iniciar en "asentando autenticación" si aún no hay usuario, para evitar rebote inmediato a /login
+  const [settlingAuth, setSettlingAuth] = useState(() => !user);
 
   // Rutas permitidas cuando el acceso no está activo (páginas de pago)
   const allowedWhenInactive = ['/mi-plan', '/payment-gateway', '/paymentgateway', '/recibo'];
   const isOnAllowedPaymentRoute = allowedWhenInactive.some((p) => location.pathname.startsWith(p));
 
-  if (loading) {
+  if (loading || settlingAuth) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-vita-orange"></div>
@@ -21,8 +23,8 @@ const ProtectedRoute = ({ children }) => {
     );
   }
 
-  // Si no hay usuario autenticado, redirigir a login
-  if (!user) {
+  // Si no hay usuario autenticado, sólo redirigir si ya no estamos en período de gracia
+  if (!user && !settlingAuth) {
     return <Navigate to="/login" />;
   }
 
@@ -56,6 +58,29 @@ const ProtectedRoute = ({ children }) => {
       isMounted = false;
     };
   }, [user?.id]);
+
+  // Período de gracia: si llegamos aquí sin usuario (posible deep link), esperar brevemente
+  useEffect(() => {
+    let unsub;
+    let active = true;
+    if (!user && !loading) {
+      setSettlingAuth(true);
+      // Suscribirse temporalmente a cambios de sesión para capturar setSession rápido
+      const sub = supabase.auth.onAuthStateChange((_event, session) => {
+        if (!active) return;
+        if (session?.user) {
+          setSettlingAuth(false);
+        }
+      });
+      unsub = () => sub?.data?.subscription?.unsubscribe?.();
+      // Timeout de 1500ms: si no llegó sesión, seguimos flujo normal
+      const t = setTimeout(() => { if (active) setSettlingAuth(false); }, 1500);
+      return () => { active = false; clearTimeout(t); unsub?.(); };
+    } else {
+      setSettlingAuth(false);
+    }
+    return () => { try { unsub?.(); } catch {} };
+  }, [user, loading]);
 
   if (checkingAccess) {
     return (

@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "target": "ES2020",
-    "module": "ES2020",
+    "module": "ESNext",
     "lib": ["DOM", "DOM.Iterable", "ES2020"],
     "allowJs": true,
     "skipLibCheck": true,
@@ -9,7 +9,7 @@
     "allowSyntheticDefaultImports": true,
     "strict": true,
     "forceConsistentCasingInFileNames": true,
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true,
@@ -17,9 +17,8 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"]
-    }
-    ,
-  // "types": ["vite/client"]
+    },
+    "types": ["vite/client", "node"]
   },
   "include": ["src", "src/types", "vite-env.d.ts"],
   "exclude": ["node_modules", "dist"]

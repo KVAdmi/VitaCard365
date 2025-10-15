@@ -12,14 +12,18 @@ const isAndroid = Capacitor.getPlatform && Capacitor.getPlatform() === 'android'
 const protocol = (typeof window !== 'undefined' && window.location?.protocol) || '';
 const isNativeEnv = (Capacitor?.isNativePlatform?.() === true) || protocol === 'capacitor:' || protocol === 'file:';
 
-// En nativo: desregistrar cualquier Service Worker previo y limpiar CacheStorage
+// En nativo: limpiar CacheStorage siempre y desregistrar SW si existe soporte
 try {
-  if (typeof window !== 'undefined' && window.Capacitor && 'serviceWorker' in navigator) {
-    navigator.serviceWorker.getRegistrations().then((regs) => {
-      const count = regs?.length || 0;
-      regs.forEach((r) => r.unregister().catch(() => {}));
-      try { console.log('[Init] SW unregistered count=', count); } catch {}
-    }).catch(() => {});
+  if (typeof window !== 'undefined' && isNativeEnv) {
+    // Intentar desregistrar SW si el WebView lo soporta
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then((regs) => {
+        const count = regs?.length || 0;
+        regs.forEach((r) => r.unregister().catch(() => {}));
+        try { console.log('[Init] SW unregistered count=', count); } catch {}
+      }).catch(() => {});
+    }
+    // Limpiar CacheStorage en nativo, independientemente de SW
     if (typeof caches !== 'undefined' && caches.keys) {
       caches.keys().then((keys) => {
         Promise.all(keys.map((k) => caches.delete(k))).then(()=>{
@@ -27,6 +31,10 @@ try {
         });
       }).catch(() => {});
     }
+    // Best-effort: limpiar localStorage clave de versión para forzar recarga si se usa
+    try {
+      localStorage.removeItem('app_build_version');
+    } catch {}
   }
 } catch {}
 
