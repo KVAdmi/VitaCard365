@@ -1,0 +1,12 @@
+{
+  "expo": {
+    "ios": {
+      "bundleIdentifier": "com.vitacard365.app"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "63c11a35-f1c5-461c-bdc3-9d0f0043df03"
+      }
+    }
+  }
+}
