@@ -2,10 +2,13 @@
   "cli": { "version": ">= 10.0.0" },
   "build": {
     "production": {
-      "ios": { "image": "latest", "autoIncrement": "buildNumber" }
+      "ios": {
+        "image": "latest",
+        "autoIncrement": "buildNumber",
+        "scheme": "App",
+        "buildConfiguration": "Release"
+      }
     }
   },
-  "submit": {
-    "production": { "ios": { "ascAppId": null } }
-  }
+  "submit": { "production": { "ios": {} } }
 }
