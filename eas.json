@@ -1,13 +1,15 @@
 {
-  "cli": { "version": ">= 10.0.0" },
+  "cli": { "version": ">= 9.0.0" },
   "build": {
     "production": {
       "ios": {
         "image": "latest",
         "autoIncrement": "buildNumber",
-        "buildConfiguration": "Release"
+        "buildConfiguration": "Release",
+        "scheme": "App",
+        "bundleIdentifier": "com.vitacard365.app"
       }
     }
   },
-  "submit": { "production": { "ios": {} } }
+  "submit": { "production": { "ios": { "appleId": "contacto@kvcontrol.systems" } } }
 }
