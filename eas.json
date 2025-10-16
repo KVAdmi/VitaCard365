@@ -6,8 +6,7 @@
         "image": "latest",
         "autoIncrement": "buildNumber",
         "buildConfiguration": "Release",
-        "scheme": "App",
-        "bundleIdentifier": "com.vitacard365.app"
+        "scheme": "App"
       }
     }
   },
