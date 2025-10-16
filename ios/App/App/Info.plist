@@ -36,6 +36,10 @@
 	<string>Motion data is used to calculate fitness metrics.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Photos are used to update user profile.</string>
+	<key>NSHealthShareUsageDescription</key>
+	<string>We use Health data you allow to display and track your wellness metrics.</string>
+	<key>NSHealthUpdateUsageDescription</key>
+	<string>We write Health data only with your permission to keep your metrics up to date.</string>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>

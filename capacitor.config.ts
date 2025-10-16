@@ -2,8 +2,8 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.vitacard.app',
-  appName: 'VitaCard 365',   // nombre EXACTO
+  appId: 'com.vitacard365.app',
+  appName: 'VitaCard365',
   webDir: 'dist',
   server: { androidScheme: 'https' },
 };

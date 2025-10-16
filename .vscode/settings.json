@@ -1,0 +1,7 @@
+{
+  "java.import.gradle.enabled": false,
+  "java.project.importOnFirstTimeStartup": "disabled",
+  "gradle.enabled": false,
+  "search.exclude": { "android/**": true },
+  "files.watcherExclude": { "**/android/**": true }
+}
