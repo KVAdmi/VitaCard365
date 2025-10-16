@@ -1,20 +1,11 @@
-
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd"> 
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-    <key>GMSApiKey</key>
-    <string>AIzaSyBg5PGOY4R91A2u9BW_eu6021p7gNJR7pk</string>
-    <key>NSLocationWhenInUseUsageDescription</key>
-    <string>Usamos tu ubicación para registrar tus recorridos y centrar el mapa.</string>
-    <key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-    <string>Usamos tu ubicación para registrar tus recorridos y centrar el mapa.</string>
-	<key>NSBluetoothAlwaysUsageDescription</key>
-	<string>VitaCard usa Bluetooth para conectar aparatos de gimnasio y registrar tu entrenamiento.</string>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
 	<key>CFBundleDisplayName</key>
-        <string>VitaCard365</string>
+	<string>VitaCard365</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -26,11 +17,25 @@
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
-	<string>$(MARKETING_VERSION)</string>
+	<string>1.0.10</string>
 	<key>CFBundleVersion</key>
-	<string>$(CURRENT_PROJECT_VERSION)</string>
+	<string>48</string>
+	<key>GMSApiKey</key>
+	<string>AIzaSyBg5PGOY4R91A2u9BW_eu6021p7gNJR7pk</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSBluetoothAlwaysUsageDescription</key>
+	<string>Bluetooth is used to connect to wellness devices.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Camera is used for profile and scanning features.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>Usamos tu ubicación para registrar tus recorridos y centrar el mapa.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Usamos tu ubicación para registrar tus recorridos y centrar el mapa.</string>
+	<key>NSMotionUsageDescription</key>
+	<string>Motion data is used to calculate fitness metrics.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Photos are used to update user profile.</string>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>
