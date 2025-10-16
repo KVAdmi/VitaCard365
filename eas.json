@@ -6,7 +6,7 @@
         "image": "latest",
         "autoIncrement": "buildNumber",
         "buildConfiguration": "Release",
-        "scheme": "App"
+        "scheme": "app"
       }
     }
   },
