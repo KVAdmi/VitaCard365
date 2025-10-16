@@ -61,7 +61,26 @@ Seguridad
 Seguridad
 - Los datos de tus rutinas son privados y se guardan en tu cuenta.
 
-## 7) Perfil > Wallet segura
+## 7) Coberturas
+- Entra a "Coberturas" para ver tus beneficios por categoría: Médica, Legal, Vial, Mascotas, Fitness, Hogar y Funeraria.
+- Toca una categoría para ver sus servicios con: nombre, valor, y cuántos eventos te quedan (o si es ilimitado).
+- Botón “Usar” marca el inicio del servicio y abre el número de atención (tel: 55 9337 3553). Tras la llamada, confirma si usaste el servicio para registrar tu uso.
+- Puedes abrir Coberturas con una categoría preseleccionada usando enlaces como: /coberturas?cat=fitness.
+
+Seguridad
+- El registro de uso es personal y te ayuda a llevar control; el registro oficial lo mantiene VitaCard 365.
+- No se solicitan datos sensibles en esta pantalla.
+
+## 8) Agenda
+- Agenda recordatorios propios: medicamentos, citas médicas u “otro”.
+- Calendario mensual: cambia de mes con las flechas; toca un día para crear un evento.
+- Completa: Título, Descripción (opcional), Fecha, Hora, si quieres Notificar y si se Repite (diario/semanal/mensual/no repetir).
+- Guarda. Verás tus eventos en “Próximos 30 días”. Puedes Editar o Eliminar; si habilitaste Notificar, se programa el aviso.
+
+Seguridad
+- Tus eventos se asocian a tu cuenta. Las notificaciones no exponen información sensible.
+
+## 9) Perfil > Wallet segura
 - Guarda datos personales útiles: pólizas, tarjetas (solo últimos 4), contactos de emergencia, documentos y notas.
 - Primero desbloquea con tu contraseña; luego podrás agregar, editar o borrar.
 - Toca “Guardar todo” para cifrar y guardar localmente en tu teléfono.
@@ -70,18 +89,18 @@ Seguridad
 - Todo en Wallet se cifra en tu dispositivo (AES-GCM). No se sube a servidores.
 - Si cambias la contraseña de acceso y vuelves a desbloquear, sigues controlando tu información.
 
-## 8) Solución de problemas
+## 10) Solución de problemas
 - Pagaste y aún ves paywall: cierra sesión y vuelve a entrar para refrescar tu estado.
 - No llega el correo de confirmación: revisa Spam/Promociones o reenvía desde “Olvidé mi contraseña”.
 - La pasarela no carga: verifica tu conexión y reintenta.
 - No ves cambios recientes: cierra y vuelve a abrir la app.
 
-## 9) Preguntas frecuentes
+## 11) Preguntas frecuentes
 - ¿Puedo usar distintas tarjetas? Sí, cualquier método aceptado por Mercado Pago.
 - ¿Puedo usar sin plan? Algunas secciones son libres; para beneficios completos necesitas un plan activo.
 - ¿Puedo borrar mi cuenta? Sí, solicítalo desde Perfil o por soporte.
 
-## 10) Soporte
+## 12) Soporte
 Escríbenos a contacto@vitacard365.com con tu correo de acceso y una breve descripción del problema.
 
 Gracias por usar VitaCard 365.
