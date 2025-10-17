@@ -1,12 +1,12 @@
 {
-  "cli": { "version": ">= 9.0.0" },
+  "cli": { "version": ">= 9.0.0", "appVersionSource": "remote" },
   "build": {
     "production": {
       "ios": {
         "image": "latest",
         "autoIncrement": "buildNumber",
         "buildConfiguration": "Release",
-        "scheme": "app"
+        "scheme": "App"
       }
     }
   },
