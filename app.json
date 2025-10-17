@@ -1,5 +1,7 @@
 {
   "expo": {
+    "owner": "kodigovivo",
+    "scheme": "App",
     "ios": {
       "bundleIdentifier": "com.vitacard365.app"
     },
