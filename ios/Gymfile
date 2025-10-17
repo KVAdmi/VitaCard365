@@ -1,0 +1,19 @@
+suppress_xcode_output(true)
+clean(true)
+
+# Workspace de Capacitor ubicado en ios/App/App.xcworkspace
+workspace("App/App.xcworkspace")
+
+# Scheme exacto (mayúscula A)
+scheme("App")
+
+# Export para App Store (EAS sobreescribe credenciales y keychain)
+export_options({
+  method: "app-store"
+})
+
+# Ruta/nombre de salida por defecto que EAS espera
+output_directory("./build")
+output_name("App")
+
+disable_xcpretty(true)
