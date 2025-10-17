@@ -1,0 +1,8 @@
+{
+  "iosPath": "ios",
+  "native": {
+    "ios": {
+      "path": "ios"
+    }
+  }
+}
