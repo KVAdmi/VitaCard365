@@ -1,13 +1,15 @@
-name: production-ios
-steps:
-  - name: Install dependencies
-    run: |
-      if [ -f yarn.lock ]; then yarn install --frozen-lockfile; else npm ci; fi
-  - name: CocoaPods install
-    run: |
-      cd ios
-      pod install --repo-update
-  - name: Build with fastlane gym (workspace+scheme)
-    run: |
-      cd ios
-      fastlane gym --workspace "VitaCard365.xcworkspace" --scheme "App" --configuration Release --export_method app-store --output_directory "./build" --output_name "App"
+build:
+  name: production-ios
+  ios:
+    steps:
+      - name: Install dependencies
+        run: |
+          if [ -f yarn.lock ]; then yarn install --frozen-lockfile; else npm ci; fi
+      - name: CocoaPods install
+        run: |
+          cd ios
+          pod install --repo-update
+      - name: Build with fastlane gym (workspace+scheme)
+        run: |
+          cd ios
+          fastlane gym --workspace "VitaCard365.xcworkspace" --scheme "App" --configuration Release --export_method app-store --output_directory "./build" --output_name "App"
