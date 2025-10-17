@@ -3,8 +3,10 @@ dist/
 build/
 supabase/.temp/
 
-# Ignore Expo EAS custom build configs
-.eas/
+# Ignore Expo EAS custom build configs by default, allow only production-ios.yml
+.eas/*
+!.eas/build/
+!.eas/build/production-ios.yml
 
 .env
 .env.local

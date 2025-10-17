@@ -1,0 +1,17 @@
+build:
+  name: production-ios
+  steps:
+    - uses: eas/checkout@v1
+    - run:
+        name: Install JS dependencies
+        command: npm ci
+    - run:
+        name: CocoaPods install
+        command: |
+          cd ios
+          pod install --repo-update
+    - run:
+        name: Build iOS with fastlane gym
+        command: |
+          cd ios
+          fastlane gym

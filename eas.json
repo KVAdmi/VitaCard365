@@ -6,7 +6,9 @@
         "image": "latest",
         "scheme": "App",
         "buildConfiguration": "Release",
-        "autoIncrement": "buildNumber"
+        "autoIncrement": "buildNumber",
+        "config": "production-ios.yml",
+        "applicationArchivePath": "ios/build/*.ipa"
       }
     }
   },
