@@ -8,6 +8,7 @@ supabase/.temp/
 !.eas/build/
 !.eas/build/production-ios.yml
 
+
 .env
 .env.local
 .env.*.local
