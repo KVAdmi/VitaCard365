@@ -4,8 +4,6 @@
     "production": {
       "ios": {
         "image": "latest",
-        "scheme": "App",
-        "buildConfiguration": "Release",
         "autoIncrement": "buildNumber",
         "config": "production-ios.yml",
         "applicationArchivePath": "ios/build/*.ipa"
