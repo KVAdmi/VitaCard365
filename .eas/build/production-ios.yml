@@ -3,7 +3,21 @@ build:
   steps:
     - run:
         name: Install JS dependencies
-        command: npm ci
+        command: |
+          set -e
+          echo "Node:" $(node -v)
+          echo "NPM:" $(npm -v)
+          if [ -f package-lock.json ]; then
+            npm ci || npm install
+          else
+            npm install
+          fi
+    - run:
+        name: Build web bundle
+        command: npm run build
+    - run:
+        name: Capacitor sync iOS
+        command: npx cap sync ios
     - run:
         name: CocoaPods install
         command: |
