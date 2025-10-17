@@ -1,4 +1,4 @@
-node_modules/
+VitaCard365/node_modules/
 dist/
 build/
 supabase/.temp/
