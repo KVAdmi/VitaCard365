@@ -4,13 +4,13 @@
     "production": {
       "ios": {
         "image": "latest",
-        "autoIncrement": "buildNumber",
-        "buildConfiguration": "Release",
         "scheme": "App",
-        "config": "production-ios.yml",
-        "applicationArchivePath": "ios/build/*.ipa"
+        "buildConfiguration": "Release",
+        "autoIncrement": "buildNumber"
       }
     }
   },
-  "submit": { "production": { "ios": { "appleId": "contacto@kvcontrol.systems" } } }
+  "submit": {
+    "production": { "ios": {} }
+  }
 }
