@@ -13,4 +13,4 @@ build:
     - name: Build with fastlane gym (workspace+scheme)
       run: |
         cd ios
-        fastlane gym --workspace "VitaCard365.xcworkspac e" --scheme "App" --configuration Release --export_method app-store --output_directory "./build" --output_name "App"
+        fastlane gym --workspace "VitaCard365.xcworkspace" --scheme "App" --configuration Release --export_method app-store --output_directory "./build" --output_name "App"
