@@ -1,8 +1,8 @@
 suppress_xcode_output(true)
 clean(true)
 
-# Workspace de Capacitor ubicado en ios/App/App.xcworkspace
-workspace("App/App.xcworkspace")
+# Workspace raiz que referencia App/App.xcodeproj (evita autodetección fallida)
+workspace("VitaCard365.xcworkspace")
 
 # Scheme exacto (mayúscula A)
 scheme("App")
