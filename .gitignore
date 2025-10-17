@@ -3,6 +3,9 @@ dist/
 build/
 supabase/.temp/
 
+# Ignore Expo EAS custom build configs
+.eas/
+
 .env
 .env.local
 .env.*.local
