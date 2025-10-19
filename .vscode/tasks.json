@@ -65,10 +65,1441 @@
 			"group": "build"
 		},
 		{
+			"label": "npm run build",
+			"type": "shell",
+			"command": "npm run build",
+			"isBackground": false,
+			"problemMatcher": [
+				"$tsc",
+				"$eslint-stylish"
+			],
+			"group": "build"
+		},
+		{
+			"label": "build and copy after maps guard",
+			"type": "shell",
+			"command": "npm run build",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
 			"label": "npm run build (quick)",
 			"type": "shell",
 			"command": "npm run build",
 			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "npm run build (quick)",
+			"type": "shell",
+			"command": "npm run build",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "npm run build (quick)",
+			"type": "shell",
+			"command": "npm run build",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "npm run build (quick)",
+			"type": "shell",
+			"command": "npm run build",
+			"isBackground": false,
+			"problemMatcher": [
+				"$tsc",
+				"$eslint-stylish"
+			],
+			"group": "build"
+		},
+		{
+			"label": "npm run build (quick)",
+			"type": "shell",
+			"command": "npm run build",
+			"isBackground": false,
+			"problemMatcher": [
+				"$tsc",
+				"$eslint-stylish"
+			],
+			"group": "build"
+		},
+		{
+			"label": "cap copy android (manual)",
+			"type": "shell",
+			"command": "npx cap copy android",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "cap sync android (full)",
+			"type": "shell",
+			"command": "npx cap sync android",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "npm run build (quick)",
+			"type": "shell",
+			"command": "npm run build",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "npm run build",
+			"type": "shell",
+			"command": "npm run build",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "npx cap copy android (release)",
+			"type": "shell",
+			"command": "npx cap copy android",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "npx cap copy android",
+			"type": "shell",
+			"command": "npx cap copy android",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "gradlew.bat assembleDebug",
+			"type": "shell",
+			"command": "cd android; .\\gradlew.bat assembleDebug",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "npm run build (quick)",
+			"type": "shell",
+			"command": "npm run build",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "npm run build",
+			"type": "shell",
+			"command": "npm run build",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "npm run build",
+			"type": "shell",
+			"command": "npm run build",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "npm run build",
+			"type": "shell",
+			"command": "npm run build",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "npm run build (quick)",
+			"type": "shell",
+			"command": "npm run build",
+			"isBackground": false,
+			"problemMatcher": [
+				"$tsc"
+			],
+			"group": "build"
+		},
+		{
+			"label": "npm run build (quick)",
+			"type": "shell",
+			"command": "npm run build",
+			"isBackground": false,
+			"problemMatcher": [
+				"$eslint-stylish"
+			],
+			"group": "build"
+		},
+		{
+			"label": "cap copy android",
+			"type": "shell",
+			"command": "npx cap copy android",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "gradlew.bat assembleDebug",
+			"type": "shell",
+			"command": "cd android; .\\gradlew.bat assembleDebug",
+			"isBackground": false,
+			"problemMatcher": [
+				"$gcc"
+			],
+			"group": "build"
+		},
+		{
+			"label": "npm run build (release)",
+			"type": "shell",
+			"command": "npm run build",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "npx cap copy android (release)",
+			"type": "shell",
+			"command": "npx cap copy android",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "gradlew.bat assembleDebug",
+			"type": "shell",
+			"command": "cd android; .\\gradlew.bat assembleDebug",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "npm run build",
+			"type": "shell",
+			"command": "npm run build",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "cap copy android",
+			"type": "shell",
+			"command": "npx cap copy android",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "gradlew.bat assembleDebug",
+			"type": "shell",
+			"command": "cd android; .\\gradlew.bat assembleDebug",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "npm run build (quick)",
+			"type": "shell",
+			"command": "npm run build",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "cap copy android",
+			"type": "shell",
+			"command": "npx cap copy android",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "gradlew.bat assembleDebug",
+			"type": "shell",
+			"command": "cd android; .\\gradlew.bat assembleDebug",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "Clean web dist",
+			"type": "shell",
+			"command": "powershell -NoProfile -Command \"if (Test-Path dist) { attrib -r -h -s -force dist -Recurse -ErrorAction SilentlyContinue; Remove-Item -Recurse -Force dist }\"",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "npm run build (clean)",
+			"type": "shell",
+			"command": "npm run build",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "npm run build",
+			"type": "shell",
+			"command": "npm run build",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "build:web",
+			"type": "shell",
+			"command": "npm run build",
+			"isBackground": false,
+			"problemMatcher": [
+				"$eslint-stylish"
+			],
+			"group": "build"
+		},
+		{
+			"label": "cap copy android",
+			"type": "shell",
+			"command": "npx cap copy android",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "gradle clean assembleDebug",
+			"type": "shell",
+			"command": "cd android; .\\gradlew.bat clean assembleDebug",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "gradlew.bat clean assembleDebug",
+			"type": "shell",
+			"command": "cd android; .\\gradlew.bat clean assembleDebug",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "assets: regenerate",
+			"type": "shell",
+			"command": "npx @capacitor/assets generate",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "cap copy android (after assets)",
+			"type": "shell",
+			"command": "npx cap copy android",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "npx cap copy android",
+			"type": "shell",
+			"command": "npx cap copy android",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "gradlew.bat assembleDebug",
+			"type": "shell",
+			"command": "cd android; .\\gradlew.bat assembleDebug",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "npx cap copy android (splash layer)",
+			"type": "shell",
+			"command": "npx cap copy android",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "npx cap copy android",
+			"type": "shell",
+			"command": "npx cap copy android",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "gradlew.bat assembleDebug",
+			"type": "shell",
+			"command": "cd android; .\\gradlew.bat assembleDebug",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "gradlew.bat assembleDebug (splash)",
+			"type": "shell",
+			"command": "cd android; .\\gradlew.bat assembleDebug",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "gradlew.bat assembleDebug",
+			"type": "shell",
+			"command": "cd android; .\\gradlew.bat assembleDebug",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "npm run build (quick)",
+			"type": "shell",
+			"command": "npm run build",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "cap copy android",
+			"type": "shell",
+			"command": "npx cap copy android",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "gradlew.bat assembleDebug",
+			"type": "shell",
+			"command": "cd android; .\\gradlew.bat assembleDebug",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "cap copy android",
+			"type": "shell",
+			"command": "npx cap copy android",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "gradlew.bat assembleDebug",
+			"type": "shell",
+			"command": "cd android; .\\gradlew.bat assembleDebug",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "npm run build",
+			"type": "shell",
+			"command": "npm run build",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "cap copy android",
+			"type": "shell",
+			"command": "npx cap copy android",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "gradlew.bat assembleDebug",
+			"type": "shell",
+			"command": "cd android; .\\gradlew.bat assembleDebug",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "gradlew.bat assembleDebug",
+			"type": "shell",
+			"command": "cd android; .\\gradlew.bat assembleDebug",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "gradle clean",
+			"type": "shell",
+			"command": "cd android; .\\gradlew.bat clean",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "gradlew.bat assembleDebug",
+			"type": "shell",
+			"command": "cd android; .\\gradlew.bat assembleDebug",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "gradlew.bat assembleDebug",
+			"type": "shell",
+			"command": "cd android; .\\gradlew.bat assembleDebug",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "npm run build (quick)",
+			"type": "shell",
+			"command": "npm run build",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "npm run build (quick)",
+			"type": "shell",
+			"command": "npm run build",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "assets: generate fresh",
+			"type": "shell",
+			"command": "npx @capacitor/assets generate",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "npm run build (quick)",
+			"type": "shell",
+			"command": "npm run build",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "npm run build (quick)",
+			"type": "shell",
+			"command": "npm run build",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "Clean web dist",
+			"type": "shell",
+			"command": "powershell -NoProfile -Command \"if (Test-Path dist) { attrib -r -h -s -force dist -Recurse -ErrorAction SilentlyContinue; Remove-Item -Recurse -Force dist }\"",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "npm run build (clean)",
+			"type": "shell",
+			"command": "npm run build",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "cap copy android",
+			"type": "shell",
+			"command": "npx cap copy android",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "gradle clean assembleDebug",
+			"type": "shell",
+			"command": "cd android; .\\gradlew.bat clean assembleDebug",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "build:web",
+			"type": "shell",
+			"command": "npm run build",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "npx cap copy android",
+			"type": "shell",
+			"command": "npx cap copy android",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "build:web",
+			"type": "shell",
+			"command": "npm run build",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "cap copy android",
+			"type": "shell",
+			"command": "npx cap copy android",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "build:web",
+			"type": "shell",
+			"command": "npm run build",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "cap copy android",
+			"type": "shell",
+			"command": "npx cap copy android",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "gradlew.bat clean bundleRelease (targetSdk 35)",
+			"type": "shell",
+			"command": "cd android; .\\gradlew.bat clean bundleRelease",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "build:web (pre-apk)",
+			"type": "shell",
+			"command": "npm run build",
+			"isBackground": false,
+			"problemMatcher": [
+				"$eslint-stylish"
+			],
+			"group": "build"
+		},
+		{
+			"label": "build:web",
+			"type": "shell",
+			"command": "npm run build",
+			"args": [],
+			"isBackground": false,
+			"problemMatcher": [
+				"$eslint-stylish"
+			],
+			"group": "build"
+		},
+		{
+			"label": "build:web (force)",
+			"type": "shell",
+			"command": "npm run build",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "build:web (force)",
+			"type": "shell",
+			"command": "npm run build",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "build:web (force)",
+			"type": "shell",
+			"command": "npm run build",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "build:web (force)",
+			"type": "shell",
+			"command": "npm run build",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "build:web (force)",
+			"type": "shell",
+			"command": "npm run build",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "gradlew.bat assembleDebug (run)",
+			"type": "shell",
+			"command": "cd android; .\\gradlew.bat assembleDebug",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "gradlew.bat clean assembleDebug (fresh)",
+			"type": "shell",
+			"command": "cd android; .\\gradlew.bat --stop; .\\gradlew.bat clean assembleDebug",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "build:web (force)",
+			"type": "shell",
+			"command": "npm run build",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "cap copy android (run)",
+			"type": "shell",
+			"command": "npx cap copy android",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "gradle clean assembleDebug (run)",
+			"type": "shell",
+			"command": "cd android; .\\gradlew.bat --stop; .\\gradlew.bat clean assembleDebug",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "Clean web dist",
+			"type": "shell",
+			"command": "powershell -NoProfile -Command \"if (Test-Path dist) { attrib -r -h -s -force dist -Recurse -ErrorAction SilentlyContinue; Remove-Item -Recurse -Force dist }\"",
+			"group": "build"
+		},
+		{
+			"label": "cap copy android (adhoc)",
+			"type": "shell",
+			"command": "npx cap copy android",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "gradlew.bat clean bundleRelease (adhoc)",
+			"type": "shell",
+			"command": "cd android; .\\gradlew.bat clean bundleRelease",
+			"isBackground": false,
+			"problemMatcher": [
+				"$gradle"
+			],
+			"group": "build"
+		},
+		{
+			"label": "Clean web dist (adhoc)",
+			"type": "shell",
+			"command": "powershell -NoProfile -Command \"if (Test-Path dist) { attrib -r -h -s -force dist -Recurse -ErrorAction SilentlyContinue; Remove-Item -Recurse -Force dist }\"",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "build:web (adhoc)",
+			"type": "shell",
+			"command": "npm run build",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "cap copy android (adhoc re)",
+			"type": "shell",
+			"command": "npx cap copy android",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "gradlew.bat assembleDebug (adhoc re)",
+			"type": "shell",
+			"command": "cd android; .\\gradlew.bat assembleDebug",
+			"isBackground": false,
+			"problemMatcher": [
+				"$gradle"
+			],
+			"group": "build"
+		},
+		{
+			"label": "Clean web dist (on-demand)",
+			"type": "shell",
+			"command": "powershell -NoProfile -Command \"if (Test-Path dist) { attrib -r -h -s -force dist -Recurse -ErrorAction SilentlyContinue; Remove-Item -Recurse -Force dist }\"",
+			"isBackground": false,
+			"problemMatcher": [
+				"$eslint-stylish"
+			],
+			"group": "build"
+		},
+		{
+			"label": "build:web (force now)",
+			"type": "shell",
+			"command": "npm run build",
+			"isBackground": false,
+			"problemMatcher": [
+				"$eslint-stylish"
+			],
+			"group": "build"
+		},
+		{
+			"label": "npx cap copy android (now)",
+			"type": "shell",
+			"command": "npx cap copy android",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "gradle assembleDebug (now)",
+			"type": "shell",
+			"command": "cd android; .\\gradlew.bat assembleDebug",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "assembleDebug (install)",
+			"type": "shell",
+			"command": "cd android; .\\gradlew.bat assembleDebug",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "gradlew.bat assembleDebug (adhoc)",
+			"type": "shell",
+			"command": "cd android; .\\gradlew.bat assembleDebug",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "clean: web dist (force)",
+			"type": "shell",
+			"command": "powershell -NoProfile -Command \"if (Test-Path dist) { attrib -r -h -s -force dist -Recurse -ErrorAction SilentlyContinue; Remove-Item -Recurse -Force dist }\"",
+			"isBackground": false,
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "build:web (fresh)",
+			"type": "shell",
+			"command": "npm run build",
+			"isBackground": false,
+			"problemMatcher": [
+				"$eslint-stylish"
+			],
+			"group": "build"
+		},
+		{
+			"label": "cap: copy android (fresh)",
+			"type": "shell",
+			"command": "npx cap copy android",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "gradle: assembleDebug (fresh)",
+			"type": "shell",
+			"command": "cd android; .\\gradlew.bat assembleDebug",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "build:web (post-sleep-removal)",
+			"type": "shell",
+			"command": "npm run build",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "cap copy android (apply removal)",
+			"type": "shell",
+			"command": "npx cap copy android",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "gradle: assembleDebug (post-removal)",
+			"type": "shell",
+			"command": "cd android; .\\gradlew.bat assembleDebug",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "build:web (final)",
+			"type": "shell",
+			"command": "npm run build",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "cap copy android (final)",
+			"type": "shell",
+			"command": "npx cap copy android",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "gradlew.bat clean bundleRelease (final)",
+			"type": "shell",
+			"command": "cd android; .\\gradlew.bat clean bundleRelease",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "build:web (running-fix)",
+			"type": "shell",
+			"command": "npm run build",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "cap copy android (running-fix)",
+			"type": "shell",
+			"command": "npx cap copy android",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "gradlew.bat assembleDebug (validate resource fix)",
+			"type": "shell",
+			"command": "cd android; .\\gradlew.bat assembleDebug",
+			"isBackground": false,
+			"problemMatcher": [
+				"$gcc"
+			],
+			"group": "build"
+		},
+		{
+			"label": "build:web (verify)",
+			"type": "shell",
+			"command": "npm run build",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "cap copy android (verify)",
+			"type": "shell",
+			"command": "npx cap copy android",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "build:web (reload-gradle)",
+			"type": "shell",
+			"command": "npm run build",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "cap copy android (reload-gradle)",
+			"type": "shell",
+			"command": "npx cap copy android",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "gradlew.bat clean assembleDebug (reload)",
+			"type": "shell",
+			"command": "cd android; .\\gradlew.bat clean assembleDebug",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "gradlew.bat clean assembleDebug (reload 2)",
+			"type": "shell",
+			"command": "cd android; .\\gradlew.bat clean assembleDebug",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "gradle clean assembleDebug (reload 3)",
+			"type": "shell",
+			"command": "cd android; .\\gradlew.bat clean assembleDebug",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "gradle clean assembleDebug (open terminal)",
+			"type": "shell",
+			"command": "cd android; .\\gradlew.bat clean assembleDebug",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "gradlew.bat clean assembleDebug (terminal)",
+			"type": "shell",
+			"command": "cd android; .\\gradlew.bat clean assembleDebug",
+			"isBackground": false,
+			"problemMatcher": [
+				"$gradle"
+			],
+			"group": "build"
+		},
+		{
+			"label": "build:web (verify)",
+			"type": "shell",
+			"command": "npm run build",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "build:web (fresh)",
+			"type": "shell",
+			"command": "npm run build",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "gradlew.bat assembleDebug (run)",
+			"type": "shell",
+			"command": "cd android; .\\gradlew.bat assembleDebug",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "build:web (verify)",
+			"type": "shell",
+			"command": "npm run build",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "cap copy android (verify)",
+			"type": "shell",
+			"command": "npx cap copy android",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "gradlew.bat assembleDebug (validate resource fix)",
+			"type": "shell",
+			"command": "cd android; .\\gradlew.bat assembleDebug",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "build:web (verify)",
+			"type": "shell",
+			"command": "npm run build",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "cap copy android (verify)",
+			"type": "shell",
+			"command": "npx cap copy android",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "npm run build (quick)",
+			"type": "shell",
+			"command": "npm run build",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "gradlew.bat assembleDebug (reload 2)",
+			"type": "shell",
+			"command": "cd android; .\\gradlew.bat clean assembleDebug",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "build:web (verify)",
+			"type": "shell",
+			"command": "npm run build",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "npx cap copy android (now)",
+			"type": "shell",
+			"command": "npx cap copy android",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "gradlew.bat assembleDebug (run)",
+			"type": "shell",
+			"command": "cd android; .\\gradlew.bat assembleDebug",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "Clean web dist (adhoc run)",
+			"type": "shell",
+			"command": "powershell -NoProfile -Command \"if (Test-Path dist) { attrib -r -h -s -force dist -Recurse -ErrorAction SilentlyContinue; Remove-Item -Recurse -Force dist }\"",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "build:web (force now run)",
+			"type": "shell",
+			"command": "npm run build",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "cap copy android (now run)",
+			"type": "shell",
+			"command": "npx cap copy android",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "gradle assembleDebug (now run)",
+			"type": "shell",
+			"command": "cd android; .\\gradlew.bat assembleDebug",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "build:web (force now run 2)",
+			"type": "shell",
+			"command": "npm run build",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "cap copy android (now run 2)",
+			"type": "shell",
+			"command": "npx cap copy android",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "gradle assembleDebug (now run 2)",
+			"type": "shell",
+			"command": "cd android; .\\gradlew.bat assembleDebug",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "Clean dist and build (fresh)",
+			"type": "shell",
+			"command": "powershell -NoProfile -Command \"if (Test-Path dist) { attrib -r -h -s -force dist -Recurse -ErrorAction SilentlyContinue; Remove-Item -Recurse -Force dist }; exit 0\"; npm run build",
+			"isBackground": false,
+			"problemMatcher": [
+				"$eslint-stylish"
+			],
+			"group": "build"
+		},
+		{
+			"label": "cap copy android (fresh)",
+			"type": "shell",
+			"command": "npx cap copy android",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "gradle assembleDebug (fresh)",
+			"type": "shell",
+			"command": "cd android; .\\gradlew.bat --stop; .\\gradlew.bat clean assembleDebug",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "build:web (verify)",
+			"type": "shell",
+			"command": "npm run build",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "cap copy android (verify)",
+			"type": "shell",
+			"command": "npx cap copy android",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "gradle clean assembleDebug (reload 3)",
+			"type": "shell",
+			"command": "cd android; .\\gradlew.bat clean assembleDebug",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "Clean web dist (on-demand)",
+			"type": "shell",
+			"command": "powershell -NoProfile -Command \"if (Test-Path dist) { attrib -r -h -s -force dist -Recurse -ErrorAction SilentlyContinue; Remove-Item -Recurse -Force dist }\""
+		},
+		{
+			"label": "build:web (fresh)",
+			"type": "shell",
+			"command": "npm run build",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "cap copy android (adhoc)",
+			"type": "shell",
+			"command": "npx cap copy android",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "gradlew.bat clean assembleDebug (fresh)",
+			"type": "shell",
+			"command": "cd android; .\\gradlew.bat --stop; .\\gradlew.bat clean assembleDebug",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "build:web (force now internal)",
+			"type": "shell",
+			"command": "npm run build",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "cap copy android (now internal)",
+			"type": "shell",
+			"command": "npx cap copy android",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "gradlew.bat clean bundleRelease (now internal)",
+			"type": "shell",
+			"command": "cd android; .\\gradlew.bat clean bundleRelease",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "Clean web dist (on-demand) (agent)",
+			"type": "shell",
+			"command": "powershell -NoProfile -Command \"if (Test-Path dist) { attrib -r -h -s -force dist -Recurse -ErrorAction SilentlyContinue; Remove-Item -Recurse -Force dist }\"",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "build:web (fresh debug)",
+			"type": "shell",
+			"command": "npm run build",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "cap copy android (fresh debug)",
+			"type": "shell",
+			"command": "npx cap copy android",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "cap copy android (fresh debug 2)",
+			"type": "shell",
+			"command": "npx cap copy android",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "gradlew.bat clean assembleDebug (fresh device)",
+			"type": "shell",
+			"command": "cd android; .\\gradlew.bat --stop; .\\gradlew.bat clean assembleDebug",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "Clean web dist (on-demand)",
+			"type": "shell",
+			"command": "powershell -NoProfile -Command \"if (Test-Path dist) { attrib -r -h -s -force dist -Recurse -ErrorAction SilentlyContinue; Remove-Item -Recurse -Force dist }\"",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "build:web (fresh debug)",
+			"type": "shell",
+			"command": "npm run build",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "cap copy android (fresh debug)",
+			"type": "shell",
+			"command": "npx cap copy android",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "gradlew.bat clean assembleDebug (run)",
+			"type": "shell",
+			"command": "cd android; .\\gradlew.bat --stop; .\\gradlew.bat clean assembleDebug",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "gradle clean assembleDebug (reload 3)",
+			"type": "shell",
+			"command": "cd android; .\\gradlew.bat clean assembleDebug",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "cap copy android (fresh) [generated]",
+			"type": "shell",
+			"command": "npx cap copy android",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "build:web (fresh debug)",
+			"type": "shell",
+			"command": "npm run build",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "cap copy android (fresh debug)",
+			"type": "shell",
+			"command": "npx cap copy android",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "gradlew.bat assembleDebug (fresh device)",
+			"type": "shell",
+			"command": "cd android; .\\gradlew.bat --stop; .\\gradlew.bat clean assembleDebug",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "cap copy android (fresh debug)",
+			"type": "shell",
+			"command": "npx cap copy android",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "gradlew.bat assembleDebug (run)",
+			"type": "shell",
+			"command": "cd android; .\\gradlew.bat assembleDebug",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "build:web (fresh)",
+			"type": "shell",
+			"command": "npm run build",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "npx cap copy android (now)",
+			"type": "shell",
+			"command": "npx cap copy android",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "gradle assembleDebug (now)",
+			"type": "shell",
+			"command": "cd android; .\\gradlew.bat assembleDebug",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "Clean dist and build (fresh)",
+			"type": "shell",
+			"command": "powershell -NoProfile -Command \"if (Test-Path dist) { attrib -r -h -s -force dist -Recurse -ErrorAction SilentlyContinue; Remove-Item -Recurse -Force dist }; exit 0\"; npm run build",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "cap copy android (fresh)",
+			"type": "shell",
+			"command": "npx cap copy android",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "gradlew.bat clean assembleDebug (fresh device)",
+			"type": "shell",
+			"command": "cd android; .\\gradlew.bat --stop; .\\gradlew.bat clean assembleDebug",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "Clean dist and build (fresh)",
+			"type": "shell",
+			"command": "powershell -NoProfile -Command \"if (Test-Path dist) { attrib -r -h -s -force dist -Recurse -ErrorAction SilentlyContinue; Remove-Item -Recurse -Force dist }; exit 0\"; npm run build",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "cap copy android (now)",
+			"type": "shell",
+			"command": "npx cap copy android",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "gradlew.bat clean bundleRelease (now internal)",
+			"type": "shell",
+			"command": "cd android; .\\gradlew.bat clean bundleRelease",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "gradlew.bat clean bundleRelease (v43)",
+			"type": "shell",
+			"command": "cd android; .\\gradlew.bat clean bundleRelease -PAPP_VERSION_CODE=43 -PAPP_VERSION_NAME=1.0.5",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "build:web (verify)",
+			"type": "shell",
+			"command": "npm run build",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "assembleDebug after MainActivity fix",
+			"type": "shell",
+			"command": "cd android; .\\gradlew.bat assembleDebug",
+			"isBackground": false,
+			"problemMatcher": [
+				"$gcc"
+			],
+			"group": "build"
+		},
+		{
+			"label": "build:web (fresh debug)",
+			"type": "shell",
+			"command": "npm run build",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "build:web (fresh debug)",
+			"type": "shell",
+			"command": "npm run build",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "build:web (after CTA restore)",
+			"type": "shell",
+			"command": "npm run build",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "cap copy android (after CTA restore)",
+			"type": "shell",
+			"command": "npx cap copy android",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "Clean dist and build (fresh) [rerun]",
+			"type": "shell",
+			"command": "powershell -NoProfile -Command \"if (Test-Path dist) { attrib -r -h -s -force dist -Recurse -ErrorAction SilentlyContinue; Remove-Item -Recurse -Force dist }; exit 0\"; npm run build",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "Clean dist and build (fresh) [agent]",
+			"type": "shell",
+			"command": "powershell -NoProfile -Command \"if (Test-Path dist) { attrib -r -h -s -force dist -Recurse -ErrorAction SilentlyContinue; Remove-Item -Recurse -Force dist }; exit 0\"; npm run build",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "cap copy android (fresh) [agent]",
+			"type": "shell",
+			"command": "npx cap copy android",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "gradle assembleDebug (fresh) [agent]",
+			"type": "shell",
+			"command": "cd android; .\\gradlew.bat --stop; .\\gradlew.bat clean assembleDebug",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "Clean dist and build (fresh) [agent 2]",
+			"type": "shell",
+			"command": "powershell -NoProfile -Command \"if (Test-Path dist) { attrib -r -h -s -force dist -Recurse -ErrorAction SilentlyContinue; Remove-Item -Recurse -Force dist }; exit 0\"; npm run build",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "Clean dist and build (fresh) [agent 2]",
+			"type": "shell",
+			"command": "powershell -NoProfile -Command \"if (Test-Path dist) { attrib -r -h -s -force dist -Recurse -ErrorAction SilentlyContinue; Remove-Item -Recurse -Force dist }; exit 0\"; npm run build",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "cap copy android (fresh) [agent 2]",
+			"type": "shell",
+			"command": "npx cap copy android",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "gradle assembleDebug (fresh) [agent 2]",
+			"type": "shell",
+			"command": "cd android; .\\gradlew.bat --stop; .\\gradlew.bat clean assembleDebug",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "Clean dist and build (fresh) [agent]",
+			"type": "shell",
+			"command": "powershell -NoProfile -Command \"if (Test-Path dist) { attrib -r -h -s -force dist -Recurse -ErrorAction SilentlyContinue; Remove-Item -Recurse -Force dist }; exit 0\"; npm run build",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "gradle: bundleRelease (v46)",
+			"type": "shell",
+			"command": "cd android; .\\gradlew.bat --stop; .\\gradlew.bat --no-daemon --no-build-cache clean bundleRelease -PAPP_VERSION_CODE=46 -PAPP_VERSION_NAME=1.0.8",
+			"isBackground": false,
+			"problemMatcher": [
+				"$gcc"
+			],
 			"group": "build"
 		}
 	]

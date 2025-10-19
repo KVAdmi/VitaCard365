@@ -6,36 +6,58 @@ import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { useAuth } from '../contexts/AuthContext';
+import { supabase } from '@/lib/supabaseClient';
+import { uploadUserAvatar, uploadAvatarBlob, getAvatarUrlCached, clearAvatarUrlCache } from '@/lib/avatar';
+import AvatarCropper from '../components/AvatarCropper';
 import { useToast } from '../components/ui/use-toast';
 import { LogOut, Save, Copy, Info, Camera, Edit } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const Perfil = () => {
+  const navigate = useNavigate();
   const { user, logout, updateUser } = useAuth();
   const { toast } = useToast();
   
   const [isEditing, setIsEditing] = useState(false);
+  const [loadingAccess, setLoadingAccess] = useState(false);
+  const [membership, setMembership] = useState({
+    acceso_activo: null,
+    membresia: null,
+    periodicidad: null,
+    estado_pago: null,
+    codigo_vita: null,
+  });
   const [profileData, setProfileData] = useState({
     name: '',
+    apellidoPaterno: '',
+    apellidoMaterno: '',
     alias: '',
     email: '',
     phone: '',
     curp: '',
     birthDate: '',
-    avatarUrl: ''
+    avatarUrl: '',
+    bloodType: '',
+    sexo: ''
   });
   const [errors, setErrors] = useState({});
   const fileInputRef = useRef(null);
+  const [cropperSrc, setCropperSrc] = useState(null);
 
   useEffect(() => {
     if (user && user.user_metadata) {
       setProfileData({
         name: user.user_metadata.name || '',
+        apellidoPaterno: user.user_metadata.apellidoPaterno || user.user_metadata.apellido_paterno || '',
+        apellidoMaterno: user.user_metadata.apellidoMaterno || user.user_metadata.apellido_materno || '',
         alias: user.user_metadata.alias || '',
         email: user.email || '',
         phone: user.user_metadata.phone || '',
         curp: user.user_metadata.curp || '',
         birthDate: user.user_metadata.birthDate || '',
-        avatarUrl: user.user_metadata.avatarUrl || ''
+        avatarUrl: user.user_metadata.avatarUrl || '',
+        bloodType: user.user_metadata.bloodType || '',
+        sexo: user.user_metadata.sexo || ''
       });
       if (user.user_metadata.planStatus === 'active' && (!user.user_metadata.phone || !user.user_metadata.curp || !user.user_metadata.birthDate)) {
         setIsEditing(true);
@@ -47,13 +69,87 @@ const Perfil = () => {
     }
   }, [user, toast]);
 
+  // Cargar estado real de membresía desde Supabase (profiles_certificado_v2)
+  const fetchMembership = async () => {
+    try {
+      setLoadingAccess(true);
+      const { data: u } = await supabase.auth.getUser();
+      const uid = u?.user?.id;
+      if (!uid) { setLoadingAccess(false); return; }
+      const { data, error } = await supabase
+        .from('profiles_certificado_v2')
+        .select('acceso_activo,membresia,periodicidad,estado_pago,codigo_vita,avatar_url')
+        .eq('user_id', uid)
+        .limit(1)
+        .single();
+      if (!error && data) setMembership({
+        acceso_activo: data.acceso_activo ?? null,
+        membresia: data.membresia ?? null,
+        periodicidad: data.periodicidad ?? null,
+        estado_pago: data.estado_pago ?? null,
+        codigo_vita: data.codigo_vita ?? null,
+      });
+      // Traer avatar firmado si existe
+      if (!error && data?.avatar_url) {
+        try {
+          const signed = await getAvatarUrlCached(data.avatar_url);
+          if (signed) setProfileData(prev => ({ ...prev, avatarUrl: signed }));
+        } catch {}
+      }
+    } finally {
+      setLoadingAccess(false);
+    }
+  };
+
+  useEffect(()=>{ fetchMembership(); }, []);
+
+  // Cargar datos básicos del perfil desde public.profiles (incluye "sexo")
+  useEffect(() => {
+    (async () => {
+      try {
+        const { data: u } = await supabase.auth.getUser();
+        const uid = u?.user?.id;
+        if (!uid) return;
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('user_id,name,apellido_paterno,apellido_materno,birthdate,phone,sexo,codigo_vita,plan_status')
+          .eq('user_id', uid)
+          .maybeSingle();
+        if (!error && data) {
+          setProfileData(prev => ({
+            ...prev,
+            // Prefiere valores del servidor si existen
+            name: prev.name || data.name || '',
+            apellidoPaterno: prev.apellidoPaterno || data.apellido_paterno || '',
+            apellidoMaterno: prev.apellidoMaterno || data.apellido_materno || '',
+            phone: data.phone ?? prev.phone ?? '',
+            birthDate: (data.birthdate ?? prev.birthDate ?? ''),
+            sexo: (data.sexo ?? prev.sexo ?? ''),
+          }));
+          setMembership(prev => ({
+            ...prev,
+            codigo_vita: prev.codigo_vita ?? data.codigo_vita ?? prev.codigo_vita,
+          }));
+        }
+      } catch {
+        // Silenciar errores de carga inicial
+      }
+    })();
+  }, []);
+
   const validateField = (name, value) => {
     let error = '';
+    if ((name === 'name' || name === 'apellidoPaterno') && isEditing && !value) {
+      error = 'Este campo es obligatorio.';
+    }
     if (name === 'phone' && value && value.length !== 10) {
       error = 'El teléfono debe tener 10 dígitos.';
     }
     if (name === 'curp' && value && value.length !== 18) {
       error = 'El CURP debe tener 18 caracteres.';
+    }
+    if (name === 'sexo' && value && !['Masculino','Femenino'].includes(value)) {
+      error = 'Selecciona Masculino o Femenino.';
     }
     setErrors(prev => ({ ...prev, [name]: error }));
   };
@@ -66,33 +162,41 @@ const Perfil = () => {
     }
   };
 
-  const handleAvatarChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      if (file.size > 1050 * 1050 * 5) { // Approx 5MB limit
-        toast({
-          title: "Imagen muy grande",
-          description: "Por favor, elige una imagen de menos de 5MB.",
-          variant: "destructive",
-        });
-        return;
-      }
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setProfileData(prev => ({ ...prev, avatarUrl: reader.result }));
-        // Guardar en Supabase
-        updateUser({ ...profileData, avatarUrl: reader.result });
-      };
-      reader.readAsDataURL(file);
-    }
+  const handleAvatarChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    // Abrir cropper con la imagen seleccionada
+    const reader = new FileReader();
+    reader.onload = () => setCropperSrc(reader.result);
+    reader.readAsDataURL(file);
   };
 
   const handleSave = async () => {
     let validationErrors = { ...errors };
+    if (!profileData.name) {
+      validationErrors.name = 'Requerido';
+    } else {
+      validationErrors.name = '';
+    }
+    if (!profileData.apellidoPaterno) {
+      validationErrors.apellidoPaterno = 'Requerido';
+    } else {
+      validationErrors.apellidoPaterno = '';
+    }
+    if (!profileData.phone || profileData.phone.length !== 10) {
+      validationErrors.phone = 'El teléfono debe tener 10 dígitos.';
+    } else {
+      validationErrors.phone = '';
+    }
     if (!profileData.bloodType || profileData.bloodType.trim().length < 2) {
       validationErrors.bloodType = 'El tipo de sangre es obligatorio';
     } else {
       validationErrors.bloodType = '';
+    }
+    if (!profileData.sexo || !['Masculino','Femenino'].includes(profileData.sexo)) {
+      validationErrors.sexo = 'Selecciona Masculino o Femenino.';
+    } else {
+      validationErrors.sexo = '';
     }
     const hasErrors = Object.values(validationErrors).some(e => e !== '');
     if (hasErrors) {
@@ -107,7 +211,38 @@ const Perfil = () => {
     setErrors(validationErrors);
 
     try {
+      // 1) Persistir en auth.user_metadata para mantener consistencia en cliente
       await updateUser(profileData);
+      // 2) Persistir en tabla profiles (incluye sexo)
+      try {
+        const { data: u } = await supabase.auth.getUser();
+        const uid = u?.user?.id;
+        if (uid) {
+          const { error: updErr, status } = await supabase.from('profiles').update({
+            phone: profileData.phone || null,
+            curp: profileData.curp || null,
+            birthdate: profileData.birthDate || null,
+            blood_type: profileData.bloodType || null,
+            name: profileData.name || null,
+            apellido_paterno: profileData.apellidoPaterno || null,
+            apellido_materno: profileData.apellidoMaterno || null,
+            alias: profileData.alias || null,
+            sexo: profileData.sexo || null,
+          }).eq('user_id', uid);
+
+          // Si no existe el registro, realizar upsert mínimo para crear sexo (sin tocar otras columnas)
+          if (updErr && status === 406 /* Not Acceptable from PostgREST on update without match */) {
+            await supabase.from('profiles').upsert({
+              user_id: uid,
+              name: profileData.name || null,
+              apellido_paterno: profileData.apellidoPaterno || null,
+              apellido_materno: profileData.apellidoMaterno || null,
+              birthdate: profileData.birthDate || null,
+              sexo: profileData.sexo || null
+            }, { onConflict: 'user_id' });
+          }
+        }
+      } catch {}
       setIsEditing(false);
       toast({
         title: '¡Éxito!',
@@ -133,7 +268,7 @@ const Perfil = () => {
   const Avatar = () => (
     <div className="relative w-24 h-24">
       <div className="w-24 h-24 bg-vita-orange rounded-full flex items-center justify-center overflow-hidden">
-        {profileData.avatarUrl ? (
+        {(profileData.avatarUrl && /^https?:\/\//i.test(profileData.avatarUrl)) ? (
           <img src={profileData.avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
         ) : (
           <span className="text-white text-4xl font-bold">{(profileData.alias || profileData.name)?.charAt(0)?.toUpperCase() || 'U'}</span>
@@ -152,7 +287,7 @@ const Perfil = () => {
         type="file"
         ref={fileInputRef}
         onChange={handleAvatarChange}
-        accept="image/png, image/jpeg"
+        accept="image/png, image/jpeg, image/webp"
         className="hidden"
       />
     </div>
@@ -173,14 +308,60 @@ const Perfil = () => {
 
       <Layout title="Mi Perfil" showBackButton>
         <div className="p-4 space-y-6">
+          {cropperSrc && (
+            <AvatarCropper
+              src={cropperSrc}
+              onCancel={() => { setCropperSrc(null); if (fileInputRef.current) fileInputRef.current.value = ''; }}
+              onConfirm={async (blob) => {
+                try {
+                  const res = await uploadAvatarBlob(blob, { table: 'profiles' });
+                  clearAvatarUrlCache();
+                  const url = await getAvatarUrlCached(res.path);
+                  setProfileData(prev => ({ ...prev, avatarUrl: url || prev.avatarUrl }));
+                  toast({ title: 'Avatar actualizado' });
+                  setCropperSrc(null);
+                  if (fileInputRef.current) fileInputRef.current.value = '';
+                  fetchMembership();
+                } catch (err) {
+                  toast({ title: 'Error al subir', description: err.message || 'Intenta de nuevo', variant: 'destructive' });
+                }
+              }}
+            />
+          )}
           <Card>
             <CardContent className="p-6 flex items-center space-x-4">
               <Avatar />
               <div>
-                <h2 className="text-xl font-bold text-vita-white">{profileData.name}</h2>
+                <h2 className="text-xl font-bold text-vita-white">{[profileData.name, profileData.apellidoPaterno, profileData.apellidoMaterno].filter(Boolean).join(' ') || profileData.name}</h2>
                 <p className="text-vita-muted-foreground">{profileData.email}</p>
-                <p className="text-sm text-vita-orange font-semibold mt-1">Folio VitaCard: {user.user_metadata?.vita_card_id}</p>
+                <p className="text-sm text-vita-orange font-semibold mt-1">
+                  Folio VitaCard: {membership.codigo_vita || user.user_metadata?.vita_card_id || '—'}
+                </p>
               </div>
+            </CardContent>
+          </Card>
+
+          {/* Estado de Membresía (datos reales de Supabase) */}
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between gap-3">
+              <div>
+                <CardTitle>Membresía</CardTitle>
+                <CardDescription>Estado real de tu acceso</CardDescription>
+              </div>
+              <Button variant="outline" size="sm" onClick={fetchMembership} disabled={loadingAccess}>
+                {loadingAccess ? 'Actualizando…' : 'Refrescar'}
+              </Button>
+            </CardHeader>
+            <CardContent className="space-y-2 text-sm text-white/90">
+              <p>
+                Acceso: {membership.acceso_activo === null ? '—' : membership.acceso_activo ? '✅ Activo' : '❌ Inactivo'}
+              </p>
+              <p>
+                Plan: {(membership.membresia || '—')} · {(membership.periodicidad || '—')} · {(membership.estado_pago || '—')}
+              </p>
+              <p>
+                Folio: <span className="font-semibold">{membership.codigo_vita || user.user_metadata?.vita_card_id || '—'}</span>
+              </p>
             </CardContent>
           </Card>
 
@@ -219,9 +400,21 @@ const Perfil = () => {
                 <Label htmlFor="alias">Alias (cómo te saludamos)</Label>
                 <Input id="alias" name="alias" value={profileData.alias} onChange={handleInputChange} disabled={!isEditing} placeholder="Ej: Paty" />
               </div>
-              <div className="space-y-2">
-                <FieldLabel htmlFor="name">Nombre Completo</FieldLabel>
-                <Input id="name" name="name" value={profileData.name} onChange={handleInputChange} disabled={!isEditing} required />
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <FieldLabel htmlFor="name">Nombre(s)</FieldLabel>
+                  <Input id="name" name="name" value={profileData.name} onChange={handleInputChange} disabled={!isEditing} required />
+                  {errors.name && <p className="text-xs text-red-400">{errors.name}</p>}
+                </div>
+                <div className="space-y-2">
+                  <FieldLabel htmlFor="apellidoPaterno">Apellido Paterno</FieldLabel>
+                  <Input id="apellidoPaterno" name="apellidoPaterno" value={profileData.apellidoPaterno} onChange={handleInputChange} disabled={!isEditing} required />
+                  {errors.apellidoPaterno && <p className="text-xs text-red-400">{errors.apellidoPaterno}</p>}
+                </div>
+                <div className="space-y-2">
+                  <FieldLabel htmlFor="apellidoMaterno">Apellido Materno</FieldLabel>
+                  <Input id="apellidoMaterno" name="apellidoMaterno" value={profileData.apellidoMaterno} onChange={handleInputChange} disabled={!isEditing} />
+                </div>
               </div>
               <div className="space-y-2">
                 <FieldLabel htmlFor="email">Correo Electrónico</FieldLabel>
@@ -242,6 +435,23 @@ const Perfil = () => {
               <div className="space-y-2">
                 <FieldLabel htmlFor="birthDate">Fecha de Nacimiento</FieldLabel>
                 <Input id="birthDate" name="birthDate" type="date" value={profileData.birthDate} onChange={handleInputChange} disabled={!isEditing} required />
+              </div>
+              <div className="space-y-2">
+                <FieldLabel htmlFor="sexo">Sexo</FieldLabel>
+                <select
+                  id="sexo"
+                  name="sexo"
+                  value={profileData.sexo}
+                  onChange={handleInputChange}
+                  disabled={!isEditing}
+                  className="w-full rounded-xl px-4 py-2 bg-white/10 text-white shadow-inner focus:outline-none focus:ring-2 focus:ring-vita-orange border border-vita-orange/40"
+                  required
+                >
+                  <option value="" className="text-black">Selecciona…</option>
+                  <option value="Masculino" className="text-black">Masculino</option>
+                  <option value="Femenino" className="text-black">Femenino</option>
+                </select>
+                {errors.sexo && <p className="text-xs text-red-400">{errors.sexo}</p>}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="bloodType">Tipo de Sangre</Label>
@@ -275,6 +485,7 @@ const Perfil = () => {
               </Button>
             </CardContent>
           </Card>
+          {/* Wallet card removida del Perfil: ahora solo se accede desde el Dashboard */}
         </div>
       </Layout>
     </>

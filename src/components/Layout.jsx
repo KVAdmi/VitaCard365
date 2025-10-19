@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { askIVita } from '@/api/evitaApi';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -11,6 +11,7 @@ import {
   ArrowLeft,
   Bell
 } from 'lucide-react';
+import { Capacitor } from '@capacitor/core';
 
 // Ícono de robot elegante SVG
 const RobotIcon = (props) => (
@@ -26,6 +27,9 @@ const RobotIcon = (props) => (
 );
 import { Button } from './ui/button';
 import { useAuth } from '../contexts/AuthContext';
+import { supabase } from '@/lib/supabaseClient';
+import { getAvatarUrlCached } from '@/lib/avatar';
+import { UserAvatar } from './ui/UserAvatar';
 import { Card, CardHeader, CardTitle, CardDescription } from './ui/card';
 import {
   DropdownMenu,
@@ -36,11 +40,29 @@ import {
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
 
-const notifications = [
-    { title: "Recordatorio de Cita", description: "Consulta con Dr. A. López mañana a las 10:00 AM.", time: "hace 5m" },
-    { title: "Nuevo Tip de Bienestar", description: "Descubre los beneficios de la respiración cuadrada.", time: "hace 1h" },
-    { title: "Pago Recibido", description: "Tu pago de membresía ha sido procesado exitosamente.", time: "hace 3h" },
-];
+// Feed simple (agenda + pago) – se genera al vuelo en cliente
+function useNotificationsFeed(){
+  const [items, setItems] = React.useState([]);
+  React.useEffect(()=>{
+    (async()=>{
+      try{
+        const { fetchUpcomingAgenda } = await import('@/lib/agenda');
+        const agenda = await fetchUpcomingAgenda(7);
+        const list = agenda.slice(0,5).map(ev=>({
+          title: ev.type === 'medicamento' ? 'Medicamento' : ev.type === 'cita_medica' ? 'Cita médica' : 'Recordatorio',
+          description: ev.title,
+          time: new Date(ev.event_date+'T'+ev.event_time).toLocaleString(),
+        }));
+        // Placeholder: recordatorio de pago si falta <=7 días (se puede enriquecer con member_billing)
+        // Mantengo minimal para no bloquear el flujo
+        setItems(list);
+      }catch{
+        setItems([]);
+      }
+    })();
+  },[]);
+  return items;
+}
 
 const Layout = ({ children, title, showBackButton = false }) => {
   const navigate = useNavigate();
@@ -48,6 +70,7 @@ const Layout = ({ children, title, showBackButton = false }) => {
     const { user } = useAuth();
     const userAlias = user?.alias || user?.name || "Tú";
   const [hasNotifications, setHasNotifications] = useState(true);
+  const notifications = useNotificationsFeed();
   const [showChat, setShowChat] = useState(false);
   // Chat i-Vita
   const [chatInput, setChatInput] = useState("");
@@ -65,6 +88,90 @@ const Layout = ({ children, title, showBackButton = false }) => {
     { path: '/perfil', icon: User, label: 'Perfil' },
   { path: '/i-vita', icon: RobotIcon, label: 'i-Vita', isChat: true }
   ];
+
+  // Fallback: mostrar botón flotante de regreso si no se pidió explícitamente
+  const topLevel = ['/dashboard','/fit','/home','/','/agenda','/bienestar','/mi-plan','/perfil'];
+  const showFloatingBack = !showBackButton && !topLevel.includes(location.pathname);
+
+  // Manejar botón físico de Android para navegar atrás dentro de la app (solo nativo)
+  useEffect(() => {
+    let sub;
+    (async () => {
+      if (!Capacitor.isNativePlatform()) return;
+      const { App } = await import('@capacitor/app');
+      sub = App.addListener('backButton', ({ canGoBack }) => {
+        if (canGoBack) navigate(-1);
+        else if (App.minimize) App.minimize();
+      });
+    })();
+    return () => { try { sub && sub.remove(); } catch {} };
+  }, [navigate]);
+
+  // Cerrar overlays/modales globales al cambiar de ruta para evitar "pantalla oscura"
+  useEffect(() => {
+    // Cierra el chat si estuviera abierto
+    if (showChat) setShowChat(false);
+    // Intenta cerrar cualquier Dialog/Sheet compatible con tecla Escape
+    try {
+      const evt = new KeyboardEvent('keydown', {
+        key: 'Escape',
+        code: 'Escape',
+        keyCode: 27,
+        which: 27,
+        bubbles: true,
+      });
+      document.dispatchEvent(evt);
+    } catch {}
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.pathname]);
+
+  // Avatar firmado y refresco para evitar expiración
+  const [signedAvatar, setSignedAvatar] = useState(null);
+  const [metaAvatarValid, setMetaAvatarValid] = useState(true);
+  useEffect(() => {
+    let timer;
+    (async () => {
+      try {
+        const { data: u } = await supabase.auth.getUser();
+        const uid = u?.user?.id;
+        if (!uid) { return; }
+        // Primero intentamos en profiles_certificado_v2 (prod)
+        const { data: cert } = await supabase
+          .from('profiles_certificado_v2')
+          .select('avatar_url')
+          .eq('user_id', uid)
+          .limit(1)
+          .single();
+        let path = cert?.avatar_url;
+        if (!path) {
+          // Fallback a profiles.normal
+          const { data: prof } = await supabase
+            .from('profiles')
+            .select('avatar_url')
+            .eq('user_id', uid)
+            .limit(1)
+            .single();
+          path = prof?.avatar_url;
+        }
+        // Mantener último avatar mientras se obtiene uno nuevo para evitar flicker
+        if (path) {
+          const url = await getAvatarUrlCached(path);
+          if (url) setSignedAvatar(url);
+        }
+      } catch {
+        // no limpiar imagen para evitar parpadeo
+      } finally {
+        // refrescar cada 50 minutos aprox para evitar expirar (firma 60m)
+        timer = setTimeout(() => {
+          try {
+            // fuerza re-ejecución
+            setSignedAvatar(sa => sa); 
+          } catch {}
+        }, 50 * 60 * 1000);
+      }
+    })();
+    return () => { if (timer) clearTimeout(timer); };
+  }, [user?.id]);
 
   return (
     <div className="min-h-screen bg-vita-blue text-vita-white">
@@ -107,7 +214,9 @@ const Layout = ({ children, title, showBackButton = false }) => {
               >
                 <DropdownMenuLabel className="font-semibold">Notificaciones</DropdownMenuLabel>
                 <DropdownMenuSeparator className="bg-white/15" />
-                {notifications.map((notification, index) => (
+                {notifications.length === 0 ? (
+                  <div className="p-3 text-sm text-white/80">Sin notificaciones recientes</div>
+                ) : notifications.map((notification, index) => (
                   <DropdownMenuItem 
                     key={index} 
                     className="flex flex-col items-start gap-1 p-3 focus:bg-white/15"
@@ -127,17 +236,15 @@ const Layout = ({ children, title, showBackButton = false }) => {
               </DropdownMenuContent>
             </DropdownMenu>
 
-            <div 
-              className="w-8 h-8 bg-vita-orange rounded-full flex items-center justify-center cursor-pointer overflow-hidden"
+            <div
+              className="w-8 h-8 rounded-full cursor-pointer"
               onClick={() => navigate('/perfil')}
             >
-              {user?.user_metadata?.avatarUrl ? (
-                <img src={user.user_metadata.avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
-              ) : (
-                <span className="text-white text-sm font-bold">
-                  {(user?.user_metadata?.alias || user?.user_metadata?.name)?.charAt(0)?.toUpperCase() || 'U'}
-                </span>
-              )}
+              <UserAvatar
+                src={signedAvatar || (metaAvatarValid && user?.user_metadata?.avatarUrl && /^https?:\/\//i.test(user.user_metadata.avatarUrl) ? user.user_metadata.avatarUrl : undefined)}
+                name={user?.user_metadata?.alias || user?.user_metadata?.name || 'U'}
+                className="w-8 h-8 rounded-full"
+              />
             </div>
           </div>
         </div>
@@ -190,6 +297,17 @@ const Layout = ({ children, title, showBackButton = false }) => {
           })}
         </div>
       </nav>
+
+      {/* Botón flotante de regreso para páginas que no lo muestran en el header */}
+      {showFloatingBack && (
+        <button
+          className="fixed top-3 left-3 z-50 rounded-full bg-white/10 border border-white/15 p-2 text-white hover:bg-white/20 active:scale-95 transition"
+          onClick={() => navigate(-1)}
+          aria-label="Regresar"
+        >
+          <ArrowLeft className="h-5 w-5" />
+        </button>
+      )}
 
   {/* Modal/Sheet para el chat i-Vita */}
       {showChat && (
@@ -274,20 +392,8 @@ const Layout = ({ children, title, showBackButton = false }) => {
                   <svg width="20" height="20" fill="none" viewBox="0 0 20 20"><path d="M2.5 10L17.5 3.5L11.25 10L17.5 16.5L2.5 10Z" fill="currentColor"/></svg>
                 </button>
                 <button
-                  type="button"
-                  className="rounded-full bg-white/10 p-2 text-vita-orange hover:bg-vita-orange/20 transition"
-                  title="Hablar"
-                  onClick={async () => {
-                    try {
-                      await navigator.mediaDevices.getUserMedia({ audio: true });
-                      alert('Permiso de micrófono concedido. (Reconocimiento de voz próximamente)');
-                    } catch (err) {
-                      alert('Debes otorgar permiso de micrófono para usar esta función.');
-                    }
-                  }}
-                >
-                  <svg width="20" height="20" fill="none" viewBox="0 0 20 20"><circle cx="10" cy="10" r="8" stroke="currentColor" strokeWidth="2"/><rect x="8.5" y="5" width="3" height="7" rx="1.5" fill="currentColor"/></svg>
-                </button>
+                  style={{ display: 'none' }}
+                />
               </form>
               <div className="mt-2 text-xs text-vita-white/70 text-center px-2">
                 Las recomendaciones de i-Vita se basan en inteligencia artificial y no sustituyen la consulta con un profesional de la salud. Ante dudas o síntomas graves, acude siempre con tu médico.

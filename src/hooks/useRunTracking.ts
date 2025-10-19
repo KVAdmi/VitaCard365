@@ -10,12 +10,7 @@ export function useRunTracking() {
   const pauseTime = useRef<number | null>(null);
   const totalPausedTime = useRef<number>(0);
 
-  const [stats, setStats] = useState({
-    distance_km: 0,
-    duration_s: 0,
-    pace_min_km: 0,
-    kcal: 0
-  });
+  const [stats, setStats] = useState({ distance_km: 0, duration_s: 0, pace_min_km: 0, kcal: 0 });
 
   // Calcular distancia entre dos puntos
   const calculateDistance = (p1: {lat: number; lng: number}, p2: {lat: number; lng: number}) => {
@@ -36,7 +31,9 @@ export function useRunTracking() {
 
     let totalDistance = 0;
     for (let i = 1; i < points.current.length; i++) {
-      totalDistance += calculateDistance(points.current[i-1], points.current[i]);
+      const d = calculateDistance(points.current[i-1], points.current[i]);
+      // descartar saltos menores a 1 metro para reducir ruido
+      if (d > 0.001) totalDistance += d;
     }
 
     const now = Date.now();
@@ -72,8 +69,8 @@ export function useRunTracking() {
       // Comenzar a observar la ubicación
       watchId.current = (await Geolocation.watchPosition({
         enableHighAccuracy: true,
-  timeout: 5000, // 5 segundos máximo para obtener posición, pero depende del hardware
-  maximumAge: 0
+        timeout: 5000,
+        maximumAge: 0
       }, (position, error) => {
         if (error) {
           console.error('[Tracking] Error de ubicación:', error);
@@ -84,6 +81,10 @@ export function useRunTracking() {
           return;
         }
         if (!isPaused) {
+          // si es el primer punto, agrega uno inicial inmediato para empezar a computar duración y pace
+          if (points.current.length === 0) {
+            points.current.push({ lat: position.coords.latitude, lng: position.coords.longitude, timestamp: position.timestamp });
+          }
           points.current.push({
             lat: position.coords.latitude,
             lng: position.coords.longitude,

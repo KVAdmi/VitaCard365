@@ -1,9 +1,12 @@
+import React from 'react';
 import VitaCard365Logo from '../../components/Vita365Logo';
 import Layout from '../../components/Layout';
 // Página principal de FIT
 
 import { Link, Outlet, useLocation } from "react-router-dom";
 import { Bluetooth, Dumbbell, ListChecks, Salad, LineChart, Play } from "lucide-react";
+import { Dumbbell as GymIcon } from "lucide-react";
+import { useRoutineSummary } from '@/hooks/useRoutineSummary';
 
 const iconGlow = {
   sync: 'text-cyan-300 drop-shadow-[0_0_8px_rgba(34,255,255,0.7)]',
@@ -11,6 +14,7 @@ const iconGlow = {
   plan: 'text-blue-400 drop-shadow-[0_0_8px_rgba(80,180,255,0.7)]',
   nutricion: 'text-pink-300 drop-shadow-[0_0_8px_rgba(255,80,200,0.7)]',
   progreso: 'text-violet-300 drop-shadow-[0_0_8px_rgba(180,80,255,0.7)]',
+  gym: 'text-violet-300 drop-shadow-[0_0_8px_rgba(180,80,255,0.7)]',
 };
 
 const Tile = ({ to, Icon, title, subtitle, glow }) => (
@@ -30,12 +34,34 @@ const Tile = ({ to, Icon, title, subtitle, glow }) => (
   </Link>
 );
 
+class FitErrorBoundary extends React.Component { 
+  constructor(props){ super(props); this.state = { hasError:false, error:null }; }
+  static getDerivedStateFromError(error){ return { hasError:true, error }; }
+  componentDidCatch(error, info){ console.error('[FIT] render error', error, info); }
+  render(){
+    if (this.state.hasError) {
+      return (
+        <Layout title="Fitness" showBackButton>
+          <div className="p-4">
+            <div className="rounded-xl border border-white/10 bg-white/5 p-4 text-white">
+              <div className="font-semibold">Estamos restableciendo Fitness…</div>
+              <div className="text-sm opacity-80">Intenta regresar a esta pantalla. Si persiste, reinicia la app.</div>
+            </div>
+          </div>
+        </Layout>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 export default function FitPage() {
   const location = useLocation();
   const isRoot = location.pathname === "/fit";
+  const { streakDias, sesionesSemana, diasSemana, kcalHoy } = useRoutineSummary();
   if (!isRoot) return <Outlet />;
   return (
-    <>
+    <FitErrorBoundary>
       <Layout title="Fitness" showBackButton>
         <div className="px-4 pb-24 min-h-screen bg-gradient-to-br from-[#0E1A2B] via-[#101a2e] to-[#0a1120] relative overflow-hidden">
           {/* NASA grid lines */}
@@ -62,34 +88,85 @@ export default function FitPage() {
               <h1 className="text-[28px] font-extrabold tracking-tight text-cyan-200 drop-shadow-[0_2px_8px_rgba(0,255,255,0.18)]">Fitness</h1>
               <p className="text-cyan-100/80 text-sm -mt-1 tracking-tight">Tu entrenador inteligente, integrado con tu salud.</p>
             </div>
-            {/* Continuar entrenamiento */}
-            <Link to="/fit/plan"
-              className="hidden sm:flex items-center gap-2 rounded-full px-4 py-2 bg-cyan-400/10 border border-cyan-300/20 text-cyan-100/90 hover:bg-cyan-400/20 hover:shadow-[0_0_16px_2px_rgba(0,255,255,0.12)] transition">
-              <Play className="h-4 w-4" /> Continuar
-            </Link>
+            {/* (Removido) botón Continuar */}
           </div>
           {/* KPIs compactos */}
           <div className="max-w-[1100px] mx-auto grid grid-cols-3 gap-3 sm:gap-4 mb-12 relative z-10">
             <div className="rounded-xl bg-cyan-400/10 border border-cyan-300/20 px-3 py-2 text-cyan-100/90 text-xs shadow-[0_2px_8px_rgba(0,255,255,0.08)]">
-              Streak: <span className="font-semibold text-cyan-50">5 días</span>
+              Constancia: <span className="font-semibold text-cyan-50">{streakDias} {streakDias===1?'día':'días'}</span>
             </div>
             <div className="rounded-xl bg-cyan-400/10 border border-cyan-300/20 px-3 py-2 text-cyan-100/90 text-xs shadow-[0_2px_8px_rgba(0,255,255,0.08)]">
-              Semana: <span className="font-semibold text-cyan-50">3/5 sesiones</span>
+              Semana: <span className="font-semibold text-cyan-50">{sesionesSemana}/{diasSemana} sesiones</span>
             </div>
             <div className="rounded-xl bg-cyan-400/10 border border-cyan-300/20 px-3 py-2 text-cyan-100/90 text-xs shadow-[0_2px_8px_rgba(0,255,255,0.08)]">
-              Kcal hoy: <span className="font-semibold text-cyan-50">420</span>
+              Kcal hoy: <span className="font-semibold text-cyan-50">{kcalHoy}</span>
             </div>
           </div>
-          {/* Grid 3-2 pro */}
-          <div className="max-w-[1100px] mx-auto grid grid-cols-2 md:grid-cols-3 gap-x-8 gap-y-12 place-items-center relative z-10">
-            <Tile to="/fit/sync"      Icon={Bluetooth} title="Sincronizar rutina" subtitle="FTMS / HRS / Wearables" glow={iconGlow.sync} />
-            <Tile to="/fit/create"    Icon={Dumbbell}  title="Crear rutina"      subtitle="Objetivo • Gym/Casa • Nivel" glow={iconGlow.create} />
-            <Tile to="/fit/plan"      Icon={ListChecks}title="Mi rutina"         subtitle="Semana • Día • Sets" glow={iconGlow.plan} />
-            <Tile to="/fit/nutricion" Icon={Salad}     title="Nutrición"         subtitle="Peso/IMC • Kcal • Súper" glow={iconGlow.nutricion} />
-            <Tile to="/fit/progreso"  Icon={LineChart} title="Progreso"          subtitle="Min • Kcal • HR • Tendencia" glow={iconGlow.progreso} />
+          {/* Grid: 2 tarjetas + recordatorio de nutrición como tercera tarjeta (mismo tamaño) */}
+          <div className="max-w-[1100px] mx-auto grid grid-cols-1 sm:grid-cols-2 gap-x-6 sm:gap-x-10 gap-y-8 sm:gap-y-12 place-items-center relative z-10 px-2">
+            <Link
+              to="/fit/sync"
+              className="group relative flex flex-col items-center justify-center h-[170px] w-full max-w-[320px] sm:h-[200px] sm:w-[260px] rounded-2xl border border-cyan-400/20 bg-white/10 backdrop-blur-md shadow-[0_20px_40px_rgba(0,40,80,0.45)] transition-all duration-200 hover:bg-cyan-400/10 hover:shadow-[0_0_32px_4px_rgba(0,255,255,0.18)] hover:-translate-y-1 active:scale-[0.97]"
+              style={{ boxShadow: '0 0 0 1.5px #00ffe7, 0 20px 40px rgba(0,40,80,0.35)' }}
+            >
+              <div className="absolute -top-4 left-1/2 -translate-x-1/2 rounded-full border-2 border-cyan-300/30 bg-cyan-400/10 p-2 shadow-[0_0_16px_2px_rgba(0,255,255,0.18)] group-hover:scale-110 transition-transform">
+                <Bluetooth className={`h-6 w-6 ${iconGlow.sync} transition-all duration-200`} />
+              </div>
+              <div className="mt-4 text-base font-semibold text-white text-center tracking-tight drop-shadow-[0_1px_2px_rgba(0,0,0,0.25)]">Sincronizar rutina</div>
+              <div className="mt-1 text-[12px] text-cyan-100/80 text-center tracking-tight">FTMS • HRS • Wearables</div>
+              <div className="absolute inset-0 rounded-2xl pointer-events-none border border-white/5 group-hover:border-cyan-300/30 transition-all" />
+            </Link>
+
+            {/* Crear rutina en Casa (flujo existente) */}
+            <Link
+              to="/fit/create"
+              className="group relative flex flex-col items-center justify-center h-[170px] w-full max-w-[320px] sm:h-[200px] sm:w-[260px] rounded-2xl border border-cyan-400/20 bg-white/10 backdrop-blur-md shadow-[0_20px_40px_rgba(0,40,80,0.45)] transition-all duration-200 hover:bg-cyan-400/10 hover:shadow-[0_0_32px_4px_rgba(0,255,255,0.18)] hover:-translate-y-1 active:scale-[0.97]"
+              style={{ boxShadow: '0 0 0 1.5px #00ffe7, 0 20px 40px rgba(0,40,80,0.35)' }}
+            >
+              <div className="absolute -top-4 left-1/2 -translate-x-1/2 rounded-full border-2 border-cyan-300/30 bg-cyan-400/10 p-2 shadow-[0_0_16px_2px_rgba(0,255,255,0.18)] group-hover:scale-110 transition-transform">
+                <Dumbbell className={`h-6 w-6 ${iconGlow.create} transition-all duration-200`} />
+              </div>
+              <div className="mt-4 text-base font-semibold text-white text-center tracking-tight drop-shadow-[0_1px_2px_rgba(0,0,0,0.25)]">Crear rutina (Casa)</div>
+              <div className="mt-1 text-[12px] text-cyan-100/80 text-center tracking-tight">Objetivo • Casa • Nivel</div>
+              <div className="absolute inset-0 rounded-2xl pointer-events-none border border-white/5 group-hover:border-cyan-300/30 transition-all" />
+            </Link>
+
+            <Link
+              to="/fit/gym/catalog"
+              className="group relative flex flex-col items-center justify-center h-[170px] w-full max-w-[320px] sm:h-[200px] sm:w-[260px] rounded-2xl border border-cyan-400/20 bg-white/10 backdrop-blur-md shadow-[0_20px_40px_rgba(0,40,80,0.45)] transition-all duration-200 hover:bg-cyan-400/10 hover:shadow-[0_0_32px_4px_rgba(0,255,255,0.18)] hover:-translate-y-1 active:scale-[0.97]"
+              style={{ boxShadow: '0 0 0 1.5px #00ffe7, 0 20px 40px rgba(0,40,80,0.35)' }}
+            >
+              <div className="absolute -top-4 left-1/2 -translate-x-1/2 rounded-full border-2 border-cyan-300/30 bg-cyan-400/10 p-2 shadow-[0_0_16px_2px_rgba(0,255,255,0.18)] group-hover:scale-110 transition-transform">
+                <GymIcon className={`h-6 w-6 ${iconGlow.gym} transition-all duration-200`} />
+              </div>
+              <div className="mt-4 text-base font-semibold text-white text-center tracking-tight drop-shadow-[0_1px_2px_rgba(0,0,0,0.25)]">Crear rutina (Gym)</div>
+              <div className="mt-1 text-[12px] text-cyan-100/80 text-center tracking-tight">Catálogo • Circuito • Runner</div>
+              <div className="absolute inset-0 rounded-2xl pointer-events-none border border-white/5 group-hover:border-cyan-300/30 transition-all" />
+            </Link>
+
+            {/* (Removido) Accesos directos Gym: Plan y Progreso — ahora viven dentro de Crear rutina (Gym) */}
+
+            {/* Tarjeta: Asistencia Fitness 24/7 (nutrición) con mismo tamaño y estilo */}
+            <Link
+              to="/coberturas?cat=fitness"
+              className="group relative flex flex-col items-center justify-center h-[170px] w-full max-w-[320px] sm:h-[200px] sm:w-[260px] rounded-2xl border border-cyan-400/20 bg-white/10 backdrop-blur-md shadow-[0_20px_40px_rgba(0,40,80,0.45)] transition-all duration-200 hover:bg-cyan-400/10 hover:shadow-[0_0_32px_4px_rgba(0,255,255,0.18)] hover:-translate-y-1 active:scale-[0.97]"
+              style={{ boxShadow: '0 0 0 1.5px #00ffe7, 0 20px 40px rgba(0,40,80,0.35)' }}
+            >
+              <div className="absolute -top-4 left-1/2 -translate-x-1/2 rounded-full border-2 border-cyan-300/30 bg-cyan-400/10 p-2 shadow-[0_0_16px_2px_rgba(0,255,255,0.18)] group-hover:scale-110 transition-transform">
+                <ListChecks className={`h-6 w-6 ${iconGlow.nutricion} transition-all duration-200`} />
+              </div>
+              <div className="mt-4 text-base font-semibold text-white text-center tracking-tight drop-shadow-[0_1px_2px_rgba(0,0,0,0.25)]">Asistencia Fitness 24/7</div>
+              <div className="mt-1 text-[12px] text-cyan-100/80 text-center tracking-tight">Nutrición y entrenamiento con expertos</div>
+              <div className="absolute inset-0 rounded-2xl pointer-events-none border border-white/5 group-hover:border-cyan-300/30 transition-all" />
+            </Link>
+          </div>
+
+          {/* Imagen de marca al fondo */}
+          <div className="max-w-[1100px] mx-auto mt-10 pb-24 relative z-10 flex justify-center">
+            <img src="/branding/9.png" alt="VitaCard 365" className="w-full max-w-md opacity-90" loading="lazy" />
           </div>
         </div>
       </Layout>
-    </>
+    </FitErrorBoundary>
   );
 }

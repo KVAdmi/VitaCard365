@@ -1,265 +1,268 @@
-
-import React, { useState, useEffect } from 'react';
-import { Helmet } from 'react-helmet';
+import NeonSelect from '@/components/neon/NeonSelect';
+import React, { useMemo, useState, useEffect } from 'react';
+import { ChevronLeft, ChevronRight, Plus } from 'lucide-react';
 import Layout from '../components/Layout';
+import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/card';
 import { Button } from '../components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '../components/ui/dialog';
-import { Plus, Pill, Stethoscope, Edit, Trash2, Download, Info } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { v4 as uuidv4 } from 'uuid';
+import { Label } from '../components/ui/label';
+import { Input } from '../components/ui/input';
 import { useToast } from '../components/ui/use-toast';
-import { useLocalStorage } from '../hooks/useLocalStorage';
-import MedicineForm from '../components/agenda/MedicineForm';
-import AppointmentForm from '../components/agenda/AppointmentForm';
+import { createAgendaEvent, fetchUpcomingAgenda, fetchAgendaRange, updateAgendaEvent, deleteAgendaEvent } from '@/lib/agenda';
 
-const Agenda = () => {
+export default function AgendaPage(){
+  const [events, setEvents] = useState([]);
+  const [loading, setLoading] = useState(true);
   const { toast } = useToast();
-  const [medicines, setMedicines] = useLocalStorage('vita365_medicines', []);
-  const [appointments, setAppointments] = useLocalStorage('vita365_appointments', []);
 
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [editingItem, setEditingItem] = useState(null);
-  const [activeTab, setActiveTab] = useState('medicinas');
+  const [form, setForm] = useState({
+    type: 'medicamento',
+    title: '',
+    description: '',
+    event_date: new Date().toISOString().slice(0,10),
+    event_time: '08:00:00',
+    notify: true,
+    repeat_type: 'none',
+  });
+  const [editingId, setEditingId] = useState(null);
 
-  useEffect(() => {
-    const timeouts = [];
-    medicines.forEach(med => {
-      if (!med.taken) {
-        const [hours, minutes] = med.time.split(':');
-        const now = new Date();
-        const medTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hours, minutes, 0, 0);
-        const timeToAlert = medTime.getTime() - now.getTime();
-        
-        if(timeToAlert > 0) {
-          const timeoutId = setTimeout(() => {
-            alert(`Hora de tu medicina: ${med.name} - ${med.dose}`);
-          }, timeToAlert);
-          timeouts.push(timeoutId);
-        }
-      }
-    });
+  // Calendario
+  const today = new Date();
+  const [monthCursor, setMonthCursor] = useState(new Date(today.getFullYear(), today.getMonth(), 1));
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [monthEvents, setMonthEvents] = useState([]);
+  const [showForm, setShowForm] = useState(false);
 
-    appointments.forEach(appt => {
-      const apptTime = new Date(appt.datetime);
-      const now = new Date();
-      const timeToAlert = apptTime.getTime() - now.getTime() - (4 * 60 * 60 * 1000); // 4 hours before
+  async function load(){
+    setLoading(true);
+    const data = await fetchUpcomingAgenda(30);
+    setEvents(data);
+    setLoading(false);
+  }
 
-      if(timeToAlert > 0) {
-        const timeoutId = setTimeout(() => {
-          alert(`Recuerda tu cita médica: ${appt.title} a las ${apptTime.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`);
-        }, timeToAlert);
-        timeouts.push(timeoutId);
-      }
-    });
+  useEffect(()=>{ load(); },[]);
 
-    return () => timeouts.forEach(clearTimeout);
-  }, [medicines, appointments]);
+  useEffect(()=>{
+    (async ()=>{
+      const start = new Date(monthCursor.getFullYear(), monthCursor.getMonth(), 1);
+      const end = new Date(monthCursor.getFullYear(), monthCursor.getMonth()+1, 0);
+      const data = await fetchAgendaRange(start, end);
+      setMonthEvents(data);
+    })();
+  }, [monthCursor]);
 
-  const handleAddItem = (item) => {
-    if (activeTab === 'medicinas') {
-      setMedicines([...medicines, { ...item, id: uuidv4(), taken: false }]);
-      toast({ title: 'Medicina agregada', description: `${item.name} se ha añadido a tu agenda.` });
-    } else {
-      setAppointments([...appointments, { ...item, id: uuidv4() }]);
-      toast({ title: 'Cita agregada', description: `${item.title} se ha añadido a tu agenda.` });
-    }
-    setDialogOpen(false);
-  };
-
-  const handleEditItem = (item) => {
-    if (activeTab === 'medicinas') {
-      setMedicines(medicines.map(m => m.id === item.id ? item : m));
-      toast({ title: 'Medicina actualizada', description: `${item.name} se ha actualizado.` });
-    } else {
-      setAppointments(appointments.map(a => a.id === item.id ? item : a));
-      toast({ title: 'Cita actualizada', description: `${item.title} se ha actualizado.` });
-    }
-    setEditingItem(null);
-    setDialogOpen(false);
-  };
-
-  const handleDeleteItem = (id) => {
-    if (window.confirm('¿Estás seguro de que deseas eliminar este elemento?')) {
-      if (activeTab === 'medicinas') {
-        setMedicines(medicines.filter(m => m.id !== id));
-        toast({ title: 'Medicina eliminada' });
+  async function onSubmit(e){
+    e.preventDefault();
+    try{
+      if (editingId) {
+        await updateAgendaEvent(editingId, form);
+        toast({ title: 'Evento actualizado', description: 'Se reprogramaron notificaciones si corresponde.' });
       } else {
-        setAppointments(appointments.filter(a => a.id !== id));
-        toast({ title: 'Cita eliminada' });
+        await createAgendaEvent(form);
+        toast({ title: 'Evento guardado', description: 'Se programará una notificación si corresponde.' });
       }
+      setForm(f=>({ ...f, title:'', description:'' }));
+      setShowForm(false);
+      setEditingId(null);
+      await load();
+      const start = new Date(monthCursor.getFullYear(), monthCursor.getMonth(), 1);
+      const end = new Date(monthCursor.getFullYear(), monthCursor.getMonth()+1, 0);
+      const data = await fetchAgendaRange(start, end);
+      setMonthEvents(data);
+    }catch(e){
+      toast({ title: 'Error al guardar', description: e.message || 'Intenta de nuevo', variant: 'destructive' });
     }
-  };
+  }
 
-  const toggleMedicineTaken = (id) => {
-    setMedicines(medicines.map(m => m.id === id ? { ...m, taken: !m.taken } : m));
-  };
-  
-  const handleExport = () => {
-    const data = JSON.stringify({ medicines, appointments }, null, 2);
-    const blob = new Blob([data], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'vita365_agenda.json';
-    a.click();
-    URL.revokeObjectURL(url);
-    toast({ title: 'Agenda exportada', description: 'Tus datos se han guardado en un archivo JSON.' });
-  };
+  async function onEdit(ev){
+    setEditingId(ev.id);
+    setForm({
+      type: ev.type,
+      title: ev.title,
+      description: ev.description || '',
+      event_date: ev.event_date,
+      event_time: ev.event_time,
+      notify: !!ev.notify,
+      repeat_type: ev.repeat_type || 'none',
+    });
+    setSelectedDate(new Date(ev.event_date+'T'+ev.event_time));
+    setShowForm(true);
+  }
+
+  async function onDelete(ev){
+    if (!window.confirm('¿Eliminar este evento?')) return;
+    try{
+      await deleteAgendaEvent(ev.id);
+      toast({ title: 'Evento eliminado', description: 'Se cancelaron notificaciones si había.' });
+      await load();
+      const start = new Date(monthCursor.getFullYear(), monthCursor.getMonth(), 1);
+      const end = new Date(monthCursor.getFullYear(), monthCursor.getMonth()+1, 0);
+      const data = await fetchAgendaRange(start, end);
+      setMonthEvents(data);
+    }catch(e){
+      toast({ title: 'Error al eliminar', description: e.message || 'Intenta de nuevo', variant: 'destructive' });
+    }
+  }
+
+  // Utilidades calendario
+  const year = monthCursor.getFullYear();
+  const month = monthCursor.getMonth();
+  const monthName = monthCursor.toLocaleString('es-MX', { month: 'long', year: 'numeric' });
+  const firstDay = new Date(year, month, 1);
+  const startWeekday = (firstDay.getDay() + 6) % 7; // lunes=0
+  const daysInMonth = new Date(year, month+1, 0).getDate();
+  const gridDays = useMemo(()=>{
+    const arr = [];
+    for (let i=0;i<startWeekday;i++) arr.push(null);
+    for (let d=1; d<=daysInMonth; d++) arr.push(new Date(year, month, d));
+    while (arr.length % 7 !== 0) arr.push(null);
+    return arr;
+  }, [year, month, startWeekday, daysInMonth]);
+
+  const eventsByDay = useMemo(()=>{
+    const map = new Map();
+    for (const ev of monthEvents) {
+      const key = ev.event_date;
+      if (!map.has(key)) map.set(key, []);
+      map.get(key).push(ev);
+    }
+    return map;
+  }, [monthEvents]);
 
   return (
-    <>
-      <Helmet>
-        <title>Agenda - Vita365</title>
-        <meta name="description" content="Organiza tus medicamentos y citas médicas con la agenda de Vita365." />
-      </Helmet>
-
-      <Layout title="Agenda" showBackButton>
-        <div className="p-4 md:p-6 pb-20">
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <div className="flex justify-between items-center mb-4">
-              <TabsList>
-                <TabsTrigger value="medicinas"><Pill className="mr-2 h-4 w-4" />Medicinas</TabsTrigger>
-                <TabsTrigger value="citas"><Stethoscope className="mr-2 h-4 w-4" />Citas Médicas</TabsTrigger>
-              </TabsList>
-
+    <Layout title="Agenda" showBackButton>
+      <div className="p-4 space-y-6">
+        {/* Calendario mensual */}
+        <Card className="relative bg-white/10 border border-cyan-400/20" style={{ boxShadow: '0 0 0 1px rgba(0,255,231,0.18)' }}>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <Button variant="ghost" onClick={()=>setMonthCursor(new Date(year, month-1, 1))}><ChevronLeft className="w-5 h-5"/></Button>
+            <CardTitle className="capitalize tracking-tight text-cyan-100">{monthName}</CardTitle>
+            <Button variant="ghost" onClick={()=>setMonthCursor(new Date(year, month+1, 1))}><ChevronRight className="w-5 h-5"/></Button>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-7 gap-2 text-xs text-cyan-100/80 mb-1">
+              {['L','M','X','J','V','S','D'].map(d=> (
+                <div key={d} className="text-center opacity-80">{d}</div>
+              ))}
             </div>
+            <div className="grid grid-cols-7 gap-2">
+              {gridDays.map((d,idx)=>{
+                if (!d) return <div key={`empty-${idx}`} className="h-16 rounded-xl bg-white/5 border border-white/5"/>;
+                const key = d.toISOString().slice(0,10);
+                const has = eventsByDay.has(key);
+                const isSel = selectedDate && key===selectedDate.toISOString().slice(0,10);
+                return (
+                  <button key={key}
+                          onClick={()=>{ setSelectedDate(d); setForm(f=>({...f, event_date: key})); setShowForm(true); }}
+                          className={`relative h-16 rounded-xl text-left p-2 border transition-all ${isSel ? 'bg-cyan-400/15 border-cyan-300/30' : 'bg-white/10 border-cyan-400/10 hover:bg-cyan-400/10'} ${has ? 'ring-1 ring-[color:var(--vc-primary,#f06340)]/70' : ''}`}
+                          style={{ boxShadow: has ? '0 0 18px rgba(240,99,64,0.18)' : undefined }}
+                          title={has ? `${eventsByDay.get(key).length} evento(s)` : ''}>
+                    <div className="text-[11px] font-semibold drop-shadow-sm">{d.getDate()}</div>
+                    {has && (
+                      <span className="absolute bottom-1 right-1 inline-block w-1.5 h-1.5 rounded-full bg-[color:var(--vc-primary,#f06340)] shadow-[0_0_8px_rgba(240,99,64,0.6)]" />
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
 
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={activeTab}
-                initial={{ y: 10, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                exit={{ y: -10, opacity: 0 }}
-                transition={{ duration: 0.2 }}
-              >
-                <TabsContent value="medicinas">
-                  <h3 className="text-lg font-bold text-vita-orange mb-2">Toma de Medicamentos</h3>
-                  {medicines.length === 0 ? (
-                    <Card className="text-center p-10 glass-card">
-                      <p className="text-vita-white">No tienes medicinas en tu agenda.</p>
-                      <p className="text-vita-muted-foreground text-sm mt-1">Usa el botón '+' para agregar una.</p>
-                    </Card>
-                  ) : (
-                    <div className="space-y-4">
-                      {medicines.map(med => (
-                        <Card key={med.id} className="flex items-center justify-between p-4 glass-card border border-vita-orange/30 shadow-lg">
-                           <div className="flex items-center">
-                             <input type="checkbox" checked={med.taken} onChange={() => toggleMedicineTaken(med.id)} className="h-6 w-6 rounded-full text-vita-orange focus:ring-vita-orange bg-white/20 border-white/30" />
-                             <div className="ml-4">
-                               <div className="flex items-center gap-2">
-                                 <Pill className="h-6 w-6 text-vita-orange" />
-                                 <p className={`font-bold text-lg ${med.taken ? 'line-through text-vita-muted-foreground' : 'text-vita-white'}`}>{med.name}</p>
-                               </div>
-                               <p className="text-sm text-vita-muted-foreground mt-1">{med.dose}</p>
-                               <div className="flex items-center gap-2 mt-1">
-                                 <span className="inline-flex items-center gap-1 text-white/80 text-xs bg-vita-orange/20 rounded-full px-2 py-1">
-                                   <svg width="16" height="16" fill="none" viewBox="0 0 24 24"><path stroke="#fff" strokeWidth="2" d="M12 6v6l4 2"/></svg>
-                                   {med.time}
-                                 </span>
-                                 {med.repeat && med.repeat !== 'none' && (
-                                   <span className="inline-flex items-center gap-1 text-xs bg-vita-blue-dark/40 rounded-full px-2 py-1">
-                                     Repite: {med.repeat}
-                                   </span>
-                                 )}
-                               </div>
-                             </div>
-                           </div>
-                           <div className="flex gap-2">
-                            <Button variant="ghost" size="icon" className="h-8 w-8 text-white/70 hover:text-white" onClick={() => { setEditingItem(med); setDialogOpen(true); }}>
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                            <Button variant="ghost" size="icon" className="h-8 w-8 text-red-400 hover:text-red-500" onClick={() => handleDeleteItem(med.id)}>
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                           </div>
-                        </Card>
-                      ))}
-                    </div>
+        {showForm && (
+          <Card className="bg-white/10 border border-cyan-400/20" style={{ boxShadow:'0 0 0 1px rgba(0,255,231,0.18)' }}>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle>{editingId ? 'Editar evento' : 'Nuevo evento'} — {form.event_date}</CardTitle>
+              <div className="flex items-center gap-2">
+                {editingId && (
+                  <Button variant="ghost" onClick={()=>{ setEditingId(null); setShowForm(false); }}>Cancelar</Button>
+                )}
+                <Button variant="ghost" onClick={()=>{ setEditingId(null); setShowForm(false); }}>Cerrar</Button>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <form onSubmit={onSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div>
+                  <Label>Tipo</Label>
+                  <NeonSelect variant="cyan" value={form.type} onChange={e=>setForm({...form, type:e.target.value})}
+                    options={[
+                      { value: 'medicamento', label: 'Medicamento' },
+                      { value: 'cita_medica', label: 'Cita médica' },
+                      { value: 'otro', label: 'Otro' },
+                    ]} placeholder="Tipo" />
+                </div>
+                <div className="md:col-span-1">
+                  <Label>Título</Label>
+                  <Input value={form.title} onChange={e=>setForm({...form, title:e.target.value})} required />
+                </div>
+                <div className="md:col-span-2">
+                  <Label>Descripción</Label>
+                  <Input value={form.description} onChange={e=>setForm({...form, description:e.target.value})} />
+                </div>
+                <div>
+                  <Label>Fecha</Label>
+                  <Input type="date" value={form.event_date} onChange={e=>setForm({...form, event_date:e.target.value})} required />
+                </div>
+                <div>
+                  <Label>Hora</Label>
+                  <Input type="time" value={form.event_time.slice(0,5)} onChange={e=>setForm({...form, event_time:e.target.value+':00'})} required />
+                </div>
+                <div>
+                  <Label>Repetir</Label>
+                  <NeonSelect variant="cyan" value={form.repeat_type} onChange={e=>setForm({...form, repeat_type:e.target.value})}
+                    options={[
+                      { value: 'none', label: 'No repetir' },
+                      { value: 'daily', label: 'Diario' },
+                      { value: 'weekly', label: 'Semanal' },
+                      { value: 'monthly', label: 'Mensual' },
+                    ]} placeholder="Repetición" />
+                </div>
+                <div className="flex items-center gap-2">
+                  <input id="notify" type="checkbox" className="accent-orange-500" checked={!!form.notify} onChange={e=>setForm({...form, notify:e.target.checked})} />
+                  <Label htmlFor="notify">Notificarme</Label>
+                </div>
+                <div className="md:col-span-2 flex gap-2">
+                  <Button type="submit" className="flex-1">{editingId ? 'Actualizar' : 'Guardar'}</Button>
+                  {editingId && (
+                    <Button type="button" variant="destructive" onClick={()=>onDelete({id: editingId})}>Eliminar</Button>
                   )}
-                </TabsContent>
-                <TabsContent value="citas">
-                  <h3 className="text-lg font-bold text-vita-blue mb-2">Citas Médicas</h3>
-                  {appointments.length === 0 ? (
-                    <Card className="text-center p-10 glass-card">
-                      <p className="text-vita-white">No tienes citas en tu agenda.</p>
-                      <p className="text-vita-muted-foreground text-sm mt-1">Usa el botón '+' para agregar una.</p>
-                    </Card>
-                  ) : (
-                    <div className="space-y-4">
-                      {appointments.map(appt => (
-                        <Card key={appt.id} className="p-4 glass-card border border-vita-blue/30 shadow-lg">
-                          <div className="flex justify-between items-start">
-                            <div>
-                              <div className="flex items-center gap-2 mb-1">
-                                <Stethoscope className="h-6 w-6 text-vita-blue" />
-                                <p className="font-bold text-lg text-vita-white">{appt.title}</p>
-                              </div>
-                              <div className="flex items-center gap-2 text-xs text-white/80 mb-1">
-                                <svg width="16" height="16" fill="none" viewBox="0 0 24 24"><path stroke="#fff" strokeWidth="2" d="M12 6v6l4 2"/></svg>
-                                {new Date(appt.datetime).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}
-                              </div>
-                              {appt.location && <p className="text-sm text-vita-muted-foreground">Lugar: {appt.location}</p>}
-                              {appt.notes && <p className="text-sm text-vita-white mt-2">Nota: {appt.notes}</p>}
-                              {appt.repeat && appt.repeat !== 'none' && (
-                                <span className="inline-flex items-center gap-1 text-xs bg-vita-blue-dark/40 rounded-full px-2 py-1 mt-1">
-                                  Repite: {appt.repeat}
-                                </span>
-                              )}
-                            </div>
-                            <div className="flex gap-2">
-                              <Button variant="ghost" size="icon" className="h-8 w-8 text-white/70 hover:text-white" onClick={() => { setEditingItem(appt); setDialogOpen(true); }}>
-                                <Edit className="h-4 w-4" />
-                              </Button>
-                              <Button variant="ghost" size="icon" className="h-8 w-8 text-red-400 hover:text-red-500" onClick={() => handleDeleteItem(appt.id)}>
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          </div>
-                        </Card>
-                      ))}
-                    </div>
-                  )}
-                </TabsContent>
-              </motion.div>
-            </AnimatePresence>
-          </Tabs>
+                </div>
+              </form>
+            </CardContent>
+          </Card>
+        )}
 
-          <Dialog open={dialogOpen} onOpenChange={(open) => { if (!open) { setEditingItem(null); } setDialogOpen(open); }}>
-            <DialogTrigger asChild>
-              <Button size="icon" className="fixed bottom-24 right-6 md:bottom-8 md:right-8 h-16 w-16 bg-vita-orange rounded-full shadow-lg z-50">
-                <Plus className="h-8 w-8" />
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>{editingItem ? 'Editar' : 'Agregar'} {activeTab === 'medicinas' ? 'Medicina' : 'Cita'}</DialogTitle>
-              </DialogHeader>
-              {activeTab === 'medicinas' ? (
-                <MedicineForm
-                  onSubmit={editingItem ? handleEditItem : handleAddItem}
-                  initialData={editingItem}
-                />
-              ) : (
-                <AppointmentForm
-                  onSubmit={editingItem ? handleEditItem : handleAddItem}
-                  initialData={editingItem}
-                />
-              )}
-            </DialogContent>
-          </Dialog>
+        <Card className="bg-white/10 border border-cyan-400/20" style={{ boxShadow:'0 0 0 1px rgba(0,255,231,0.18)' }}>
+          <CardHeader><CardTitle>Próximos 30 días</CardTitle></CardHeader>
+          <CardContent className="space-y-2">
+            {loading ? <p>Cargando…</p> : events.length === 0 ? <p>No hay eventos.</p> : (
+              <ul className="divide-y divide-white/10">
+                {events.map(ev => (
+                  <li key={ev.id} className="py-2 flex items-center justify-between">
+                    <div>
+                      <p className="font-semibold text-white">{ev.title}</p>
+                      <p className="text-sm text-white/70">{new Date(ev.event_date+'T'+ev.event_time).toLocaleString()}</p>
+                      <p className="text-xs text-white/50">{ev.type} {ev.repeat_type && ev.repeat_type !== 'none' ? `· ${ev.repeat_type}` : ''}</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button onClick={()=>onEdit(ev)} className="px-3 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-xs">Editar</button>
+                      <button onClick={()=>onDelete(ev)} className="px-3 py-1 rounded-lg bg-red-500/80 hover:bg-red-500 text-white text-xs">Eliminar</button>
+                      {ev.notify ? <span className="text-green-400 text-xs">Con aviso</span> : <span className="text-white/50 text-xs">Sin aviso</span>}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Botón flotante para crear evento rápido */}
+        <div className="fixed bottom-20 right-5 z-20">
+          <Button className="rounded-full bg-[color:var(--vc-primary,#f06340)] shadow-[0_0_24px_rgba(240,99,64,0.4)]" onClick={()=>{ const d=new Date(); setSelectedDate(d); setForm(f=>({ ...f, event_date: d.toISOString().slice(0,10) })); setShowForm(true); }}>
+            <Plus className="w-5 h-5 mr-2"/>Agregar evento
+          </Button>
         </div>
-      </Layout>
-      <footer className="fixed bottom-[72px] left-0 right-0 bg-vita-background/80 backdrop-blur-sm p-3 text-center border-t border-white/10">
-        <div className="flex items-center justify-center text-xs text-white/70">
-            <Info className="h-4 w-4 mr-2" />
-            <span>Descarga tus archivos, por seguridad se eliminarán en unos días.</span>
-        </div>
-      </footer>
-    </>
+      </div>
+    </Layout>
   );
-};
-
-export default Agenda;
+}
+ 
   

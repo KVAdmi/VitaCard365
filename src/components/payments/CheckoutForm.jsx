@@ -1,6 +1,6 @@
 import MPWallet from './MPWallet';
 
-export default function CheckoutForm({ plan = 'Individual', frequency = 'Mensual', amount = 199 }) {
+export default function CheckoutForm({ plan = 'Individual', frequency = 'Mensual', amount = 249 }) {
   return (
     <div className="glass-card p-6 rounded-2xl shadow-lg flex flex-col gap-4 items-center w-full max-w-md mx-auto">
       <div className="text-blue-600 text-center text-lg font-bold mb-4">Paga con Mercado Pago</div>

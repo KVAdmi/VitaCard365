@@ -47,7 +47,7 @@ const Receipt = () => {
           <header className="flex justify-between items-center pb-6 border-b">
             <div>
               <Vita365Logo className="h-10 text-3xl text-vita-blue" />
-              <p className="text-sm text-gray-500">Kódigo Vivo S.A. de C.V.</p>
+              <p className="text-sm text-gray-500">Azisted S.A. de C.V.</p>
             </div>
             <div className="text-right">
               <h2 className="text-2xl font-bold text-gray-700">Recibo de Pago</h2>

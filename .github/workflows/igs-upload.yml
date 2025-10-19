@@ -1,0 +1,38 @@
+name: IGS CSV to SFTP
+
+on:
+  schedule:
+    - cron: '30 5 * * *'  # 23:30 MX-CDMX aprox (UTC 05:30)
+  workflow_dispatch: {}
+
+jobs:
+  upload:
+    runs-on: ubuntu-latest
+    permissions: {}
+    env:
+      # Permite desactivar el cron hasta que lo apruebes desde Secrets
+      IGS_CRON_ENABLED: ${{ secrets.IGS_CRON_ENABLED }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Install deps (runtime only)
+        run: npm i ssh2-sftp-client node-fetch@3
+
+      - name: Upload CSV to SFTP
+        # Desactiva el job si viene por cron y el toggle no es 'true'
+        if: ${{ github.event_name != 'schedule' || env.IGS_CRON_ENABLED == 'true' }}
+        env:
+          IGS_EXPORT_URL: ${{ secrets.IGS_EXPORT_URL }}
+          IGS_SFTP_HOST: ${{ secrets.IGS_SFTP_HOST }}
+          IGS_SFTP_PORT: ${{ secrets.IGS_SFTP_PORT }}
+          IGS_SFTP_USER: ${{ secrets.IGS_SFTP_USER }}
+          IGS_SFTP_PASS: ${{ secrets.IGS_SFTP_PASS }}
+          IGS_SFTP_DIR:  ${{ secrets.IGS_SFTP_DIR }}
+        run: node scripts/igs-sftp-upload.mjs
+

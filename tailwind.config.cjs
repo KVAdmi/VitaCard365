@@ -53,6 +53,7 @@ module.exports = {
   safelist: [
     'bg-vita-background',
     'bg-vita-primary',
+    'bg-[#0d2041]',
     // Agrega aquí otras clases dinámicas si las usas
   ],
 };

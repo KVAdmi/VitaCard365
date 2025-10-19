@@ -4,6 +4,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import MeasureLayout from '../../components/michequeo/MeasureLayout';
 import NASAHistoryCardsPanel from '../../components/mi-chequeo/NASAHistoryCardsPanel';
 import { Card } from '../../components/ui/card';
+import NeonSelect from '@/components/neon/NeonSelect';
 
 
 const History = () => {
@@ -94,15 +95,17 @@ const History = () => {
       <NASAHistoryCardsPanel />
       <div className="space-y-6">
         <div className="flex flex-wrap gap-2 mb-2">
-          <select value={tipo} onChange={e=>setTipo(e.target.value)} className="rounded-lg px-3 py-2 bg-white/10 text-white">
-            <option value="all">Todos</option>
-            <option value="bp">Presión arterial</option>
-            <option value="pulso_bpm">Pulso</option>
-            <option value="spo2">SpO₂</option>
-            <option value="glucosa">Glucosa</option>
-          </select>
-          <input type="date" value={desde} onChange={e=>setDesde(e.target.value)} className="rounded-lg px-3 py-2 bg-white/10 text-white" />
-          <input type="date" value={hasta} onChange={e=>setHasta(e.target.value)} className="rounded-lg px-3 py-2 bg-white/10 text-white" />
+          <NeonSelect variant="cyan" value={tipo} onChange={e=>setTipo(e.target.value)} placeholder="Tipo"
+            options={[
+              { value: 'all', label: 'Todos' },
+              { value: 'bp', label: 'Presión arterial' },
+              { value: 'pulso_bpm', label: 'Pulso' },
+              { value: 'spo2', label: 'SpO₂' },
+              { value: 'glucosa', label: 'Glucosa' },
+            ]}
+          />
+          <input type="date" value={desde} onChange={e=>setDesde(e.target.value)} className="rounded-xl px-3 py-2 bg-white/10 text-white border border-cyan-300/25 focus:outline-none focus:ring-2 focus:ring-cyan-300/60" />
+          <input type="date" value={hasta} onChange={e=>setHasta(e.target.value)} className="rounded-xl px-3 py-2 bg-white/10 text-white border border-cyan-300/25 focus:outline-none focus:ring-2 focus:ring-cyan-300/60" />
         </div>
         {loading ? (
           <Card className="p-6 glass-card">

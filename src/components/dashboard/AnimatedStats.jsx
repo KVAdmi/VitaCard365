@@ -95,7 +95,7 @@ const AnimatedStats = () => {
         <div className="text-xs mt-1 font-medium text-center">Solicitudes atendidas</div>
       </div>
 
-      {/* Años de servicio continuo */}
+      {/* Años de servicio       */}
       <div className={CARD} style={{ background: 'rgba(24,28,40,0.30)' }}>
   <div className="absolute top-2 left-1/2 -translate-x-1/2 bg-vita-orange rounded-full p-2 shadow-lg border-2 border-white z-20">
           <Clock className="h-7 w-7 text-white" />
@@ -106,7 +106,7 @@ const AnimatedStats = () => {
           :{serviceTime.minutes.toString().padStart(2, '0')}
           :{serviceTime.seconds.toString().padStart(2, '0')}
         </div>
-        <div className="text-xs mt-1 font-medium text-center">Años de servicio continuo</div>
+        <div className="text-xs mt-1 font-medium text-center">Años de servicio      </div>
       </div>
 
       {/* Clientes satisfechos */}

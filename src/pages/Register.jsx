@@ -9,6 +9,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
 import { useToast } from '../components/ui/use-toast';
 import { Eye, EyeOff, Mail, Lock, User, ArrowLeft, Ticket } from 'lucide-react';
+import { validateSellerCode, PromoStorage } from '@/lib/codes';
 import VitaCard365Logo from '../components/Vita365Logo';
 import GoogleLoginButton from '../components/ui/GoogleLoginButton';
 
@@ -54,6 +55,7 @@ const Register = () => {
         setLoading(false);
         return;
       }
+      // Asegurar sesión activa
       if (!data.session) {
         const { error: e2 } = await supabase.auth.signInWithPassword({
           email: formData.email,
@@ -69,11 +71,52 @@ const Register = () => {
           return;
         }
       }
+
+      // Si proporcionó un código de activación, verificar en Supabase si está pagado/activo
+      const code = (formData.activationCode || '').trim().toUpperCase();
+      if (code) {
+        try {
+          // Buscar el código en profiles_certificado_v2
+          const { data: folio, error: qErr } = await supabase
+            .from('profiles_certificado_v2')
+            .select('codigo_vita, estado_pago, acceso_activo, membresia')
+            .eq('codigo_vita', code)
+            .maybeSingle();
+
+          if (!qErr && folio && (folio.acceso_activo || (folio.estado_pago || '').toLowerCase() === 'pagado')) {
+            // Asociar este folio al usuario actual y activar acceso (si políticas lo permiten)
+            const { data: u } = await supabase.auth.getUser();
+            const uid = u?.user?.id;
+            if (uid) {
+              await supabase
+                .from('profiles_certificado_v2')
+                .upsert({ user_id: uid, codigo_vita: code, acceso_activo: true, estado_pago: folio.estado_pago || 'pagado', membresia: folio.membresia || 'individual' }, { onConflict: 'user_id' });
+            }
+            toast({ title: '¡Registro exitoso!', description: 'Tu folio fue validado. Completa tu perfil.' });
+            navigate('/perfil');
+            return;
+          }
+
+          // Si no es un folio pagado, intentamos validarlo como código de vendedor (AA999)
+          const v = await validateSellerCode(code);
+          if (v.valid) {
+            PromoStorage.save(code);
+            toast({ title: 'Código aplicado', description: `Se aplicará precio preferencial: $${v.discount_price} por persona/mes.` });
+            navigate('/payment-gateway');
+            return;
+          }
+        } catch (e) {
+          // Si algo falla, seguirá el flujo normal a pago
+          console.warn('[register] Validación de folio falló o no aplica:', e);
+        }
+      }
+
+      // Sin código válido pagado: ir a pasarela de pago
       toast({
-        title: '¡Registro exitoso!',
-        description: 'Bienvenida.',
+        title: '¡Cuenta creada!',
+        description: 'Continúa con el pago para activar tu membresía.',
       });
-      navigate('/perfil');
+      navigate('/payment-gateway');
     } catch (error) {
       toast({
         title: 'Error de Registro',
@@ -169,10 +212,10 @@ const Register = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="activationCode">¿Tienes tu código VITACARD365? Ingrésalo aquí</Label>
+                  <Label htmlFor="activationCode">¿Tienes folio VITA o código de descuento? Ingrésalo aquí</Label>
                   <div className="relative">
                     <Ticket className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-white/80" />
-                    <Input id="activationCode" type="text" placeholder="Ej: VITAFAM-XXXX" className="pl-12" value={formData.activationCode} onChange={(e) => setFormData({ ...formData, activationCode: e.target.value.toUpperCase() })} />
+                    <Input id="activationCode" type="text" placeholder="Ej: VITAFAM-XXXX o AA999" className="pl-12" value={formData.activationCode} onChange={(e) => setFormData({ ...formData, activationCode: e.target.value.toUpperCase() })} />
                   </div>
                 </div>
 
@@ -186,7 +229,7 @@ const Register = () => {
                 <div className="relative flex justify-center text-sm"><span className="bg-transparent px-2 text-white/70 backdrop-blur-sm">O continúa con</span></div>
               </div>
 
-              <GoogleLoginButton onSuccess={handleGoogleSuccess} />
+              <GoogleLoginButton nextPath="/payment-gateway" onSuccess={handleGoogleSuccess} />
 
               <div className="text-center mt-6 text-sm">
                 <span className="text-white/70">¿Ya tienes cuenta? </span>

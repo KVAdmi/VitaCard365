@@ -16,7 +16,9 @@ export async function createPreference(payload) {
       plan: payload.plan || 'individual',
       frequency: payload.frequency || 'monthly', 
       familySize: Number(payload.familySize || 1),
-      amount: price  // precio en pesos con decimales
+      amount: price,  // precio en pesos con decimales
+      // Si el cliente ya generó una orden previa, puede pasar orderId (UUID)
+      ...(payload.orderId ? { orderId: payload.orderId } : {})
     };
 
     console.log('[API] Enviando payload:', validPayload);

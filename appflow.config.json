@@ -1,0 +1,164 @@
+{
+  "name": "VitaCard365",
+  "appId": "f6c253d1",
+  "androidPath": "android",
+  "iosPath": "ios/App",
+  "build": {
+    "android": {
+      "stack": "Android - 2025",
+      "packageManager": "npm",
+      "scripts": {
+        "prebuild": [
+          "npm ci"
+        ],
+        "build": [
+          "vite build"
+        ],
+        "postbuild": [
+          "npx cap copy android && npx cap sync android"
+        ]
+      },
+      "env": {},
+      "secrets": {},
+      "hooks": {
+        "prebuild": [],
+        "build": [],
+        "postbuild": []
+      },
+      "plugins": []
+    },
+    "ios": {
+      "stack": "macOS - 2025.06 - Apple silicon",
+      "packageManager": "npm",
+      "scripts": {
+        "prebuild": [
+          "npm ci",
+          "npm i --no-save capacitor-healthkit@latest"
+        ],
+        "build": [
+          "vite build"
+        ],
+        "postbuild": [
+          "npx cap copy ios && npx cap sync ios",
+          "node scripts/ios-set-gms-key.js",
+          "cd ios/App && pod install --repo-update"
+        ]
+      },
+      "env": {},
+      "secrets": {},
+      "hooks": {
+        "prebuild": [],
+        "build": [],
+        "postbuild": []
+      },
+      "exportOptions": {
+        "method": "app-store",
+        "uploadSymbols": true,
+        "destination": "export",
+        "signingStyle": "manual",
+        "provisioningProfiles": []
+      },
+      "plugins": []
+    }
+  },
+  "environments": {
+    "default": {
+      "ios": {
+        "profiles": [],
+        "perfiles": [],
+        "certificates": [],
+        "hooks": {
+          "prebuild": [],
+          "build": [],
+          "postbuild": []
+        },
+        "env": {},
+        "secrets": {},
+        "exportOptions": {
+          "provisioningProfiles": []
+        }
+      },
+      "android": {
+        "profiles": [],
+        "perfiles": [],
+        "certificates": [],
+        "hooks": {
+          "prebuild": [],
+          "build": [],
+          "postbuild": []
+        },
+        "env": {},
+        "secrets": {}
+      }
+    },
+    "prod": {
+      "ios": {
+        "profiles": [],
+        "perfiles": [],
+        "certificates": [],
+        "hooks": {
+          "prebuild": [],
+          "build": [],
+          "postbuild": []
+        },
+        "env": {},
+        "secrets": {},
+        "exportOptions": {
+          "provisioningProfiles": []
+        }
+      },
+      "android": {
+        "profiles": [],
+        "perfiles": [],
+        "certificates": [],
+        "hooks": {
+          "prebuild": [],
+          "build": [],
+          "postbuild": []
+        },
+        "env": {},
+        "secrets": {}
+      }
+    },
+    "staging": {
+      "ios": {
+        "profiles": [],
+        "perfiles": [],
+        "certificates": [],
+        "hooks": {
+          "prebuild": [],
+          "build": [],
+          "postbuild": []
+        },
+        "env": {},
+        "secrets": {},
+        "exportOptions": {
+          "provisioningProfiles": []
+        }
+      },
+      "android": {
+        "profiles": [],
+        "perfiles": [],
+        "certificates": [],
+        "hooks": {
+          "prebuild": [],
+          "build": [],
+          "postbuild": []
+        },
+        "env": {},
+        "secrets": {}
+      }
+    }
+  },
+  "deploy": {
+    "channels": [ ]
+  },
+  "signingCertificates": {
+    "android": [],
+    "ios": []
+  },
+  "nativeConfigs": {
+    "android": [],
+    "ios": []
+  }
+}

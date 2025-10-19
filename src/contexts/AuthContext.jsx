@@ -141,13 +141,24 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = async () => {
+    try {
+      const ok = window.confirm('¿Seguro que deseas cerrar sesión? Si cierras sesión, no recibirás notificaciones.');
+      if (!ok) return;
+    } catch {}
     if (isSupabaseConnected) {
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
     } else {
       localStorage.removeItem('vita-user');
-      setUser(null);
     }
+    try {
+      // Limpieza defensiva de posibles restos
+      localStorage.removeItem('supabase.auth.token');
+      localStorage.removeItem('vita-auth');
+    } catch {}
+    setUser(null);
+    // Navegar a landing para resetear toda la UI de manera segura
+    try { window.location.replace('/'); } catch {}
   };
 
   const updateUser = async (updateData) => {
@@ -186,20 +197,20 @@ export const AuthProvider = ({ children }) => {
           name,
           alias: name?.split(' ')[0] || '',
           avatar_url: picture,
-          vita_card_id: profile?.vita_card_id || generateId('VITA'),
+          vita_card_id: profile?.vita_card_id || makeVitaId('VITA'),
           plan_status: profile?.plan_status || 'inactive',
           created_at: profile?.created_at || new Date().toISOString(),
         }, { onConflict: ['user_id'] });
       if (upsertError) throw upsertError;
 
-      setUser({ id, email, user_metadata: { name, alias: name?.split(' ')[0] || '', avatarUrl: picture, vita_card_id: profile?.vita_card_id || generateId('VITA') } });
+  setUser({ id, email, user_metadata: { name, alias: name?.split(' ')[0] || '', avatarUrl: picture, vita_card_id: profile?.vita_card_id || makeVitaId('VITA') } });
       return { id, email, name, picture };
     } else {
       // Mock login Google
       const mockUser = {
         id,
         email,
-        user_metadata: { name, alias: name?.split(' ')[0] || '', avatarUrl: picture, vita_card_id: generateId('VITA') },
+  user_metadata: { name, alias: name?.split(' ')[0] || '', avatarUrl: picture, vita_card_id: makeVitaId('VITA') },
         app_metadata: { provider: 'google' },
         aud: 'authenticated',
         created_at: new Date().toISOString(),

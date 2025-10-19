@@ -13,42 +13,35 @@ const wellnessCategories = [
     title: wellnessData.tips.name,
     description: 'Consejos diarios para una vida mejor.',
     icon: Brain,
-    color: 'text-blue-400',
+    color: 'text-vita-orange',
   },
   {
     slug: 'nutricion',
     title: wellnessData.nutricion.name,
     description: 'Guías y planes para una alimentación sana.',
     icon: Salad,
-    color: 'text-green-400',
+    color: 'text-vita-orange',
   },
   {
     slug: 'respiracion',
     title: wellnessData.respiracion.name,
     description: 'Ejercicios guiados para calmar tu mente.',
     icon: Wind,
-    color: 'text-teal-400',
-  },
-  {
-    slug: 'meditacion',
-    title: wellnessData.meditacion.name,
-    description: 'Encuentra tu paz interior con audios.',
-    icon: Waves,
-    color: 'text-purple-400',
+    color: 'text-vita-orange',
   },
   {
     slug: 'rutinas',
     title: wellnessData.rutinas.name,
     description: 'Actívate con ejercicios cortos y efectivos.',
     icon: Dumbbell,
-    color: 'text-orange-400',
+    color: 'text-vita-orange',
   },
   {
     slug: 'sueno',
     title: wellnessData.sueno.name,
     description: 'Mejora tu descanso y energía.',
     icon: Moon,
-    color: 'text-indigo-400',
+    color: 'text-vita-orange',
   },
 ];
 
@@ -64,22 +57,6 @@ const Bienestar = () => {
 
       <Layout title="Bienestar" showBackButton>
         <div className="p-4 md:p-6 space-y-6">
-          <Card 
-            className="cursor-pointer hover:bg-white/10 transition-colors"
-            onClick={() => navigate('/bienestar/favoritos')}
-          >
-            <CardContent className="p-4 flex items-center justify-between">
-              <div className='flex items-center'>
-                <Star className="w-8 h-8 text-yellow-400 mr-4" />
-                <div>
-                  <h3 className="text-lg font-bold text-vita-white">Mis Favoritos</h3>
-                  <p className="text-sm text-white/80">Tu contenido guardado para después.</p>
-                </div>
-              </div>
-              <ArrowRight className="w-5 h-5 text-vita-muted-foreground" />
-            </CardContent>
-          </Card>
-          
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {wellnessCategories.map((category, index) => {
               const Icon = category.icon;

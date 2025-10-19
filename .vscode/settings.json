@@ -1,7 +1,7 @@
 {
-  "java.import.gradle.enabled": false,
-  "java.project.importOnFirstTimeStartup": "disabled",
-  "gradle.enabled": false,
-  "search.exclude": { "android/**": true },
-  "files.watcherExclude": { "**/android/**": true }
+    "java.configuration.updateBuildConfiguration": "automatic"
+{
+    "yaml.schemas": {
+        "https://json.schemastore.org/github-workflow.json": ".github/workflows/*.yml"
+    }
 }

@@ -1,6 +1,6 @@
 ﻿{
   "appId": "com.vitacard365.app",
-  "appName": "VitaCard365",
+  "appName": "VitaCard 365",
   "webDir": "dist",
   "bundledWebRuntime": false,
   "server": { "androidScheme": "https" }

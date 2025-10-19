@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Helmet } from 'react-helmet';
@@ -17,10 +17,10 @@ const Login = () => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-  });
+  const [formData, setFormData] = useState({ email: '', password: '' });
+  const formRef = useRef(null);
+  const emailRef = useRef(null);
+  const passwordRef = useRef(null);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -60,6 +60,53 @@ const Login = () => {
       setLoading(false);
     }
   };
+
+  // Auto-submit si el gestor autollenó (Android/iOS pueden no disparar eventos clásicos)
+  useEffect(() => {
+    let submitting = false;
+    if (!formRef.current || !emailRef.current || !passwordRef.current) return;
+    const emailEl = emailRef.current;
+    const passEl = passwordRef.current;
+
+    const doPasswordLogin = async () => {
+      if (submitting) return;
+      if (!emailEl.value || !passEl.value || !emailEl.checkValidity()) return;
+      submitting = true;
+      try {
+        const result = await login(emailEl.value.trim(), passEl.value);
+        if (result) {
+          setTimeout(() => navigate('/dashboard', { replace: true }), 50);
+        }
+      } catch (err) {
+        // silencioso: el botón y toasts ya cubren el error en envío manual
+      } finally {
+        submitting = false;
+      }
+    };
+
+    const handlers = ['input', 'change', 'blur', 'keyup', 'paste'].map(evt => {
+      const h = () => void doPasswordLogin();
+      emailEl.addEventListener(evt, h);
+      passEl.addEventListener(evt, h);
+      return { evt, h };
+    });
+
+    let lastE = '', lastP = '';
+    const poll = setInterval(() => {
+      if (emailEl.value !== lastE || passEl.value !== lastP) {
+        lastE = emailEl.value; lastP = passEl.value;
+        void doPasswordLogin();
+      }
+    }, 400);
+
+    return () => {
+      handlers.forEach(({ evt, h }) => {
+        emailEl.removeEventListener(evt, h);
+        passEl.removeEventListener(evt, h);
+      });
+      clearInterval(poll);
+    };
+  }, [login, navigate]);
 
   const { signInWithGoogle } = useAuth();
   const handleGoogleSuccess = async (googleUser) => {
@@ -108,18 +155,21 @@ const Login = () => {
                 <p className="text-white/70 mt-2">Accede a tu cuenta VitaCard 365</p>
               </div>
               
-              <form onSubmit={handleSubmit} className="space-y-6">
+              <form id="loginForm" ref={formRef} onSubmit={handleSubmit} className="space-y-6">
                 <div className="space-y-2">
                   <Label htmlFor="email" className="text-white">Correo Electrónico</Label>
                   <div className="relative">
                     <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-white/80" />
                     <Input
                       id="email"
+                      ref={emailRef}
                       type="email"
                       placeholder="tu@email.com"
                       className="pl-12"
                       value={formData.email}
                       onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                      autoComplete="username email"
+                      inputMode="email"
                       required
                     />
                   </div>
@@ -131,11 +181,13 @@ const Login = () => {
                     <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-white/80" />
                     <Input
                       id="password"
+                      ref={passwordRef}
                       type={showPassword ? 'text' : 'password'}
                       placeholder="Tu contraseña"
                       className="pl-12 pr-12"
                       value={formData.password}
                       onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                      autoComplete="current-password"
                       required
                     />
                     <Button
@@ -198,3 +250,8 @@ const Login = () => {
 };
 
 export default Login;
+
+// Auto-submit con autocompletar del sistema/gestores de contraseñas
+// Implementado dentro del componente usando refs y efectos
+// Sin romper el flujo existente
+Login.displayName = 'Login';

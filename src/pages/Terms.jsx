@@ -36,7 +36,7 @@ const Terms = () => {
           <p>Todo el contenido, diseño, logos y funcionalidades de la aplicación son propiedad de Kódigo Vivo S.A. de C.V. y están protegidos por las leyes de propiedad intelectual.</p>
 
           <h2 className="text-2xl font-bold pt-4 text-vita-blue">6. Limitación de Responsabilidad</h2>
-          <p>VitaCard 365 y Kódigo Vivo S.A. de C.V. no serán responsables por decisiones médicas o acciones tomadas basadas únicamente en la información de la aplicación. La responsabilidad por la prestación de los servicios de asistencia recae en IGS Group Solution y sus proveedores.</p>
+          <p>VitaCard 365 y Azisted S.A. de C.V. no serán responsables por decisiones médicas o acciones tomadas basadas únicamente en la información de la aplicación. La responsabilidad por la prestación de los servicios de asistencia recae en IGS Group Solution y sus proveedores.</p>
           
           <h2 className="text-2xl font-bold pt-4 text-vita-blue">7. Ley Aplicable y Jurisdicción</h2>
           <p>Estos Términos se regirán por las leyes de los Estados Unidos Mexicanos. Para cualquier disputa, las partes se someten a la jurisdicción de los tribunales competentes de la Ciudad de México.</p>

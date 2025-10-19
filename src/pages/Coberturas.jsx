@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Helmet } from 'react-helmet';
 import Layout from '../components/Layout';
@@ -30,6 +31,7 @@ import {
 
 const Coberturas = () => {
   const { coverageUsage, trackCoverageUsage } = useUser();
+  const location = useLocation();
   const [selectedCategory, setSelectedCategory] = useState('medica');
   const [confirmingService, setConfirmingService] = useState(null);
   const { toast } = useToast();
@@ -64,13 +66,20 @@ const Coberturas = () => {
     ],
     vial: [
       { id: 'grua_falla_mecanica', name: 'Servicio de Grúa por falla mecánica (solo auto)', events: 1, unlimited: false, value: 'Hasta $1,000 MXN c/u' },
-      { id: 'cambio_llanta', name: 'Cambio de llanta (auto y moto)', events: 2, unlimited: false, value: 'Hasta $800 MXN c/u (en combinación)' },
-      { id: 'paso_corriente', name: 'Paso de corriente (auto y moto)', events: 2, unlimited: false, value: 'Hasta $800 MXN c/u (en combinación)' },
-      { id: 'suministro_gasolina', name: 'Suministro de gasolina (auto y moto)', events: 2, unlimited: false, value: 'Hasta $800 MXN c/u (en combinación)' },
       { id: 'traslado_bicicleta', name: 'Traslado de la bicicleta', events: 1, unlimited: false, value: 'Sin costo para el afiliado' },
       { id: 'asistencia_telefonica_accidente', name: 'Asistencia telefónica por accidente', events: 0, unlimited: true, value: 'Sin costo para el afiliado' },
       { id: 'mantenimiento_bicicleta', name: 'Mantenimiento básico de la bicicleta', events: 1, unlimited: false, value: 'Hasta $500 MXN' },
       { id: 'medico_telefonico_vial', name: 'Médico Telefónico', events: 0, unlimited: true, value: 'Sin costo para el afiliado' },
+      // Tarjeta combinada: 2 disponibles entre estos 3 servicios
+      {
+        id: 'vial_combinado_cambio_paso_gasolina',
+        name: 'Cambio de llanta, Paso de corriente o Suministro de gasolina (auto y moto)',
+        events: 2,
+        unlimited: false,
+        value: 'Hasta $800 MXN c/u',
+        note: '2 disponibles combinadas entre estos 3 servicios',
+        combined: true
+      },
     ],
     mascotas: [
       { id: 'consulta_veterinaria_emergencia', name: 'Consulta médica veterinaria por emergencia', events: 1, unlimited: false, value: 'Hasta $900 MXN c/u' },
@@ -85,9 +94,16 @@ const Coberturas = () => {
       { id: 'referencia_gimnasios', name: 'Referencia y coordinación de gimnasios, spas y centros de estética', events: 0, unlimited: true, value: 'Sin límite de eventos' },
     ],
     hogar: [
-      { id: 'plomero', name: 'Asistencia de Plomero para el Hogar', events: 2, unlimited: false, value: 'Hasta $800 MXN por servicio (en combinación)' },
-      { id: 'cerrajero', name: 'Asistencia de Cerrajero para el Hogar', events: 2, unlimited: false, value: 'Hasta $800 MXN por servicio (en combinación)' },
-      { id: 'electricista', name: 'Asistencia de Electricista para el Hogar', events: 2, unlimited: false, value: 'Hasta $800 MXN por servicio (en combinación)' },
+      // Tarjeta combinada: 2 disponibles entre estos 3 servicios
+      {
+        id: 'hogar_combinado_plomero_cerrajero_electricista',
+        name: 'Plomero, Cerrajero o Electricista para el Hogar',
+        events: 2,
+        unlimited: false,
+        value: 'Hasta $800 MXN por servicio',
+        note: '2 disponibles combinadas entre estos 3 servicios',
+        combined: true
+      },
     ],
     funeraria: [
       { id: 'servicios_funerarios', name: 'Servicios Funerarios', events: 1, unlimited: false, value: 'Hasta $18,000 MXN' }
@@ -118,6 +134,18 @@ const Coberturas = () => {
     return `${remaining} de ${service.events} disponibles`;
   };
 
+  // Si viene ?cat=fitness en la URL, seleccionar esa categoría por defecto
+  useEffect(() => {
+    try {
+      const params = new URLSearchParams(location.search);
+      const cat = params.get('cat');
+      if (cat && ['medica','legal','vial','mascotas','fitness','hogar','funeraria'].includes(cat)) {
+        setSelectedCategory(cat);
+      }
+    } catch {}
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   return (
     <>
       <Helmet>
@@ -127,6 +155,10 @@ const Coberturas = () => {
 
       <Layout title="Coberturas" showBackButton>
         <div className="p-4 space-y-6">
+          {/* Logo IGS superior */}
+          <div className="w-full flex justify-center">
+            <img src="/branding/Logo-IGS-lineal-01.png" alt="IGS" className="h-12 sm:h-16 object-contain drop-shadow-[0_0_20px_rgba(240,99,64,0.35)]" />
+          </div>
           <Card className="bg-vita-blue-light border border-vita-orange/30">
             <CardContent className="p-4 flex items-start space-x-3">
               <Info className="h-5 w-5 text-vita-orange flex-shrink-0 mt-1" />
@@ -171,14 +203,19 @@ const Coberturas = () => {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.3 }}
                 >
-                  <Card>
+                  <Card className={service.combined ? 'border-2 border-vita-orange/60 bg-vita-orange/10' : ''}>
                     <CardContent className="p-4">
                       <div className="flex justify-between items-start space-x-4">
                         <div className="flex-1">
                           <h3 className="font-semibold text-vita-white text-base mb-1">
                             {service.name}
                           </h3>
-                          <p className="text-xs text-vita-muted-foreground mb-2">{service.value}</p>
+                          <p className="text-xs text-vita-muted-foreground mb-1">{service.value}</p>
+                          {service.note && (
+                            <p className="text-xs text-vita-orange font-semibold mb-2">
+                              {service.note}
+                            </p>
+                          )}
                           <div className={`flex items-center space-x-2 text-sm font-medium ${isServiceAvailable(service) ? 'text-green-400' : 'text-yellow-400'}`}>
                             {isServiceAvailable(service) ? <CheckCircle className="h-4 w-4" /> : <AlertCircle className="h-4 w-4" />}
                             <span>{getAvailabilityText(service)}</span>

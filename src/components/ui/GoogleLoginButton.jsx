@@ -1,15 +1,10 @@
 
 import React from 'react';
 import { Button } from '../ui/button';
-import { supabase } from '../../lib/supabaseClient';
+import { signInWithGoogle } from '@/lib/auth';
 
-const GoogleLoginButton = () => {
-  const handleGoogleLogin = async () => {
-    await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: { redirectTo: `${window.location.origin}/auth/callback` }
-    });
-  };
+const GoogleLoginButton = ({ nextPath } = {}) => {
+  const handleGoogleLogin = async () => { await signInWithGoogle(); };
 
   return (
     <Button onClick={handleGoogleLogin} variant="outline" size="lg" className="w-full border border-white/20 bg-white/10 text-white hover:bg-white/20 flex items-center justify-center">
