@@ -33,6 +33,7 @@
         "clean:node": "rimraf node_modules package-lock.json",
         "rebuild:android": "npm run clean:android && npx cap sync android && cd android && .\\gradlew.bat clean assembleDebug",
         "android:debug:fresh": "npm run build:mobile && npm run clean:android:web && npx cap copy android && cd android && .\\gradlew.bat --stop && .\\gradlew.bat clean assembleDebug"
+        ,"ios:setup": "npm install && npm run build && npx cap sync ios && bash scripts/ios/pod-install.sh"
     },
     "dependencies": {
         "@capacitor-community/bluetooth-le": "7.0.0",
