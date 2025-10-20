@@ -140,19 +140,6 @@ const Dashboard = () => {
             </Card>
           </div>
 
-          <div className="mt-6">
-            <h3 className="text-lg font-semibold text-vita-white">Logros</h3>
-            <ul className="list-disc pl-5 text-white/80">
-              {logros.map((logro, index) => (
-                <li key={index}>{logro}</li>
-              ))}
-            </ul>
-          </div>
-
-          <div className="mt-6">
-            <h3 className="text-lg font-semibold text-vita-white">Rutinas completadas</h3>
-            <p className="text-white/80">Has completado {rutinasCompletadas} rutinas.</p>
-          </div>
 
           {/* Firma del desarrollador (fuera de la tarjeta, sobre el fondo) */}
           <div className="w-full flex justify-center mt-6 mb-8">
