@@ -1,6 +1,6 @@
 // src/pages/PaymentGateway.jsx
 import { useEffect, useRef, useState } from "react";
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Navigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabaseClient';
 import { usePayment } from "../hooks/usePayment";
 import { createPreference } from "../lib/api";
@@ -10,6 +10,27 @@ import Layout from "../components/Layout";
 
 export default function PaymentGateway() {
   const navigate = useNavigate();
+
+  console.log(">>> Estoy en PaymentGateway REAL");
+
+  useEffect(() => {
+    try {
+      const kvGate = sessionStorage.getItem("kv_gate") === "1";
+      if (kvGate) {
+        console.info("[KV] kv_gate=1 → redirijo a /mi-plan (imperativo)");
+        window.location.href = "/mi-plan";
+      }
+    } catch (e) {
+      console.warn("[KV] sessionStorage no disponible:", e);
+    }
+  }, []);
+
+  const kvGate = typeof window !== 'undefined' && sessionStorage.getItem('kv_gate') === '1';
+  if (kvGate) {
+    console.info('[KV] Bloqueando pago por kv_gate=1 -> /mi-plan');
+    return <Navigate to="/mi-plan" replace />;
+  }
+
   // Definir membership ANTES de usePayment para evitar undefined en render
   const [membership, setMembership] = useState({ acceso_activo: false, periodicidad: null, membresia: null });
   const {

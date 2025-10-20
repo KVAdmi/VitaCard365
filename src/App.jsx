@@ -9,7 +9,7 @@ import GymRunner from './pages/fit/gym/Runner.jsx';
 import GymPlan from './pages/fit/gym/Plan.jsx';
 import GymProgreso from './pages/fit/gym/Progreso.jsx';
 import FitProgreso from './pages/fit/progreso';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { BrowserRouter, HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Helmet, HelmetProvider } from 'react-helmet-async';
 import { Toaster } from './components/ui/toaster';
@@ -46,7 +46,6 @@ import PaymentGateway from './pages/PaymentGateway';
 import FitCallback from './pages/FitCallback';
 import ResetPassword from './pages/ResetPassword';
 import AuthCallback from './pages/AuthCallback';
-import { useEffect } from 'react';
 import { initAuthDeepLinks } from '@/lib/deeplinks';
 import '@/lib/auth'; // inicializa listener de deep link (auth-callback)
 import IntroVideo from './pages/IntroVideo';
@@ -58,6 +57,7 @@ import Wallet from './pages/perfil/Wallet';
 import '@/lib/sessionHydrator';
 import '@/lib/nativeGuards';
 import '@/lib/backGuard';
+import { useEntitlements } from '@/hooks/useEntitlements';
 
 
 
@@ -154,7 +154,7 @@ function App() {
                       <Route path="*" element={<Navigate to={notFoundTarget} replace />} />
 
                     <Route path="/mi-plan" element={<ProtectedRoute><Pagos /></ProtectedRoute>} />
-                    <Route path="/payment-gateway" element={<ProtectedRoute><PaymentGateway /></ProtectedRoute>} />
+                    <Route path="/payment-gateway" element={<ProtectedRoute><PaymentGatewayWrapper profile={{}} /></ProtectedRoute>} />
                     <Route path="/paymentgateway" element={<Navigate to="/payment-gateway" replace />} />
                     <Route path="/perfil" element={<ProtectedRoute><Perfil /></ProtectedRoute>} />
                     <Route path="/perfil/wallet" element={<ProtectedRoute><Wallet /></ProtectedRoute>} />
@@ -171,6 +171,15 @@ function App() {
       </>
     </HelmetProvider>
   );
+}
+
+function PaymentGatewayWrapper({ profile }) {
+  const { paywallEnabled } = useEntitlements(null, profile);
+  if (!paywallEnabled) {
+    console.info('[KV] paywall disabled');
+    return <Navigate to="/dashboard" replace />;
+  }
+  return <PaymentGateway />;
 }
 
 export default App;

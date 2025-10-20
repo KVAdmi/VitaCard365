@@ -54,13 +54,12 @@ const equipoAlias: Record<string,string> = {
 export default function CreateRoutine() {
   const navigate = useNavigate();
   const { success, error: toastError } = useToast();
-  const [paso, setPaso] = useState<Paso>('objetivo');
-  // Lugar quedó fijo a "Casa" por simplificación del flujo; no se expone al usuario
-  const [lugar] = useState<'Gym'|'Casa'>('Casa');
+  const [paso, setPaso] = useState<'objetivo' | 'estructura' | 'dias' | 'ejercicios' | 'resumen'>('objetivo');
+  const [lugar] = useState<'Gym' | 'Casa'>('Casa');
   const [showHelp, setShowHelp] = useState(true);
 
   // Paso 1
-  const [objetivo, setObjetivo] = useState<'musculo'|'grasa'|'movilidad'|'cardio'|'mixto'>('musculo');
+  const [objetivo, setObjetivo] = useState<'musculo' | 'grasa' | 'movilidad' | 'cardio' | 'mixto'>('musculo');
   const [semanas, setSemanas] = useState(4);
   const [diasSemana, setDiasSemana] = useState(4);
   const [minutos, setMinutos] = useState<number>(25); // int libre; UI MVP 15/25/40
@@ -278,8 +277,55 @@ export default function CreateRoutine() {
     }
   }
 
+  // Guardar rutina y vincular con agenda
+  const guardarRutina = async () => {
+    try {
+      const userId = await getUserId();
+      const rutinaId = await crearPlan({
+        user_id: userId,
+        objetivo,
+        semanas,
+        dias_semana: diasSemana,
+        minutos_sesion: minutos,
+      });
+
+      success('Rutina guardada y vinculada a la agenda correctamente.');
+      navigate('/dashboard');
+    } catch (error) {
+      toastError('Error al guardar la rutina. Inténtalo nuevamente.');
+    }
+  };
+
+  // Definición de la función calcularFechaInicio
+  const calcularFechaInicio = (dia: number) => {
+    const hoy = new Date();
+    const fechaInicio = new Date(hoy);
+    fechaInicio.setDate(hoy.getDate() + (dia - 1));
+    return fechaInicio;
+  };
+
+  // Corrección de comparaciones de tipos
+  const compararFoco = (f: string) => {
+    switch (f) {
+      case 'full':
+        return 'Todo el cuerpo';
+      case 'upper':
+        return 'Parte superior';
+      case 'lower':
+        return 'Parte inferior';
+      case 'movilidad':
+        return 'Movilidad';
+      case 'cardio':
+        return 'Cardio';
+      case 'core':
+        return 'Core';
+      default:
+        return 'Desconocido';
+    }
+  };
+
   return (
-  <div className="p-4 space-y-4 text-[color:var(--vc-foreground,#e7e7ea)]">
+    <div className="p-4 space-y-4 text-[color:var(--vc-foreground,#e7e7ea)]">
       {/* Neon keyframes locales para pulsar botones */}
       <style>
         {`
