@@ -1,0 +1,14 @@
+default_platform(:ios)
+
+platform :ios do
+  desc "Skeleton para builds locales (no sube a TestFlight)"
+  lane :build_local do
+    cocoapods(clean_install: true)
+    # Nota: build_app requiere firma; se deja como referencia
+    build_app(
+      scheme: "App",
+      export_method: "app-store",
+      skip_profile_detection: true
+    )
+  end
+end

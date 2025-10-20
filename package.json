@@ -10,6 +10,7 @@
         "@rollup/rollup-win32-arm64-msvc": "4.21.3"
     },
     "scripts": {
+        "ios:setup": "npm install && npm run build && npx cap sync ios && bash scripts/ios/pod-install.sh",
         "dev": "vite",
         "prebuild": "node scripts/prebuild-clean-public.cjs",
         "build": "npm run prebuild && cross-env ROLLUP_SKIP_NODEJS_NATIVE=1 ROLLUP_SKIP_NATIVE=1 ROLLUP_USE_JS=1 vite build --config vite.config.mjs",
