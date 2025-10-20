@@ -201,7 +201,7 @@ const Landing = () => {
             <span className="hidden sm:inline">|</span>
             <a href="/terminos-y-condiciones" className="hover:text-vita-orange transition-colors">Términos y Condiciones</a>
           </div>
-          <p className="mt-4">Desarrollo Kódigo Vivo.</p>
+          <p className="mt-4">Desarrollo Azisted Systems.</p>
         </footer>
       </div>
     </>;

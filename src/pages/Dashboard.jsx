@@ -22,8 +22,15 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [access, setAccess] = useState(null);
+  const [logros, setLogros] = useState([]);
+  const [rutinasCompletadas, setRutinasCompletadas] = useState(0);
 
   useEffect(()=>{ (async()=>{ setAccess(await fetchAccess()); })(); },[]);
+  useEffect(() => {
+    // Simulación de logros y rutinas completadas
+    setLogros(['Primera rutina completada', '5 días consecutivos']);
+    setRutinasCompletadas(12); // Número simulado
+  }, []);
 
   // Accesos rápidos: cards en orden (Coberturas, FIT, Mi Chequeo, Bienestar)
   const quickActions = [
@@ -133,9 +140,23 @@ const Dashboard = () => {
             </Card>
           </div>
 
+          <div className="mt-6">
+            <h3 className="text-lg font-semibold text-vita-white">Logros</h3>
+            <ul className="list-disc pl-5 text-white/80">
+              {logros.map((logro, index) => (
+                <li key={index}>{logro}</li>
+              ))}
+            </ul>
+          </div>
+
+          <div className="mt-6">
+            <h3 className="text-lg font-semibold text-vita-white">Rutinas completadas</h3>
+            <p className="text-white/80">Has completado {rutinasCompletadas} rutinas.</p>
+          </div>
+
           {/* Firma del desarrollador (fuera de la tarjeta, sobre el fondo) */}
           <div className="w-full flex justify-center mt-6 mb-8">
-            <p className="text-[12px] leading-none text-white/90 tracking-wide">® Kódigo Vivo.</p>
+            <p className="text-[12px] leading-none text-white/90 tracking-wide">® Azisted.</p>
           </div>
 
         </div>
