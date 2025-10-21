@@ -1,17 +1,18 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>VitaCard 365</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>VitaCard365</title>
     <!-- build-stamp: inserted by Copilot on 2025-10-10 -->
     <link rel="manifest" href="/manifest.json" />
     <meta name="theme-color" content="#0d2041" />
   </head>
   <body style="background:#0d2041;">
     <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
-  <script type="module" id="ios-splash-intro">
+
+    <!-- Tu script de overlay iOS va aquí, antes de cerrar body -->
+    <script type="module" id="ios-splash-intro">
     const BASE = (import.meta?.env?.BASE_URL ?? '/');
     const isIOS =
       (window.Capacitor && typeof window.Capacitor.getPlatform === 'function' && window.Capacitor.getPlatform() === 'ios') ||
@@ -60,6 +61,9 @@
         }, 60);
       });
     }
-  </script>
+    </script>
+
+    <!-- Asegura el entry correcto según tu stack -->
+    <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>
