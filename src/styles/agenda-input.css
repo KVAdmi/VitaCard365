@@ -1,0 +1,74 @@
+/* Footer seguro para móviles con gestos y barra de navegación */
+.footer-menu {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+/* Restaurar estilo original de inputs y ajustar tarjetas */
+.agenda-input {
+  background: rgba(21,32,68,0.7); /* Restaurar opacidad original */
+  color: #fff; /* Restaurar color original */
+  border-radius: 0.75rem;
+  backdrop-filter: blur(4px);
+  box-shadow: 0 4px 16px rgba(21,32,68,0.15);
+  font-weight: normal; /* Restaurar peso original */
+  border: none; /* Quitar borde */
+}
+
+.agenda-input::placeholder {
+  color: #e0e0e0;
+  opacity: 1;
+}
+
+/* Ajustar estilo de las tarjetas */
+.agenda-list-card {
+  background: rgba(21,32,68,0.85); /* Fondo más opaco para mejor legibilidad */
+  color: #fff; /* Contraste adecuado para texto */
+  border-radius: 1rem;
+  box-shadow: 0 4px 16px rgba(21,32,68,0.18);
+  margin-top: 1rem;
+  margin-bottom: 0.5rem;
+  padding: 1rem;
+}
+
+/* Más opacidad en los dropdowns de tipo y repetir */
+.agenda-dropdown {
+  background: rgba(21,32,68,0.97) !important;
+  color: #fff !important;
+  border-radius: 0.75rem !important;
+  font-weight: 600;
+}
+
+/* Ajustes para mejorar opacidad y apilamiento de tarjetas desplegables */
+
+/* --- INICIO: Código de Gemini para ajustar tarjetas de la agenda --- */
+/* Tarjeta desplegable de menú tipo y repetir */
+.tarjeta-desplegable {
+  background: rgba(21,32,68,0.99) !important; /* Azul marino casi sólido */
+  color: #fff !important; /* Texto blanco */
+  border-radius: 0.75rem !important;
+  font-weight: 500;
+  backdrop-filter: blur(10px) !important;
+  border: 1px solid rgba(255,255,255,0.12) !important;
+  position: relative;
+  z-index: 9999 !important; /* Máximo para estar siempre encima */
+}
+/* --- FIN: Código de Gemini --- */
+
+.tarjeta-proximos-dias {
+  position: relative;
+  z-index: 1; /* Apilamiento bajo para estar debajo */
+}
+
+/* --- INICIO: Código de Gemini para ajustar tarjetas de la agenda --- */
+
+.clase-de-la-tarjeta-desplegable {
+  /* SOLUCIÓN DE OPACIDAD */
+  background: rgba(0, 0, 0, 0.6) !important;
+  backdrop-filter: blur(10px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+
+  /* SOLUCIÓN DE APILAMIENTO (Z-INDEX) */
+  position: relative;
+  z-index: 999; /* Un valor alto para garantizar que esté al frente */
+}
+
+/* --- FIN: Código de Gemini --- */

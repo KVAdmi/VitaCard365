@@ -11,56 +11,48 @@
   <body style="background:#0d2041;">
     <div id="root"></div>
 
-    <!-- Tu script de overlay iOS va aquí, antes de cerrar body -->
-    <script type="module" id="ios-splash-intro">
-    const BASE = (import.meta?.env?.BASE_URL ?? '/');
-    const isIOS =
-      (window.Capacitor && typeof window.Capacitor.getPlatform === 'function' && window.Capacitor.getPlatform() === 'ios') ||
-      /iPad|iPhone|iPod/.test(navigator.userAgent);
-    const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
 
-    if (!isIOS || reduceMotion) { /* no-op */ } else {
-      const overlay = document.createElement('div');
-      overlay.setAttribute('data-ios-intro', 'true');
-      Object.assign(overlay.style, {
-        position: 'fixed', inset: '0', zIndex: '2147483647',
-        backgroundColor: '#000', display: 'flex',
-        alignItems: 'center', justifyContent: 'center',
-        backgroundImage: `url("${BASE}branding/splash.png")`,
-        backgroundRepeat: 'no-repeat', backgroundPosition: 'center center',
-        backgroundSize: 'cover'
+    <!-- SPLASH + INTRO (iOS) -->
+    <script>
+    (function () {
+      const ov = document.createElement('div');
+      ov.style.cssText = 'position:fixed;inset:0;background:#0c1732;display:flex;align-items:center;justify-content:center;z-index:99999;transition:opacity .25s ease;';
+
+      const img = new Image();
+      img.src = '/branding/splash.png';
+      img.style.cssText = 'max-width:70%;max-height:70%;opacity:1;transition:opacity .25s ease';
+      ov.appendChild(img);
+
+      const vid = document.createElement('video');
+      vid.src = '/videos/intro.mp4';
+      vid.muted = true;
+      vid.playsInline = true;
+      vid.autoplay = true;
+      vid.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .25s ease';
+
+      const played = { v:false };
+
+      function quit() {
+        ov.style.opacity = '0';
+        setTimeout(() => ov.remove(), 250);
+      }
+
+      vid.addEventListener('loadeddata', () => {
+        if (played.v) return;
+        played.v = true;
+        vid.play().then(() => {
+          img.style.opacity = '0';
+          vid.style.opacity = '1';
+        }).catch(() => { quit(); });
       });
 
-      const video = document.createElement('video');
-      video.setAttribute('playsinline', '');
-      video.setAttribute('webkit-playsinline', '');
-      video.setAttribute('muted', '');
-      video.setAttribute('autoplay', '');
-      video.setAttribute('preload', 'auto');
-      video.setAttribute('aria-label', 'Intro');
-      Object.assign(video.style, { maxWidth: '100%', maxHeight: '100%', objectFit: 'cover' });
-      video.src = `${BASE}videos/intro.mp4`;
+      setTimeout(() => { if (vid.paused) vid.play().catch(quit); }, 1000);
+      const hard = setTimeout(quit, 6500);
+      vid.addEventListener('ended', () => { clearTimeout(hard); quit(); });
 
-      const cleanup = () => {
-        overlay.style.transition = 'opacity 220ms ease-out';
-        overlay.style.opacity = '0';
-        setTimeout(() => overlay.remove(), 240);
-      };
-
-      const failSafe = setTimeout(cleanup, 6500);
-      video.addEventListener('ended', () => { clearTimeout(failSafe); cleanup(); });
-      video.addEventListener('error', () => { clearTimeout(failSafe); cleanup(); });
-      video.addEventListener('abort', () => { clearTimeout(failSafe); cleanup(); });
-
-      document.addEventListener('DOMContentLoaded', () => {
-        document.body.appendChild(overlay);
-        setTimeout(() => {
-          overlay.appendChild(video);
-          const p = video.play?.();
-          if (p && p.catch) p.catch(() => {});
-        }, 60);
-      });
-    }
+      ov.appendChild(vid);
+      document.body.appendChild(ov);
+    })();
     </script>
 
     <!-- Asegura el entry correcto según tu stack -->
