@@ -37,27 +37,37 @@ const AppointmentForm = ({ onSubmit, initialData }) => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="space-y-2">
-        <Label htmlFor="title">Título</Label>
-        <Input id="title" value={formData.title} onChange={handleChange} placeholder="Ej. Consulta con Dra. López" required />
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor="datetime">Fecha y Hora</Label>
-        <Input id="datetime" type="datetime-local" value={formData.datetime} onChange={handleChange} required />
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor="location">Ubicación (Opcional)</Label>
-        <Input id="location" value={formData.location} onChange={handleChange} placeholder="Ej. Consultorio 123" />
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor="notes">Notas</Label>
-        <Textarea id="notes" value={formData.notes} onChange={handleChange} placeholder="Ej. Llevar últimos análisis" />
-      </div>
-      <Button type="submit" className="w-full bg-vita-orange">
-        {initialData ? 'Guardar Cambios' : 'Agregar Cita'}
-      </Button>
-    </form>
+    <div
+      style={{
+        background: 'rgba(21,32,68,0.7)',
+        backdropFilter: 'blur(6px)',
+        borderRadius: '1rem',
+        boxShadow: '0 4px 16px rgba(21,32,68,0.15)',
+        padding: '1.5rem',
+      }}
+    >
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="title">Título</Label>
+          <Input id="title" value={formData.title} onChange={handleChange} placeholder="Ej. Consulta con Dra. López" required />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="datetime">Fecha y Hora</Label>
+          <Input id="datetime" type="datetime-local" value={formData.datetime} onChange={handleChange} required />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="location">Ubicación (Opcional)</Label>
+          <Input id="location" value={formData.location} onChange={handleChange} placeholder="Ej. Consultorio 123" />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="notes">Notas</Label>
+          <Textarea id="notes" value={formData.notes} onChange={handleChange} placeholder="Ej. Llevar últimos análisis" />
+        </div>
+        <Button type="submit" className="w-full bg-vita-orange">
+          {initialData ? 'Guardar Cambios' : 'Agregar Cita'}
+        </Button>
+      </form>
+    </div>
   );
 };
 

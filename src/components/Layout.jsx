@@ -260,7 +260,7 @@ const Layout = ({ children, title, showBackButton = false }) => {
         </motion.div>
       </main>
 
-      <nav className="fixed bottom-0 left-0 right-0 z-40 glass-card">
+      <nav className="fixed bottom-0 left-0 right-0 z-40 glass-card footer-menu">
         <div className="flex justify-around py-2">
           {navigationItems.map((item) => {
             const Icon = item.icon;

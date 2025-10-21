@@ -8,6 +8,7 @@ import { Label } from '../components/ui/label';
 import { Input } from '../components/ui/input';
 import { useToast } from '../components/ui/use-toast';
 import { createAgendaEvent, fetchUpcomingAgenda, fetchAgendaRange, updateAgendaEvent, deleteAgendaEvent } from '@/lib/agenda';
+import '../styles/agenda-input.css';
 
 export default function AgendaPage(){
   const [events, setEvents] = useState([]);
@@ -128,6 +129,14 @@ export default function AgendaPage(){
     return map;
   }, [monthEvents]);
 
+  // Cambios visuales en inputs/selects del formulario de Agenda
+  const inputStyle = {
+    background: 'rgba(21,32,68,0.7)',
+    backdropFilter: 'blur(4px)',
+    borderRadius: '0.75rem',
+    color: '#fff',
+  };
+
   return (
     <Layout title="Agenda" showBackButton>
       <div className="p-4 space-y-6">
@@ -168,7 +177,11 @@ export default function AgendaPage(){
         </Card>
 
         {showForm && (
-          <Card className="bg-white/10 border border-cyan-400/20" style={{ boxShadow:'0 0 0 1px rgba(0,255,231,0.18)' }}>
+          <Card className="border border-cyan-400/20" style={{
+            background: 'rgba(21,32,68,0.7)',
+            backdropFilter: 'blur(6px)',
+            boxShadow: '0 0 0 1px rgba(0,255,231,0.18)',
+          }}>
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle>{editingId ? 'Editar evento' : 'Nuevo evento'} — {form.event_date}</CardTitle>
               <div className="flex items-center gap-2">
@@ -182,38 +195,33 @@ export default function AgendaPage(){
               <form onSubmit={onSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div>
                   <Label>Tipo</Label>
-                  <NeonSelect variant="cyan" value={form.type} onChange={e=>setForm({...form, type:e.target.value})}
-                    options={[
-                      { value: 'medicamento', label: 'Medicamento' },
-                      { value: 'cita_medica', label: 'Cita médica' },
-                      { value: 'otro', label: 'Otro' },
-                    ]} placeholder="Tipo" />
+                  <div style={inputStyle}>
+                    <NeonSelect variant="cyan" value={form.type} onChange={e=>setForm({...form, type:e.target.value})}
+                      options={[{ value: 'medicamento', label: 'Medicamento' },{ value: 'cita_medica', label: 'Cita médica' },{ value: 'otro', label: 'Otro' }]} placeholder="Tipo" className="agenda-input tarjeta-desplegable" />
+                  </div>
                 </div>
                 <div className="md:col-span-1">
                   <Label>Título</Label>
-                  <Input value={form.title} onChange={e=>setForm({...form, title:e.target.value})} required />
+                  <Input value={form.title} onChange={e=>setForm({...form, title:e.target.value})} required className="agenda-input" />
                 </div>
                 <div className="md:col-span-2">
                   <Label>Descripción</Label>
-                  <Input value={form.description} onChange={e=>setForm({...form, description:e.target.value})} />
+                  <Input value={form.description} onChange={e=>setForm({...form, description:e.target.value})} className="agenda-input" />
                 </div>
                 <div>
                   <Label>Fecha</Label>
-                  <Input type="date" value={form.event_date} onChange={e=>setForm({...form, event_date:e.target.value})} required />
+                  <Input type="date" value={form.event_date} onChange={e=>setForm({...form, event_date:e.target.value})} required className="agenda-input" />
                 </div>
                 <div>
                   <Label>Hora</Label>
-                  <Input type="time" value={form.event_time.slice(0,5)} onChange={e=>setForm({...form, event_time:e.target.value+':00'})} required />
+                  <Input type="time" value={form.event_time.slice(0,5)} onChange={e=>setForm({...form, event_time:e.target.value+':00'})} required className="agenda-input" />
                 </div>
                 <div>
                   <Label>Repetir</Label>
-                  <NeonSelect variant="cyan" value={form.repeat_type} onChange={e=>setForm({...form, repeat_type:e.target.value})}
-                    options={[
-                      { value: 'none', label: 'No repetir' },
-                      { value: 'daily', label: 'Diario' },
-                      { value: 'weekly', label: 'Semanal' },
-                      { value: 'monthly', label: 'Mensual' },
-                    ]} placeholder="Repetición" />
+                  <div style={inputStyle}>
+                    <NeonSelect variant="cyan" value={form.repeat_type} onChange={e=>setForm({...form, repeat_type:e.target.value})}
+                      options={[{ value: 'none', label: 'No repetir' },{ value: 'daily', label: 'Diario' },{ value: 'weekly', label: 'Semanal' },{ value: 'monthly', label: 'Mensual' }]} placeholder="Repetición" className="agenda-input tarjeta-desplegable" />
+                  </div>
                 </div>
                 <div className="flex items-center gap-2">
                   <input id="notify" type="checkbox" className="accent-orange-500" checked={!!form.notify} onChange={e=>setForm({...form, notify:e.target.checked})} />
@@ -230,13 +238,14 @@ export default function AgendaPage(){
           </Card>
         )}
 
-        <Card className="bg-white/10 border border-cyan-400/20" style={{ boxShadow:'0 0 0 1px rgba(0,255,231,0.18)' }}>
+        {/* Restaurar estilo original de inputs y ajustar tarjetas */}
+        <Card className="bg-white/10 border border-cyan-400/20 tarjeta-proximos-dias" style={{ boxShadow:'0 0 0 1px rgba(0,255,231,0.18)', marginTop: '2rem' }}>
           <CardHeader><CardTitle>Próximos 30 días</CardTitle></CardHeader>
           <CardContent className="space-y-2">
             {loading ? <p>Cargando…</p> : events.length === 0 ? <p>No hay eventos.</p> : (
               <ul className="divide-y divide-white/10">
                 {events.map(ev => (
-                  <li key={ev.id} className="py-2 flex items-center justify-between">
+                  <li key={ev.id} className="py-2 flex items-center justify-between agenda-list-card">
                     <div>
                       <p className="font-semibold text-white">{ev.title}</p>
                       <p className="text-sm text-white/70">{new Date(ev.event_date+'T'+ev.event_time).toLocaleString()}</p>
@@ -264,5 +273,4 @@ export default function AgendaPage(){
     </Layout>
   );
 }
- 
-  
+
