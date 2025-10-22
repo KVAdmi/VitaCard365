@@ -33,7 +33,11 @@
         "clean:android": "rimraf \"android/app/build\" \"android/build\" \"android/.gradle\" \"android/capacitor-cordova-android-plugins\"",
         "clean:node": "rimraf node_modules package-lock.json",
         "rebuild:android": "npm run clean:android && npx cap sync android && cd android && .\\gradlew.bat clean assembleDebug",
-        "android:debug:fresh": "npm run build:mobile && npm run clean:android:web && npx cap copy android && cd android && .\\gradlew.bat --stop && .\\gradlew.bat clean assembleDebug"
+        "android:debug:fresh": "npm run build:mobile && npm run clean:android:web && npx cap copy android && cd android && .\\gradlew.bat --stop && .\\gradlew.bat clean assembleDebug",
+        "ios:sync": "npx cap sync ios",
+        "guard:lock-ios-public": "chmod -R a-w ios/App/public || true && chflags -R uchg ios/App/public || true",
+        "guard:unlock-ios-public": "chmod -R u+rwX ios/App/public || true && chflags -R nouchg ios/App/public || true",
+        "ios:rebuild": "npm run guard:unlock-ios-public && npm run build && npm run ios:sync && npm run guard:lock-ios-public"
     },
     "dependencies": {
         "@capacitor-community/bluetooth-le": "7.0.0",
