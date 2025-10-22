@@ -21,17 +21,13 @@ workflows:
       cocoapods: default
     scripts:
       - name: Set up code signing settings on Xcode project
-        script: |
-          xcode-project use-profiles
+        script: xcode-project use-profiles
       - name: Install dependencies
-        script: |
-          npm ci
+        script: npm ci
       - name: Web build (Vite)
-        script: |
-          npm run build
+        script: npm run build
       - name: Sync Capacitor iOS
-        script: |
-          npx cap sync ios
+        script: npx cap sync ios
       - name: Install CocoaPods
         script: |
           cd $IOS_PROJECT_PATH
@@ -42,7 +38,7 @@ workflows:
           xcode-project build-ipa \
             --workspace "$XCODE_WORKSPACE" \
             --scheme "$XCODE_SCHEME" \
-            --archive-xcargs "SKIP_INSTALL=NO"
+            --archive-xcargs "SKIP_INSTALL=NO DEVELOPMENT_TEAM=XK3A98XNZ3 CODE_SIGN_IDENTITY=Apple Distribution CODE_SIGN_STYLE=Manual"
     artifacts:
       - $CM_BUILD_DIR/**/IPA/*.ipa
       - $CM_BUILD_DIR/**/Archive/*.xcarchive
