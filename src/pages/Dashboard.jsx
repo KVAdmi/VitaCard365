@@ -24,6 +24,7 @@ const Dashboard = () => {
   const [access, setAccess] = useState(null);
   const [logros, setLogros] = useState([]);
   const [rutinasCompletadas, setRutinasCompletadas] = useState(0);
+    const [showPolicy, setShowPolicy] = useState(false);
 
   useEffect(()=>{ (async()=>{ setAccess(await fetchAccess()); })(); },[]);
   useEffect(() => {
@@ -143,9 +144,54 @@ const Dashboard = () => {
 
           {/* Firma del desarrollador (fuera de la tarjeta, sobre el fondo) */}
           <div className="w-full flex justify-center mt-6 mb-8">
-            <p className="text-[12px] leading-none text-white/90 tracking-wide">® Azisted.</p>
+            <p className="text-[12px] leading-none text-white/90 tracking-wide">® Azisted. Tecnología patentada.</p>
           </div>
-
+          <div className="w-full flex justify-center mb-2">
+            <button
+              className="text-[12px] leading-none text-white/90 tracking-wide underline cursor-pointer bg-transparent border-none p-0"
+              style={{ outline: 'none' }}
+              onClick={() => setShowPolicy(true)}
+            >
+              Política de Seguridad y Confidencialidad de Datos
+            </button>
+          </div>
+          {showPolicy && (
+            <div
+              className="fixed inset-0 z-50 flex items-center justify-center bg-black/70"
+              onClick={() => setShowPolicy(false)}
+            >
+              <div
+                className="rounded-2xl p-6 max-w-lg w-full glass-card border border-white/20 shadow-2xl relative"
+                style={{ background: 'rgba(30, 30, 40, 0.92)', color: 'white', backdropFilter: 'blur(16px)', boxShadow: '0 8px 32px rgba(0,0,0,0.32)', maxHeight: '80vh', overflowY: 'auto' }}
+                onClick={e => e.stopPropagation()}
+              >
+                <button
+                  className="absolute top-3 right-3 text-white/80 hover:text-white text-2xl font-bold bg-transparent border-none cursor-pointer"
+                  style={{ outline: 'none', zIndex: 10 }}
+                  onClick={() => setShowPolicy(false)}
+                  aria-label="Cerrar política"
+                >
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="feather feather-x">
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                  </svg>
+                </button>
+                <h2 className="text-xl font-bold mb-4 text-white text-center">Política de Seguridad y Confidencialidad de Datos</h2>
+                <div className="space-y-2 text-sm text-white/90">
+                  <p>En VitaCard365, la protección de la información de nuestros usuarios es una prioridad absoluta. Nuestra plataforma está diseñada bajo los más altos estándares de seguridad y privacidad, garantizando que los datos personales sean tratados con estricta confidencialidad y conforme a la legislación vigente.</p>
+                  <ol className="list-decimal pl-4 space-y-2">
+                    <li>No almacenamos datos de medios de pago: Todas las transacciones y operaciones relacionadas con pagos se gestionan exclusivamente a través de Mercado Pago. VitaCard365 no almacena, procesa ni tiene acceso a información sensible de tarjetas, cuentas bancarias o cualquier otro medio de pago.</li>
+                    <li>No transferimos ni vendemos datos de usuarios: La información personal proporcionada por nuestros usuarios nunca es transferida, compartida ni vendida a terceros bajo ninguna circunstancia. El acceso a los datos está restringido únicamente para fines operativos internos y conforme a lo permitido por el usuario.</li>
+                    <li>Encriptación y seguridad máxima: Todos los datos gestionados por VitaCard365 son encriptados utilizando tecnologías de seguridad de nivel empresarial, tanto en tránsito como en reposo. Implementamos medidas de protección avanzadas para prevenir accesos no autorizados, pérdida, alteración o divulgación de la información.</li>
+                    <li>Cumplimiento normativo: Nuestra plataforma cumple con las regulaciones aplicables en materia de protección de datos personales, incluyendo la Ley Federal de Protección de Datos Personales en Posesión de los Particulares (LFPDPPP) y estándares internacionales de seguridad.</li>
+                    <li>Transparencia y control: El usuario tiene pleno control sobre su información y puede solicitar en cualquier momento la revisión, actualización o eliminación de sus datos enviando una solicitud al correo <a href="mailto:contacto@vitacard365.com" className="underline text-white" style={{textDecorationColor:'#fff'}}>contacto@vitacard365.com</a>, conforme a los procedimientos establecidos.</li>
+                    <li>Identidad corporativa: VitaCard365 es un producto de Azisted S.A. de C.V. Las coberturas de asistencia ofrecidas en la plataforma son operadas por IGS Group Solution.</li>
+                  </ol>
+                  <p>Para cualquier consulta o solicitud relacionada con la protección de datos, ponemos a disposición nuestros canales de contacto y atención.</p>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </Layout>
     </>

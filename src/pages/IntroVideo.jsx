@@ -21,8 +21,8 @@ export default function IntroVideo() {
   ];
 
   useEffect(() => {
-    // Mostramos 'Omitir' después de 3s. NO ocultamos el Splash aquí.
-    const t = setTimeout(() => setShowSkip(true), 3000);
+    // Mostramos 'Omitir' después de 2s. NO ocultamos el Splash aquí.
+    const t = setTimeout(() => setShowSkip(true), 2000);
     return () => { clearTimeout(t); };
   }, []);
 

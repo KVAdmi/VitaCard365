@@ -1501,6 +1501,24 @@
 				"$gcc"
 			],
 			"group": "build"
+		},
+		{
+			"label": "build:web for Netlify",
+			"type": "shell",
+			"command": "npm run build",
+			"args": [],
+			"isBackground": false,
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "sync:android",
+			"type": "shell",
+			"command": "npx cap sync android",
+			"args": [],
+			"isBackground": false,
+			"problemMatcher": [],
+			"group": "build"
 		}
 	]
 }

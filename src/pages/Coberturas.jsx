@@ -60,10 +60,10 @@ const Coberturas = () => {
       { id: 'limpieza_dental', name: 'Asistencia Dental - Limpieza Dental', events: 1, unlimited: false, value: 'Sin costo para el afiliado' },
     ],
     legal: [
-      { id: 'asistencia_legal', name: 'Asistencia legal', events: 0, unlimited: true, value: 'Sin costo para el afiliado' },
-      { id: 'orientacion_derechos_laborales', name: 'Orientación legal en derechos laborales', events: 0, unlimited: true, value: 'Sin costo para el afiliado' },
-      { id: 'asesoria_familiar_civil', name: 'Asesoría presencial en temas familiares y Civiles', events: 2, unlimited: false, value: 'Sin costo para el afiliado' },
-    ],
+      { id: 'asistencia_legal_accidente', name: 'Asesoría legal telefónica en caso de accidente', events: 0, unlimited: true, value: 'Sin costo para el afiliado' },
+      { id: 'asistencia_legal_primaria', name: 'Asesoría legal telefónica primaria', events: 0, unlimited: true, value: 'Sin costo para el afiliado' },
+      { id: 'asesoria_presencial_acta_denuncia', name: 'Asesoría legal presencial para levantar acta o denuncia exclusivamente', events: 2, unlimited: false, value: 'Hasta $2,500 pesos por evento' },
+ ],
     vial: [
       { id: 'grua_falla_mecanica', name: 'Servicio de Grúa por falla mecánica (solo auto)', events: 1, unlimited: false, value: 'Hasta $1,000 MXN c/u' },
       { id: 'traslado_bicicleta', name: 'Traslado de la bicicleta', events: 1, unlimited: false, value: 'Sin costo para el afiliado' },

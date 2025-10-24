@@ -19,6 +19,7 @@ import Landing from './pages/Landing';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
+import AccesoDirecto from './pages/AccesoDirecto';
 import Coberturas from './pages/Coberturas';
 import MiChequeo from './pages/MiChequeo';
 import Agenda from './pages/Agenda';
@@ -132,6 +133,7 @@ function App() {
                     <Route path="/auth/callback" element={<AuthCallback />} />
                     
                     <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+                      <Route path="/acceso-directo" element={<AccesoDirecto />} />
                     <Route path="/coberturas" element={<ProtectedRoute><Coberturas /></ProtectedRoute>} />
                     
                     <Route path="/mi-chequeo" element={<ProtectedRoute><MiChequeo /></ProtectedRoute>} />
