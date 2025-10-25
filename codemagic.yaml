@@ -1,89 +1,86 @@
 workflows:
   ios_capacitor:
     name: iOS Capacitor (VitaCard365)
-    workflows:
-      ios_capacitor:
-        name: iOS Capacitor (VitaCard365)
-        max_build_duration: 60
-        instance_type: mac_mini_m2
+    max_build_duration: 60
+    instance_type: mac_mini_m2
 
-        environment:
-          vars:
-            IOS_PROJECT_PATH: "ios/App"
-            XCODE_WORKSPACE: "App.xcworkspace"
-            XCODE_SCHEME: "App"
-            BUNDLE_ID: "com.vitacard365.app"
-            EXPORT_METHOD: "app-store"
-          node: v20.11.1
-          xcode: 15.4
-          cocoapods: default
-          ios_signing:
-            provisioning_profiles:
-              - VitaCard 365
-            certificates:
-              - VitaCard 365
+    environment:
+      vars:
+        IOS_PROJECT_PATH: "ios/App"
+        XCODE_WORKSPACE: "App.xcworkspace"
+        XCODE_SCHEME: "App"
+        BUNDLE_ID: "com.vitacard365.app"
+        EXPORT_METHOD: "app-store"
+      node: v20.11.1
+      xcode: 15.4
+      cocoapods: default
+      ios_signing:
+        provisioning_profiles:
+          - VitaCard 365
+        certificates:
+          - VitaCard 365
 
-        triggering:
-          events: [ push ]
-          branch_patterns:
-            - pattern: "ios-cap7"
-              include: true
+    triggering:
+      events: [ push ]
+      branch_patterns:
+        - pattern: "ios-cap7"
+          include: true
 
-        scripts:
-          - name: Preflight (debug vars y paths)
-            script: |
-              set -e
-              echo "PWD=$(pwd)"
-              echo "CM_BUILD_DIR=$CM_BUILD_DIR"
-              echo "IOS_PROJECT_PATH=$IOS_PROJECT_PATH"
-              ls -la
-              if [ ! -d "$IOS_PROJECT_PATH" ]; then
-                echo "❌ No existe $IOS_PROJECT_PATH en el repo. Genera iOS (npx cap add ios) y commitea."; exit 1;
-              fi
-              ls -la "$IOS_PROJECT_PATH"
-              if [ ! -f "$IOS_PROJECT_PATH/Podfile" ]; then
-                echo "❌ Falta Podfile en $IOS_PROJECT_PATH. Ejecuta 'pod install' local y commitea Podfile y Podfile.lock."; exit 1;
-              fi
+    scripts:
+      - name: Preflight (debug vars y paths)
+        script: |
+          set -e
+          echo "PWD=$(pwd)"
+          echo "CM_BUILD_DIR=$CM_BUILD_DIR"
+          echo "IOS_PROJECT_PATH=$IOS_PROJECT_PATH"
+          ls -la
+          if [ ! -d "$IOS_PROJECT_PATH" ]; then
+            echo "❌ No existe $IOS_PROJECT_PATH en el repo. Genera iOS (npx cap add ios) y commitea."; exit 1;
+          fi
+          ls -la "$IOS_PROJECT_PATH"
+          if [ ! -f "$IOS_PROJECT_PATH/Podfile" ]; then
+            echo "❌ Falta Podfile en $IOS_PROJECT_PATH. Ejecuta 'pod install' local y commitea Podfile y Podfile.lock."; exit 1;
+          fi
 
-          - name: Setup code signing (Codemagic profiles)
-            script: xcode-project use-profiles
+      - name: Setup code signing (Codemagic profiles)
+        script: xcode-project use-profiles
 
-          - name: Install dependencies (npm)
-            script: npm ci
+      - name: Install dependencies (npm)
+        script: npm ci
 
-          - name: Web build (Vite)
-            script: npm run build
+      - name: Web build (Vite)
+        script: npm run build
 
-          - name: Sync Capacitor iOS
-            script: npx cap sync ios
+      - name: Sync Capacitor iOS
+        script: npx cap sync ios
 
-          - name: Install CocoaPods
-            script: |
-              set -euo pipefail
-              cd "$IOS_PROJECT_PATH"
-              pod repo update
-              pod install
+      - name: Install CocoaPods
+        script: |
+          set -euo pipefail
+          cd "$IOS_PROJECT_PATH"
+          pod repo update
+          pod install
 
-          - name: Build .ipa with Automatic Signing
-            script: |
-              set -euo pipefail
-              cd "$IOS_PROJECT_PATH"
-              xcode-project build-ipa \
-                --workspace "$XCODE_WORKSPACE" \
-                --scheme "$XCODE_SCHEME" \
-                --archive-flags "-destination generic/platform=iOS" \
-                --export-method "$EXPORT_METHOD"
+      - name: Build .ipa with Automatic Signing
+        script: |
+          set -euo pipefail
+          cd "$IOS_PROJECT_PATH"
+          xcode-project build-ipa \
+            --workspace "$XCODE_WORKSPACE" \
+            --scheme "$XCODE_SCHEME" \
+            --archive-flags "-destination generic/platform=iOS" \
+            --export-method "$EXPORT_METHOD"
 
-        artifacts:
-          - $CM_BUILD_DIR/**/IPA/*.ipa
-          - $CM_BUILD_DIR/**/Archive/*.xcarchive
-          - ios/App/build/**/*.ipa
-          - ios/App/build/**/*.xcarchive
+    artifacts:
+      - $CM_BUILD_DIR/**/IPA/*.ipa
+      - $CM_BUILD_DIR/**/Archive/*.xcarchive
+      - ios/App/build/**/*.ipa
+      - ios/App/build/**/*.xcarchive
 
-        publishing:
-          email:
-            recipients:
-              - contacto@kvcontrol.systems
-            notify:
-              success: true
-              failure: true
+    publishing:
+      email:
+        recipients:
+          - contacto@kvcontrol.systems
+        notify:
+          success: true
+          failure: true
