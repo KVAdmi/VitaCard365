@@ -65,6 +65,8 @@ workflows:
         script: |
           cd "$IOS_PROJECT_PATH"
           BUILD_NUM="${CM_BUILD_ID:-$(date +%Y%m%d%H%M)}"
+          # Si no existe, la crea; si existe, la actualiza
+          /usr/libexec/PlistBuddy -c "Add :CFBundleVersion string $BUILD_NUM" App/Info.plist 2>/dev/null || \
           /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $BUILD_NUM" App/Info.plist
           /usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" App/Info.plist || true
           /usr/libexec/PlistBuddy -c "Print :CFBundleVersion" App/Info.plist
