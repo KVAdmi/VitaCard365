@@ -19,9 +19,9 @@ workflows:
           cocoapods: default
           ios_signing:
             provisioning_profiles:
-              - "VitaCard 365"
+              - VitaCard 365
             certificates:
-              - "VitaCard 365"
+              - VitaCard 365
 
         triggering:
           events: [ push ]
