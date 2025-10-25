@@ -10,7 +10,8 @@ workflows:
         XCODE_WORKSPACE: "App.xcworkspace"
         XCODE_SCHEME: "App"
         BUNDLE_ID: "com.vitacard365.app"
-        EXPORT_METHOD: "app-store"
+        DEVELOPMENT_TEAM: "XK3A98XNZ3"   # <-- tu Team ID
+        EXPORT_METHOD: "app-store"        # app-store | ad-hoc | development | enterprise
       node: v20.11.1
       xcode: 15.4
       cocoapods: default
@@ -27,22 +28,20 @@ workflows:
           include: true
 
     scripts:
-      - name: Preflight (debug vars y paths)
+      - name: Preflight (paths, bundle, team)
         script: |
           set -e
           echo "PWD=$(pwd)"
           echo "CM_BUILD_DIR=$CM_BUILD_DIR"
           echo "IOS_PROJECT_PATH=$IOS_PROJECT_PATH"
-          ls -la
-          if [ ! -d "$IOS_PROJECT_PATH" ]; then
-            echo "❌ No existe $IOS_PROJECT_PATH en el repo. Genera iOS (npx cap add ios) y commitea."; exit 1;
-          fi
+          test -d "$IOS_PROJECT_PATH" || { echo "❌ Falta $IOS_PROJECT_PATH"; exit 1; }
           ls -la "$IOS_PROJECT_PATH"
-          if [ ! -f "$IOS_PROJECT_PATH/Podfile" ]; then
-            echo "❌ Falta Podfile en $IOS_PROJECT_PATH. Ejecuta 'pod install' local y commitea Podfile y Podfile.lock."; exit 1;
-          fi
+          # Leer bundle real del Info.plist
+          /usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$IOS_PROJECT_PATH/App/Info.plist" || true
+          echo "BUNDLE_ID (env)=$BUNDLE_ID"
+          echo "DEVELOPMENT_TEAM=$DEVELOPMENT_TEAM"
 
-      - name: Setup code signing (Codemagic profiles)
+      - name: Setup code signing (Codemagic)
         script: xcode-project use-profiles
 
       - name: Install dependencies (npm)
@@ -54,21 +53,38 @@ workflows:
       - name: Sync Capacitor iOS
         script: npx cap sync ios
 
-      - name: Install CocoaPods
+      - name: CocoaPods
         script: |
           set -euo pipefail
           cd "$IOS_PROJECT_PATH"
+          test -f Podfile || { echo "❌ Falta Podfile en $(pwd)"; exit 1; }
           pod repo update
           pod install
 
-      - name: Build .ipa with Automatic Signing
+      - name: Bump build number (evitar rechazos por versión)
+        script: |
+          cd "$IOS_PROJECT_PATH"
+          BUILD_NUM="${CM_BUILD_ID:-$(date +%Y%m%d%H%M)}"
+          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $BUILD_NUM" App/Info.plist
+          /usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" App/Info.plist || true
+          /usr/libexec/PlistBuddy -c "Print :CFBundleVersion" App/Info.plist
+
+      - name: Mostrar settings de firma (debug)
+        script: |
+          cd "$IOS_PROJECT_PATH"
+          xcodebuild -showBuildSettings -workspace "$XCODE_WORKSPACE" -scheme "$XCODE_SCHEME" | egrep "PRODUCT_BUNDLE_IDENTIFIER|DEVELOPMENT_TEAM|CODE_SIGN_STYLE|CODE_SIGN_IDENTITY|PROVISIONING_PROFILE" || true
+
+      - name: Build .ipa con firma automática
         script: |
           set -euo pipefail
           cd "$IOS_PROJECT_PATH"
+          # Importante: nada de CODE_SIGN_STYLE=Manual ni CODE_SIGN_IDENTITY fijos
           xcode-project build-ipa \
             --workspace "$XCODE_WORKSPACE" \
             --scheme "$XCODE_SCHEME" \
-            --archive-flags "-destination generic/platform=iOS"
+            --archive-flags "DEVELOPMENT_TEAM=$DEVELOPMENT_TEAM CODE_SIGN_STYLE=Automatic -destination generic/platform=iOS" \
+            --export-method "$EXPORT_METHOD" \
+            --allow-provisioning-updates
 
     artifacts:
       - $CM_BUILD_DIR/**/IPA/*.ipa
