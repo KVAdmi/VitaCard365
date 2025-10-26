@@ -144,7 +144,7 @@ const Dashboard = () => {
 
           {/* Firma del desarrollador (fuera de la tarjeta, sobre el fondo) */}
           <div className="w-full flex justify-center mt-6 mb-8">
-            <p className="text-[12px] leading-none text-white/90 tracking-wide">® Azisted. Tecnología patentada.</p>
+            <p className="text-[12px] leading-none text-white/90 tracking-wide">® Kòdigo Vivo. Tecnología patentada.</p>
           </div>
           <div className="w-full flex justify-center mb-2">
             <button

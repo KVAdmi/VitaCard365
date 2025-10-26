@@ -51,7 +51,6 @@
 				62F5575AABC446663D561D7C /* Pods-App.debug.xcconfig */,
 				33DC13536016B058679ACB23 /* Pods-App.release.xcconfig */,
 			);
-			name = Pods;
 			path = Pods;
 			sourceTree = "<group>";
 		};
