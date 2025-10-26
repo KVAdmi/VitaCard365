@@ -40,6 +40,29 @@ workflows:
           echo "BUNDLE_ID (env)=$BUNDLE_ID"
           echo "DEVELOPMENT_TEAM=$DEVELOPMENT_TEAM"
 
+      - name: Ruby, Bundler, Node y build web limpio (recomendado)
+        script: |
+          #!/usr/bin/env bash
+          set -euo pipefail
+          # 1) Ruby 3.2.2 via rbenv
+          if ! command -v rbenv >/dev/null 2>&1; then
+            brew update
+            brew install rbenv ruby-build
+          fi
+          eval "$(rbenv init - bash)"
+          rbenv install -s 3.2.2
+          rbenv global 3.2.2
+          ruby -v
+          # 2) Bundler y pods en vendor/bundle (aislado)
+          gem install bundler -v 2.4.10
+          bundle config set path 'vendor/bundle'
+          bundle install
+          # 3) Node deps + build web
+          npm ci
+          npm run build
+          # 4) Sync iOS (esto internamente hace "bundle exec pod install")
+          npx cap sync ios
+
       - name: Setup code signing (Codemagic, perfiles manuales)
         script: xcode-project use-profiles
 
