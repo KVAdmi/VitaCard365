@@ -10,7 +10,6 @@ extension WKWebView {
     }
 }
 
-
 // Constantes usadas en algunos paths de Capacitor
 internal let MSEC_PER_SEC: Double = 1_000.0
 internal let USEC_PER_SEC: Double = 1_000_000.0
