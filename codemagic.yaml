@@ -10,7 +10,7 @@ workflows:
         XCODE_WORKSPACE: "App.xcworkspace"
         XCODE_SCHEME: "App"
         BUNDLE_ID: "com.vitacard365.app"
-        DEVELOPMENT_TEAM: "XK3A98XNZ3"   # <-- tu Team ID
+        DEVELOPMENT_TEAM: "XK3A98XNZ3"
         EXPORT_METHOD: "app-store"        # app-store | ad-hoc | development | enterprise
       node: v20.11.1
       xcode: 15.4
@@ -30,28 +30,34 @@ workflows:
     scripts:
       - name: Preflight (paths, bundle, team)
         script: |
-          set -e
+          set -euo pipefail
           echo "PWD=$(pwd)"
           echo "CM_BUILD_DIR=$CM_BUILD_DIR"
           echo "IOS_PROJECT_PATH=$IOS_PROJECT_PATH"
           test -d "$IOS_PROJECT_PATH" || { echo "❌ Falta $IOS_PROJECT_PATH"; exit 1; }
           ls -la "$IOS_PROJECT_PATH"
-          # Leer bundle real del Info.plist
+          # Leer bundle real del Info.plist del target App (Capacitor)
           /usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$IOS_PROJECT_PATH/App/Info.plist" || true
           echo "BUNDLE_ID (env)=$BUNDLE_ID"
           echo "DEVELOPMENT_TEAM=$DEVELOPMENT_TEAM"
 
-      - name: Setup code signing (Codemagic)
+      - name: Setup code signing (Codemagic, perfiles manuales)
         script: xcode-project use-profiles
 
       - name: Install dependencies (npm)
-        script: npm ci
+        script: |
+          set -euo pipefail
+          npm ci
 
       - name: Web build (Vite)
-        script: npm run build
+        script: |
+          set -euo pipefail
+          npm run build
 
       - name: Sync Capacitor iOS
-        script: npx cap sync ios
+        script: |
+          set -euo pipefail
+          npx cap sync ios
 
       - name: CocoaPods
         script: |
@@ -63,9 +69,9 @@ workflows:
 
       - name: Bump build number (evitar rechazos por versión)
         script: |
+          set -euo pipefail
           cd "$IOS_PROJECT_PATH"
           BUILD_NUM="${CM_BUILD_ID:-$(date +%Y%m%d%H%M)}"
-          # Si no existe, la crea; si existe, la actualiza
           /usr/libexec/PlistBuddy -c "Add :CFBundleVersion string $BUILD_NUM" App/Info.plist 2>/dev/null || \
           /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $BUILD_NUM" App/Info.plist
           /usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" App/Info.plist || true
@@ -73,24 +79,53 @@ workflows:
 
       - name: Mostrar settings de firma (debug)
         script: |
+          set -euo pipefail
           cd "$IOS_PROJECT_PATH"
           xcodebuild -showBuildSettings -workspace "$XCODE_WORKSPACE" -scheme "$XCODE_SCHEME" | egrep "PRODUCT_BUNDLE_IDENTIFIER|DEVELOPMENT_TEAM|CODE_SIGN_STYLE|CODE_SIGN_IDENTITY|PROVISIONING_PROFILE" || true
 
-      - name: Build .ipa con firma automática
+      - name: Build .ipa con perfiles (manual, coherente)
         script: |
           set -euo pipefail
+          set -x
           cd "$IOS_PROJECT_PATH"
-          # Importante: nada de CODE_SIGN_STYLE=Manual ni CODE_SIGN_IDENTITY fijos
+          # Coherente con 'use-profiles': firma MANUAL, sin pelear con automática
           xcode-project build-ipa \
             --workspace "$XCODE_WORKSPACE" \
             --scheme "$XCODE_SCHEME" \
-            --archive-flags "DEVELOPMENT_TEAM=$DEVELOPMENT_TEAM CODE_SIGN_STYLE=Automatic -destination generic/platform=iOS"
+            --archive-flags "DEVELOPMENT_TEAM=$DEVELOPMENT_TEAM CODE_SIGN_STYLE=Manual -destination generic/platform=iOS" \
+            --export-method "$EXPORT_METHOD" \
+            --verbose | tee "$CM_BUILD_DIR/build-ipa.log"
+
+      - name: Diagnóstico post-archive (entitlements y profile)
+        script: |
+          set -euo pipefail
+          set -x
+          ARCHIVE_PATH=$(ls -1d $CM_BUILD_DIR/**/Archive/*.xcarchive 2>/dev/null | head -n1 || true)
+          if [ -z "$ARCHIVE_PATH" ]; then
+            echo "⚠️ No se generó .xcarchive; revisa $CM_BUILD_DIR/build-ipa.log para el primer 'error:'"
+            exit 0
+          fi
+          /usr/libexec/PlistBuddy -c 'Print :ApplicationProperties:ApplicationPath' "$ARCHIVE_PATH/Info.plist" || true
+          APP_REL_PATH="$(/usr/libexec/PlistBuddy -c 'Print :ApplicationProperties:ApplicationPath' "$ARCHIVE_PATH/Info.plist")"
+          FULL_APP_PATH="$ARCHIVE_PATH/Products/Applications/$(basename "$APP_REL_PATH")"
+          # Entitlements efectivos del binario
+          codesign -d --entitlements :- "$FULL_APP_PATH" > "$CM_BUILD_DIR/effective-entitlements.plist" 2>/dev/null || true
+          # Perfil embebido
+          security cms -D -i "$FULL_APP_PATH/embedded.mobileprovision" > "$CM_BUILD_DIR/embedded.mobileprovision.plist" || true
+          echo "== Embedded aps-environment ==" && \
+            /usr/libexec/PlistBuddy -c 'Print :Entitlements:aps-environment' "$CM_BUILD_DIR/embedded.mobileprovision.plist" || true
+          echo "== TeamIdentifier ==" && \
+            /usr/libexec/PlistBuddy -c 'Print :TeamIdentifier:0' "$CM_BUILD_DIR/embedded.mobileprovision.plist" || true
+          echo "== Effective Entitlements (primeras 50 líneas) ==" && head -n 50 "$CM_BUILD_DIR/effective-entitlements.plist" || true
 
     artifacts:
       - $CM_BUILD_DIR/**/IPA/*.ipa
       - $CM_BUILD_DIR/**/Archive/*.xcarchive
       - ios/App/build/**/*.ipa
       - ios/App/build/**/*.xcarchive
+      - $CM_BUILD_DIR/build-ipa.log
+      - $CM_BUILD_DIR/effective-entitlements.plist
+      - $CM_BUILD_DIR/embedded.mobileprovision.plist
 
     publishing:
       email:
