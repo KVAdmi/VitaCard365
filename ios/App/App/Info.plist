@@ -46,4 +46,14 @@
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
 </dict>
+	<!-- BLE y Localización -->
+	<key>NSBluetoothAlwaysUsageDescription</key>
+	<string>Usamos Bluetooth para conectar sensores de salud.</string>
+	<key>NSBluetoothPeripheralUsageDescription</key>
+	<string>Necesitamos Bluetooth para descubrir y conectar dispositivos.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Usamos tu ubicación para mapear rutas y calcular métricas.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>Permite registrar actividad aun con la app en segundo plano.</string>
+</dict>
 </plist>

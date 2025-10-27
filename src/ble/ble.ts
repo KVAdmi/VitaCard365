@@ -2,7 +2,7 @@
 // No tocar UI ni flujo de sesión. Solo enriquecer métricas.
 // Tipado estricto, sin any.
 
-import { BleClient } from '@capacitor-community/bluetooth-le';
+import { BleClient, numbersToDataView } from '@capacitor-community/bluetooth-le';
 import { Capacitor } from '@capacitor/core';
 import { parseFtms, parseHr, FTMS, HRS, type FtmsSample, type HrSample, type LEScanResult } from './bleFtmsHrm';
 
@@ -43,36 +43,23 @@ export function getLastCharUpdatedAt() {
   return lastCharUpdatedAt;
 }
 
-/**
- * Verifica permisos BLE y Bluetooth ON según Android.
- * SDK ≥31: requiere BLUETOOTH_SCAN / BLUETOOTH_CONNECT (debe estar concedido por el usuario en Ajustes si no se puede pedir desde JS).
- * SDK 29–30: requiere ACCESS_FINE_LOCATION (igual, si no se puede pedir desde JS, fallback = error BLE_PERMISSIONS_DENIED).
- * Si Bluetooth está apagado, devuelve BLE_DISABLED.
- * No introduce dependencias ni código nativo.
- */
-export async function ensureBleReady(): Promise<void> {
-  // Solo Android nativo
-  if (!Capacitor.isNativePlatform() || Capacitor.getPlatform() !== 'android') return;
-  // Aquí podrías intentar pedir permisos con Capacitor Permissions si tuvieras acceso,
-  // pero si no, simplemente documenta el fallback:
-  // Si el usuario no concede permisos desde Ajustes, el wrapper aborta con error claro.
-  try {
-    // Inicializar y verificar Bluetooth encendido
-    await BleClient.initialize();
-    const enabled = await BleClient.isEnabled();
-    if (!enabled) {
-      try {
-        await BleClient.requestEnable();
-      } catch {
-        throw new Error('BLE_ADAPTER_OFF');
-      }
-      const enabled2 = await BleClient.isEnabled();
-      if (!enabled2) throw new Error('BLE_ADAPTER_OFF');
-    }
-  } catch (e: any) {
-    if (e?.message === 'BLE_ADAPTER_OFF') throw new Error('BLE_ADAPTER_OFF');
-    throw new Error('BLE_PERMISSIONS_DENIED');
-  }
+
+// Nueva versión multiplataforma y segura para iOS/Android
+export async function ensureBleReady() {
+  const platform = Capacitor.getPlatform();
+  if (platform !== 'ios' && platform !== 'android') throw new Error('BLE solo en dispositivo real');
+  await BleClient.initialize();
+}
+
+// Escaneo simple multiplataforma
+export async function scanOnce(onDevice: (d: { deviceId: string; name?: string }) => void) {
+  await ensureBleReady();
+  await BleClient.requestLEScan(
+    { allowDuplicates: false },
+    result => onDevice({ deviceId: result.device.deviceId, name: result.device.name })
+  );
+  await new Promise(r => setTimeout(r, 5000));
+  await BleClient.stopLEScan();
 }
 
 /**
