@@ -4,7 +4,7 @@ android {
     namespace "com.vitacard365.app"
     // SDK and app version
     compileSdkVersion rootProject.ext.compileSdkVersion
-    def appVersionCode = project.hasProperty('APP_VERSION_CODE') ? APP_VERSION_CODE.toInteger() : 43
+    def appVersionCode = 50
     def appVersionName = project.hasProperty('APP_VERSION_NAME') ? APP_VERSION_NAME : "1.0.5"
 
     defaultConfig {
@@ -26,7 +26,7 @@ android {
 
     signingConfigs {
         release {
-            storeFile file("..\\" + VITA_STORE_FILE)
+            storeFile file("../../Keys/my-new-upload-key.jks")
             storePassword VITA_STORE_PASSWORD
             keyAlias VITA_KEY_ALIAS
             keyPassword VITA_KEY_PASSWORD
@@ -36,10 +36,9 @@ android {
     buildTypes {
         release {
             signingConfig signingConfigs.release
-            // Keep disabled by default; enable and tune after validation
-            minifyEnabled false
-            shrinkResources false
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
         debug {
             // Asegura firma de debug por defecto y sin ofuscación
@@ -48,6 +47,8 @@ android {
             shrinkResources false
         }
     }
+
+    // bundle section eliminada porque universalApk ya no es válido en AGP moderno
 
     // Avoid META-INF resource conflicts and exclude sourcemaps from APK
     packagingOptions {
