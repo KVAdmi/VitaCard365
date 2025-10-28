@@ -12,7 +12,7 @@ export default function IntroVideo() {
   const go = useCallback(() => {
     if (fired.current) return;
     fired.current = true;
-    nav('/onboarding', { replace: true });
+  nav('/descubre', { replace: true });
   }, [nav]);
 
   useEffect(() => {
