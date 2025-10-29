@@ -54,6 +54,15 @@ export async function ensureBleReady() {
 // Escaneo simple multiplataforma
 export async function scanOnce(onDevice: (d: { deviceId: string; name?: string }) => void) {
   await ensureBleReady();
+  // Solicitar permisos BLE y ubicación explícitamente antes de escanear
+  if (typeof (BleClient as any).requestPermissions === 'function') {
+    try {
+      const perms = await (BleClient as any).requestPermissions();
+      devLog('BLE Permissions:', perms);
+    } catch (e) {
+      devLog('BLE Permissions request error:', e);
+    }
+  }
   await BleClient.requestLEScan(
     { allowDuplicates: false },
     result => onDevice({ deviceId: result.device.deviceId, name: result.device.name })
@@ -108,6 +117,15 @@ export async function ensureBlePermissions(): Promise<void> {
 export async function startScan(onDevice: (device: { deviceId: string; name?: string; rssi?: number }) => void): Promise<void> {
   if (isScanning) return;
   await ensureBlePermissions();
+  // Solicitar permisos BLE y ubicación explícitamente antes de escanear
+  if (typeof (BleClient as any).requestPermissions === 'function') {
+    try {
+      const perms = await (BleClient as any).requestPermissions();
+      devLog('BLE Permissions:', perms);
+    } catch (e) {
+      devLog('BLE Permissions request error:', e);
+    }
+  }
   isScanning = true;
   try {
     await BleClient.requestLEScan({ allowDuplicates: false }, (result: any) => {
@@ -136,6 +154,15 @@ export async function scanFtmsHr(onDevice: (result: LEScanResult) => void): Prom
   }
   try {
     await ensureBleReady();
+    // Solicitar permisos BLE y ubicación explícitamente antes de escanear
+    if (typeof (BleClient as any).requestPermissions === 'function') {
+      try {
+        const perms = await (BleClient as any).requestPermissions();
+        devLog('BLE Permissions:', perms);
+      } catch (e) {
+        devLog('BLE Permissions request error:', e);
+      }
+    }
   } catch (e) {
     devLog('Permisos insuficientes o Bluetooth apagado', e);
     throw new Error('BLE_PERMISSIONS_DENIED: Activa Dispositivos cercanos y Ubicación en Ajustes');

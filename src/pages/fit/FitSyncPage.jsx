@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import PermissionGate from '../../components/fit/PermissionGate';
 // Formateadores auxiliares
 function fmtTime(s) {
   const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), ss = s % 60;
@@ -33,6 +34,14 @@ import { useNativeHeartRate } from '@/hooks/useNativeHeartRate';
 
 
 export default function FitSyncPage() {
+  return (
+    <PermissionGate>
+      {(status, actions) => <FitSyncPageContent status={status} actions={actions} />}
+    </PermissionGate>
+  );
+}
+
+function FitSyncPageContent({ status, actions }) {
   // Estado para métricas HUD
   const [hud, setHud] = useState({ distance_km: 0, duration_s: 0, pace_min_km: 0, kcal: 0 });
   const [extra, setExtra] = useState({ cad_rpm: null, power_w: null, resistance: null, incline_pct: null, battery_pct: null });
