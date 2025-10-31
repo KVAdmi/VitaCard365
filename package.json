@@ -44,7 +44,6 @@
         "@capacitor/app": "6.0.2",
         "@capacitor/device": "6.0.2",
         "@capacitor/geolocation": "6.0.2",
-        "@capacitor/google-maps": "6.0.1",
         "@capacitor/haptics": "6.0.2",
         "@capacitor/keyboard": "6.0.2",
         "@capacitor/local-notifications": "6.0.0",

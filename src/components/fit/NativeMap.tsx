@@ -1,21 +1,37 @@
 import React, { useEffect, useRef, useState } from 'react';
+
 import { Capacitor } from '@capacitor/core';
-import { GoogleMap } from '@capacitor/google-maps';
+
+
+// Blindaje: solo carga el plugin en nativo, nunca en web ni en cabecera
+let GoogleMap: any = null;
+if (Capacitor.getPlatform() !== 'web') {
+	try {
+		// eslint-disable-next-line @typescript-eslint/no-var-requires
+		GoogleMap = require('@capacitor/google-maps').GoogleMap;
+	} catch (err) {
+		console.warn('Plugin @capacitor/google-maps no disponible (modo web)');
+	}
+}
 
 type Props = { apiKey: string };
 
+
 function NativeMap({ apiKey }: Props) {
 	const mapRef = useRef<HTMLDivElement>(null);
-	const mapInstance = useRef<GoogleMap | null>(null);
+	const mapInstance = useRef<any>(null);
 	const didInit = useRef(false);
-	// ID único por instancia para evitar colisiones cuando React remonta
 	const idRef = useRef(`native-map-${Math.random().toString(36).slice(2)}`);
-
 	const [error, setError] = useState<string | null>(null);
 	const [mapReady, setMapReady] = useState(false);
 
+	// Protección: si estamos en web o no hay plugin, renderiza fallback
+	if (Capacitor.getPlatform() === 'web' || !GoogleMap) {
+		// Aquí puedes renderizar tu componente de mapa web o un fallback
+		return <div style={{width: '100%', height: '100%', background: '#eee', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#888'}}>Mapa web (fallback)</div>;
+	}
+
 	useEffect(() => {
-		// Runtime guard: en Android no creamos mapa nativo por decisión de producto.
 		const platform = Capacitor.isNativePlatform && Capacitor.isNativePlatform() ? Capacitor.getPlatform() : 'web';
 		if (platform === 'android') {
 			setError('');
@@ -23,7 +39,6 @@ function NativeMap({ apiKey }: Props) {
 			return;
 		}
 
-		// Evita doble init en StrictMode
 		if (didInit.current) return;
 		didInit.current = true;
 
@@ -71,11 +86,10 @@ function NativeMap({ apiKey }: Props) {
 					config: {
 						center: { lat: 19.4326, lng: -99.1332 },
 						zoom: 14,
-						androidLiteMode: true, // sin efecto en iOS, pero mantenemos por compatibilidad
+						androidLiteMode: true,
 					},
 				});
 				if (destroyed) {
-					// Si se desmontó durante el await, destruye limpio y sal
 					try { await map.destroy(); } catch {}
 					return;
 				}
@@ -91,7 +105,6 @@ function NativeMap({ apiKey }: Props) {
 				}
 				setMapReady(true);
 				setError(null);
-				// Validar si el mapa realmente se ve (por si hay overlays o render fallido)
 				setTimeout(() => {
 					if (mapRef.current) {
 						const r = mapRef.current.getBoundingClientRect();
@@ -112,7 +125,6 @@ function NativeMap({ apiKey }: Props) {
 		return () => {
 			destroyed = true;
 			if (mapInstance.current) {
-				// destroy seguro
 				mapInstance.current.destroy().catch(() => {});
 				mapInstance.current = null;
 			}
@@ -128,7 +140,6 @@ function NativeMap({ apiKey }: Props) {
 				height: '100%',
 				position: 'relative',
 				isolation: 'isolate',
-				// Fondo y borde temporal para depuración visual
 				background: 'rgba(0,128,255,0.08)',
 				border: '2px dashed #00f',
 				overflow: 'visible',
@@ -137,7 +148,6 @@ function NativeMap({ apiKey }: Props) {
 				pointerEvents: 'auto',
 			}}
 		>
-			{/* Quita overlays visuales encima del mapa; solo un fallback sutil */}
 			{error && (
 				<div style={{
 					position: 'absolute', inset: 0,
