@@ -17,7 +17,7 @@ export async function createPreference(payload) {
       frequency: payload.frequency || 'monthly', 
       familySize: Number(payload.familySize || 1),
       amount: price,  // precio en pesos con decimales
-      // Si el cliente ya generó una orden previa, puede pasar orderId (UUID)
+      ...(payload.user_id ? { user_id: payload.user_id } : {}),
       ...(payload.orderId ? { orderId: payload.orderId } : {})
     };
 

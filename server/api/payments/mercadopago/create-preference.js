@@ -10,8 +10,8 @@ const preference = new Preference(client);
 
 router.post('/preference', async (req, res) => {
   try {
-    const { plan='Individual', frequency='Mensual', amount=199 } = req.body || {};
-    const body = {
+  const { plan='Individual', frequency='Mensual', amount=199, user_id } = req.body || {};
+  const body = {
       items: [{
         title: `Vita365 ${String(plan)} ${String(frequency)}`,
         quantity: 1,
@@ -24,7 +24,8 @@ router.post('/preference', async (req, res) => {
         pending: `${process.env.PUBLIC_URL}/payment/pending`,
       },
       auto_return: 'approved',
-      notification_url: `${process.env.VITE_API_BASE_URL || 'http://localhost:3000'}/api/mercadopago/webhook`,
+  notification_url: `${process.env.VITE_API_BASE_URL || 'http://localhost:3000'}/api/mercadopago/webhook`,
+  external_reference: user_id // <-- AGREGADO
     };
 
     const resp = await preference.create({ body });

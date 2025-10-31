@@ -1,3 +1,25 @@
+// Pin de versiones Kotlin stdlib para TODO el árbol (Gradle 8+)
+subprojects {
+    configurations.configureEach {
+        resolutionStrategy {
+            // Opción A: forzar explícito de artefactos stdlib
+            force(
+                "org.jetbrains.kotlin:kotlin-stdlib:1.9.25",
+                "org.jetbrains.kotlin:kotlin-stdlib-common:1.9.25",
+                "org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.9.25",
+                "org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.9.25"
+            )
+            // Opción B adicional: por si aparece otro artefacto stdlib raro
+            eachDependency { d ->
+                if (d.requested.group == "org.jetbrains.kotlin" &&
+                        d.requested.name.startsWith("kotlin-stdlib")) {
+                    d.useVersion("1.9.25")
+                    d.because("Evitar choque removeFirst/removeLast con Android 15")
+                }
+            }
+        }
+    }
+}
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 
 buildscript {

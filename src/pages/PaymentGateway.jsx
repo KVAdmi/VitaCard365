@@ -123,13 +123,16 @@ export default function PaymentGateway() {
       console.log("[PAY] amount:", amount, typeof amount);
 
       // Payload para el backend (original): enviamos amount calculado en cliente
+      const { data: u } = await supabase.auth.getUser();
+      const uid = u?.user?.id;
+      if (!uid) { setError("No se pudo obtener tu usuario."); return; }
       const requestData = {
         plan: planType,
         frequency: paymentFrequencies[frequency].label,
         familySize: Number(familySize || 1),
         amount,
-        // Campo informativo no disruptivo; backend puede ignorar si no lo soporta
-        sendCertByEmail: !!sendCertByEmail
+        sendCertByEmail: !!sendCertByEmail,
+        user_id: uid // <-- AGREGADO
       };
 
       const res = await createPreference(requestData);

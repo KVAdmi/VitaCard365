@@ -16,6 +16,74 @@ import { createAgendaEvent, deleteAgendaEvent } from '@/lib/agenda';
 const API_BASE = (import.meta.env.VITE_API_BASE ?? "https://api.vitacard365.com").replace(/\/+$/, "");
 
 const Pagos = () => {
+  const [downloading, setDownloading] = useState(false);
+
+  // Descarga el PDF desde Supabase Storage y lo guarda nativamente en Android/iOS o como descarga web
+  const handleDescargarPoliza = async () => {
+    setDownloading(true);
+    try {
+      const filePath = 'certificado_vitacard365.pdf';
+      const clienteNombre = user?.user_metadata?.name || 'Cliente';
+      // Consultar el folio real desde la tabla profiles (campo codigo_vita)
+      let folioVita = 'SIN_FOLIO';
+      if (user?.id) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('codigo_vita')
+          .eq('user_id', user.id)
+          .maybeSingle();
+        if (profile && profile.codigo_vita) {
+          folioVita = profile.codigo_vita.replace(/\s+/g, '_');
+        }
+      }
+      const { data, error } = await supabase.storage.from('certificados').createSignedUrl(filePath, 60);
+      if (error || !data?.signedUrl) throw new Error('No se pudo obtener el certificado.');
+      const response = await fetch(data.signedUrl);
+      if (!response.ok) throw new Error('No se pudo descargar el certificado.');
+      const blob = await response.blob();
+      const nombreArchivo = `Poliza_VitaCard365_${folioVita}_${clienteNombre.replace(/\s+/g,'_')}.pdf`;
+
+      // Detectar plataforma
+      const isCapacitor = typeof window !== 'undefined' && window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform();
+      if (isCapacitor) {
+        // Importar Filesystem dinámicamente para evitar errores en web
+        const { Filesystem, Directory, Encoding } = await import('@capacitor/filesystem');
+        // Leer blob como base64
+        const toBase64 = (blob) => new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result.split(',')[1]);
+          reader.onerror = reject;
+          reader.readAsDataURL(blob);
+        });
+        const base64 = await toBase64(blob);
+        // Guardar en Downloads (Android) o Documents (iOS)
+        const dir = window.Capacitor.getPlatform() === 'android' ? Directory.Documents : Directory.Documents;
+        await Filesystem.writeFile({
+          path: nombreArchivo,
+          data: base64,
+          directory: dir,
+          encoding: Encoding.BASE64,
+        });
+        alert('Póliza guardada en tus documentos. Puedes abrirla desde tu gestor de archivos.');
+      } else {
+        // Web: descarga normal
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = nombreArchivo;
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(() => {
+          window.URL.revokeObjectURL(url);
+          document.body.removeChild(a);
+        }, 200);
+      }
+    } catch (e) {
+      alert('No se pudo descargar la póliza. Intenta más tarde.');
+    } finally {
+      setDownloading(false);
+    }
+  };
   const navigate = useNavigate();
   const { user } = useAuth();
   const [planType, setPlanType] = React.useState('individual');
@@ -204,6 +272,19 @@ const Pagos = () => {
               <div className="flex items-center justify-between">
                 <span className="flex items-center gap-2 text-vita-muted-foreground"><CalendarDays className="h-5 w-5" /> Próximo Pago</span>
                 <span className="font-bold text-white">{nextPaymentDate}</span>
+              </div>
+              <div className="flex w-full justify-center mt-4">
+                <button
+                  onClick={handleDescargarPoliza}
+                  disabled={downloading}
+                  className="px-6 py-3 rounded-xl text-white font-bold shadow-lg backdrop-blur-md border border-orange-200/30 hover:scale-105 active:scale-95 transition-all text-base"
+                  style={{
+                    background: 'linear-gradient(135deg, #FF7A00 80%, #FFB347 100%)',
+                    boxShadow: '0 4px 24px 0 #FF7A0033'
+                  }}
+                >
+                  {downloading ? 'Descargando...' : 'Descargar mi póliza VC 365'}
+                </button>
               </div>
             </CardContent>
           </Card>

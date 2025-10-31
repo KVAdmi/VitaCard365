@@ -66,12 +66,12 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
             <!-- Deep links HTTPS (App Links) -->
-            <intent-filter android:autoVerify="true">
-                <action android:name="android.intent.action.VIEW" />
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="https" android:host="vitacard365.app" />
-            </intent-filter>
+                <intent-filter android:autoVerify="true">
+                    <action android:name="android.intent.action.VIEW" />
+                    <category android:name="android.intent.category.DEFAULT" />
+                    <category android:name="android.intent.category.BROWSABLE" />
+                    <data android:scheme="https" android:host="vitacard365.app" android:pathPrefix="/app" />
+                </intent-filter>
             <!-- Deep link nativo para OAuth (Supabase PKCE) -->
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
@@ -79,13 +79,6 @@
                 <category android:name="android.intent.category.BROWSABLE" />
                 <!-- Coincide con vitacard365://auth/callback -->
                 <data android:scheme="vitacard365" android:host="auth" android:pathPrefix="/callback" />
-            </intent-filter>
-            <!-- Deep link nativo alterno: vitacard365://auth-callback (compatibilidad y nuevo estÃ¡ndar) -->
-            <intent-filter android:autoVerify="true">
-                <action android:name="android.intent.action.VIEW" />
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="vitacard365" android:host="auth-callback" />
             </intent-filter>
             <!-- Deep link de retorno de Mercado Pago: vitacard365://mp-return?status=success|failure|pending -->
             <intent-filter>

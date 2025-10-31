@@ -11,9 +11,6 @@ project(':capacitor-app').projectDir = new File('../node_modules/@capacitor/app/
 include ':capacitor-device'
 project(':capacitor-device').projectDir = new File('../node_modules/@capacitor/device/android')
 
-include ':capacitor-filesystem'
-project(':capacitor-filesystem').projectDir = new File('../node_modules/@capacitor/filesystem/android')
-
 include ':capacitor-geolocation'
 project(':capacitor-geolocation').projectDir = new File('../node_modules/@capacitor/geolocation/android')
 
@@ -40,3 +37,6 @@ project(':capacitor-share').projectDir = new File('../node_modules/@capacitor/sh
 
 include ':capacitor-splash-screen'
 project(':capacitor-splash-screen').projectDir = new File('../node_modules/@capacitor/splash-screen/android')
+
+include ':capacitor-filesystem'
+project(':capacitor-filesystem').projectDir = new File('../node_modules/@capacitor/filesystem/android')

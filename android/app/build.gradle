@@ -1,11 +1,29 @@
-apply plugin: 'com.android.application'
+plugins {
+    id 'com.android.application'
+    id 'org.jetbrains.kotlin.android'
+}
 
 android {
+    sourceSets {
+        main.java.srcDirs += ['src/main/java', 'src/main/kotlin']
+    }
+    applicationVariants.all { variant ->
+        if (variant.buildType.name == "release") {
+            variant.outputs.each { output ->
+                def mappingFile = variant.mappingFile
+                if (mappingFile != null && mappingFile.exists()) {
+                    println("Mapping file: ${mappingFile.absolutePath}")
+                } else {
+                    println("No mapping file found, forcing generation.")
+                }
+            }
+        }
+    }
     namespace "com.vitacard365.app"
     // SDK and app version
     compileSdkVersion rootProject.ext.compileSdkVersion
-    def appVersionCode = 50
-    def appVersionName = project.hasProperty('APP_VERSION_NAME') ? APP_VERSION_NAME : "1.0.5"
+    def appVersionCode = 61
+    def appVersionName = project.hasProperty('APP_VERSION_NAME') ? APP_VERSION_NAME : "1.0.61"
 
     defaultConfig {
         applicationId "com.vitacard365.app"
@@ -36,12 +54,11 @@ android {
     buildTypes {
         release {
             signingConfig signingConfigs.release
-            minifyEnabled true
-            shrinkResources true
+        minifyEnabled false
+        shrinkResources false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
         debug {
-            // Asegura firma de debug por defecto y sin ofuscación
             signingConfig signingConfigs.debug
             minifyEnabled false
             shrinkResources false
@@ -54,6 +71,7 @@ android {
     packagingOptions {
         resources {
             excludes += ["META-INF/DEPENDENCIES", "META-INF/INDEX.LIST", "**/*.map"]
+            exclude 'META-INF/kotlin-stdlib.kotlin_module'
         }
     }
 }
@@ -67,6 +85,8 @@ dependencies {
     testImplementation "junit:junit:$junitVersion"
     androidTestImplementation "androidx.test.ext:junit:$androidxJunitVersion"
     androidTestImplementation "androidx.test.espresso:espresso-core:$androidxEspressoCoreVersion"
+
+    implementation(platform("org.jetbrains.kotlin:kotlin-bom:1.9.25"))
 }
 
 apply from: 'capacitor.build.gradle'
@@ -84,10 +104,14 @@ apply plugin: 'com.github.triplet.play'
 
 play {
     serviceAccountCredentials.set(file("../play-service-account.json"))
+
     track.set("internal")
     defaultToAppBundles.set(true)
     releaseStatus.set(com.github.triplet.gradle.androidpublisher.ReleaseStatus.COMPLETED)
 }
+
+// Instrumentación ASM para reemplazar removeFirst/removeLast en bytecode (Android 15 fix)
+apply plugin: 'removefirstlast'
 
 // Utility to print version from Gradle
 tasks.register('printVersion') {

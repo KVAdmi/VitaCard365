@@ -7,8 +7,6 @@
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
-        <!-- NO permitir que Android â€œtinteâ€ colores por modo oscuro -->
-        <item name="android:forceDarkAllowed">false</item>
         <!-- Pre-Android 12 fallback splash background -->
         <item name="android:windowBackground">@drawable/launch_splash</item>
     </style>
@@ -22,7 +20,6 @@
 
 
     <style name="AppTheme.NoActionBarLaunch" parent="Theme.SplashScreen">
-        <item name="android:forceDarkAllowed">false</item>
         <!-- Android 12+ splash attributes -->
         <item name="windowSplashScreenBackground">#0C1C3E</item>
         <item name="windowSplashScreenAnimatedIcon">@drawable/splash</item>
