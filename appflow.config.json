@@ -12,7 +12,7 @@
           "npm ci"
         ],
         "build": [
-          "vite build"
+          "npm run build"
         ],
         "postbuild": [
           "npx cap copy android && npx cap sync android"
@@ -36,7 +36,7 @@
           "npm i --no-save capacitor-healthkit@latest"
         ],
         "build": [
-          "vite build"
+          "npm run build"
         ],
         "postbuild": [
           "npx cap copy ios && npx cap sync ios",
