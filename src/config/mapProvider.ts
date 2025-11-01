@@ -14,7 +14,9 @@ export function getMapProvider(platform: 'android' | 'ios' | 'web'): Provider {
     return 'web';
   }
   if (platform === 'ios') {
-    return (IOS === 'native' || IOS === 'web') ? (IOS as Provider) : 'native';
+    // Forzamos web en iOS para evitar el plugin nativo de Google Maps.
+    // Si en algún momento se desea volver a nativo, ajustar esta línea o usar VITE_MAP_PROVIDER_IOS=native.
+    return 'web';
   }
   // Plataforma web (navegador) siempre usa JS
   return 'web';
