@@ -15,18 +15,24 @@ export default function AgendaPage(){
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
+  const fmtDateLocal = (d) => {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${dd}`;
+  };
+
   const [form, setForm] = useState({
     type: 'medicamento',
     title: '',
     description: '',
-    event_date: new Date().toISOString().slice(0,10),
+    event_date: fmtDateLocal(new Date()),
     event_time: '08:00:00',
     notify: true,
     repeat_type: 'none',
   });
   const [editingId, setEditingId] = useState(null);
 
-  // Calendario
   const today = new Date();
   const [monthCursor, setMonthCursor] = useState(new Date(today.getFullYear(), today.getMonth(), 1));
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -85,7 +91,17 @@ export default function AgendaPage(){
       notify: !!ev.notify,
       repeat_type: ev.repeat_type || 'none',
     });
-    setSelectedDate(new Date(ev.event_date+'T'+ev.event_time));
+    try {
+      const [y, m, dd] = (ev.event_date || '').split('-').map(Number);
+      const [hh, mm, ss] = (ev.event_time || '00:00:00').split(':').map(Number);
+      if (!isNaN(y) && !isNaN(m) && !isNaN(dd)) {
+        setSelectedDate(new Date(y, m - 1, dd, hh || 0, mm || 0, ss || 0));
+      } else {
+        setSelectedDate(new Date());
+      }
+    } catch {
+      setSelectedDate(new Date());
+    }
     setShowForm(true);
   }
 
@@ -104,13 +120,13 @@ export default function AgendaPage(){
     }
   }
 
-  // Utilidades calendario
   const year = monthCursor.getFullYear();
   const month = monthCursor.getMonth();
   const monthName = monthCursor.toLocaleString('es-MX', { month: 'long', year: 'numeric' });
   const firstDay = new Date(year, month, 1);
   const startWeekday = (firstDay.getDay() + 6) % 7; // lunes=0
   const daysInMonth = new Date(year, month+1, 0).getDate();
+
   const gridDays = useMemo(()=>{
     const arr = [];
     for (let i=0;i<startWeekday;i++) arr.push(null);
@@ -129,7 +145,6 @@ export default function AgendaPage(){
     return map;
   }, [monthEvents]);
 
-  // Cambios visuales en inputs/selects del formulario de Agenda
   const inputStyle = {
     background: 'rgba(21,32,68,0.7)',
     backdropFilter: 'blur(4px)',
@@ -156,9 +171,9 @@ export default function AgendaPage(){
             <div className="grid grid-cols-7 gap-2">
               {gridDays.map((d,idx)=>{
                 if (!d) return <div key={`empty-${idx}`} className="h-16 rounded-xl bg-white/5 border border-white/5"/>;
-                const key = d.toISOString().slice(0,10);
-                const has = eventsByDay.has(key);
-                const isSel = selectedDate && key===selectedDate.toISOString().slice(0,10);
+                const key = d ? fmtDateLocal(d) : null;
+                const has = key ? eventsByDay.has(key) : false;
+                const isSel = selectedDate && key === fmtDateLocal(selectedDate);
                 return (
                   <button key={key}
                           onClick={()=>{ setSelectedDate(d); setForm(f=>({...f, event_date: key})); setShowForm(true); }}
@@ -191,42 +206,71 @@ export default function AgendaPage(){
                 <Button variant="ghost" onClick={()=>{ setEditingId(null); setShowForm(false); }}>Cerrar</Button>
               </div>
             </CardHeader>
+
             <CardContent className="space-y-3">
               <form onSubmit={onSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div>
                   <Label>Tipo</Label>
                   <div style={inputStyle}>
-                    <NeonSelect variant="cyan" value={form.type} onChange={e=>setForm({...form, type:e.target.value})}
-                      options={[{ value: 'medicamento', label: 'Medicamento' },{ value: 'cita_medica', label: 'Cita médica' },{ value: 'otro', label: 'Otro' }]} placeholder="Tipo" className="agenda-input tarjeta-desplegable" />
+                    <NeonSelect
+                      variant="cyan"
+                      value={form.type}
+                      onValueChange={(val)=> setForm(f=>({ ...f, type: val }))}
+                      options={[
+                        { value: 'medicamento', label: 'Medicamento' },
+                        { value: 'cita_medica', label: 'Cita médica' },
+                        { value: 'otro', label: 'Otro' },
+                      ]}
+                      placeholder="Tipo"
+                      className="agenda-input tarjeta-desplegable"
+                    />
                   </div>
                 </div>
+
                 <div className="md:col-span-1">
                   <Label>Título</Label>
                   <Input value={form.title} onChange={e=>setForm({...form, title:e.target.value})} required className="agenda-input" />
                 </div>
+
                 <div className="md:col-span-2">
                   <Label>Descripción</Label>
                   <Input value={form.description} onChange={e=>setForm({...form, description:e.target.value})} className="agenda-input" />
                 </div>
+
                 <div>
                   <Label>Fecha</Label>
                   <Input type="date" value={form.event_date} onChange={e=>setForm({...form, event_date:e.target.value})} required className="agenda-input" />
                 </div>
+
                 <div>
                   <Label>Hora</Label>
                   <Input type="time" value={form.event_time.slice(0,5)} onChange={e=>setForm({...form, event_time:e.target.value+':00'})} required className="agenda-input" />
                 </div>
+
                 <div>
                   <Label>Repetir</Label>
                   <div style={inputStyle}>
-                    <NeonSelect variant="cyan" value={form.repeat_type} onChange={e=>setForm({...form, repeat_type:e.target.value})}
-                      options={[{ value: 'none', label: 'No repetir' },{ value: 'daily', label: 'Diario' },{ value: 'weekly', label: 'Semanal' },{ value: 'monthly', label: 'Mensual' }]} placeholder="Repetición" className="agenda-input tarjeta-desplegable" />
+                    <NeonSelect
+                      variant="cyan"
+                      value={form.repeat_type}
+                      onValueChange={(val)=> setForm(f=>({ ...f, repeat_type: val }))}
+                      options={[
+                        { value: 'none',    label: 'No repetir' },
+                        { value: 'daily',   label: 'Diario' },
+                        { value: 'weekly',  label: 'Semanal' },
+                        { value: 'monthly', label: 'Mensual' },
+                      ]}
+                      placeholder="Repetición"
+                      className="agenda-input tarjeta-desplegable"
+                    />
                   </div>
                 </div>
+
                 <div className="flex items-center gap-2">
                   <input id="notify" type="checkbox" className="accent-orange-500" checked={!!form.notify} onChange={e=>setForm({...form, notify:e.target.checked})} />
                   <Label htmlFor="notify">Notificarme</Label>
                 </div>
+
                 <div className="md:col-span-2 flex gap-2">
                   <Button type="submit" className="flex-1">{editingId ? 'Actualizar' : 'Guardar'}</Button>
                   {editingId && (
@@ -238,7 +282,6 @@ export default function AgendaPage(){
           </Card>
         )}
 
-        {/* Restaurar estilo original de inputs y ajustar tarjetas */}
         <Card className="bg-white/10 border border-cyan-400/20 tarjeta-proximos-dias" style={{ boxShadow:'0 0 0 1px rgba(0,255,231,0.18)', marginTop: '2rem' }}>
           <CardHeader><CardTitle>Próximos 30 días</CardTitle></CardHeader>
           <CardContent className="space-y-2">
@@ -263,9 +306,16 @@ export default function AgendaPage(){
           </CardContent>
         </Card>
 
-        {/* Botón flotante para crear evento rápido */}
         <div className="fixed bottom-20 right-5 z-20">
-          <Button className="rounded-full bg-[color:var(--vc-primary,#f06340)] shadow-[0_0_24px_rgba(240,99,64,0.4)]" onClick={()=>{ const d=new Date(); setSelectedDate(d); setForm(f=>({ ...f, event_date: d.toISOString().slice(0,10) })); setShowForm(true); }}>
+          <Button
+            className="rounded-full bg-[color:var(--vc-primary,#f06340)] shadow-[0_0_24px_rgba(240,99,64,0.4)]"
+            onClick={()=>{
+              const d=new Date();
+              setSelectedDate(d);
+              setForm(f=>({ ...f, event_date: fmtDateLocal(d) }));
+              setShowForm(true);
+            }}
+          >
             <Plus className="w-5 h-5 mr-2"/>Agregar evento
           </Button>
         </div>
@@ -273,4 +323,3 @@ export default function AgendaPage(){
     </Layout>
   );
 }
-

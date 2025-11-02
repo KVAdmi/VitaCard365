@@ -47,10 +47,17 @@ export default function MiPlan() {
       const filePath = 'certificado_vitacard365.pdf';
       // Obtiene URL firmada (válida por 60s)
       const { data, error } = await supabase.storage.from('certificados').createSignedUrl(filePath, 60);
-      if (error || !data?.signedUrl) throw new Error('No se pudo obtener el certificado.');
+      if (error || !data?.signedUrl) {
+        console.error('[MiPlan] createSignedUrl error:', error, data);
+        throw new Error(error?.message || 'No se pudo obtener el certificado.');
+      }
       // Descarga el archivo
       const response = await fetch(data.signedUrl);
-      if (!response.ok) throw new Error('No se pudo descargar el certificado.');
+      if (!response.ok) {
+        const text = await response.text().catch(() => 'no-body');
+        console.error('[MiPlan] fetch signedUrl failed', response.status, response.statusText, text);
+        throw new Error(`No se pudo descargar el certificado. (${response.status})`);
+      }
       const blob = await response.blob();
       // Construye nombre personalizado
       const nombreArchivo = `Poliza_VitaCard365_${folioVita}_${clienteNombre.replace(/\s+/g,'_')}.pdf`;
@@ -66,7 +73,8 @@ export default function MiPlan() {
         document.body.removeChild(a);
       }, 200);
     } catch (e) {
-      alert('No se pudo descargar la póliza. Intenta más tarde.');
+      console.error('[MiPlan] descargar poliza failed:', e);
+      alert(`No se pudo descargar la póliza. ${e?.message || 'Intenta más tarde.'}`);
     } finally {
       setDownloading(false);
     }

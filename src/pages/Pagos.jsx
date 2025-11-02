@@ -37,9 +37,16 @@ const Pagos = () => {
         }
       }
       const { data, error } = await supabase.storage.from('certificados').createSignedUrl(filePath, 60);
-      if (error || !data?.signedUrl) throw new Error('No se pudo obtener el certificado.');
+      if (error || !data?.signedUrl) {
+        console.error('[Pagos] createSignedUrl error:', error, data);
+        throw new Error(error?.message || 'No se pudo obtener el certificado.');
+      }
       const response = await fetch(data.signedUrl);
-      if (!response.ok) throw new Error('No se pudo descargar el certificado.');
+      if (!response.ok) {
+        const text = await response.text().catch(() => 'no-body');
+        console.error('[Pagos] fetch signedUrl failed', response.status, response.statusText, text);
+        throw new Error(`No se pudo descargar el certificado. (${response.status})`);
+      }
       const blob = await response.blob();
       const nombreArchivo = `Poliza_VitaCard365_${folioVita}_${clienteNombre.replace(/\s+/g,'_')}.pdf`;
 
@@ -56,15 +63,48 @@ const Pagos = () => {
           reader.readAsDataURL(blob);
         });
         const base64 = await toBase64(blob);
-        // Guardar en Downloads (Android) o Documents (iOS)
-        const dir = window.Capacitor.getPlatform() === 'android' ? Directory.Documents : Directory.Documents;
-        await Filesystem.writeFile({
-          path: nombreArchivo,
-          data: base64,
-          directory: dir,
-          encoding: Encoding.BASE64,
-        });
-        alert('Póliza guardada en tus documentos. Puedes abrirla desde tu gestor de archivos.');
+        // Intentar guardar en un par de directorios conocidos (diagnóstico y fallback)
+        const platform = window.Capacitor.getPlatform?.() || 'unknown';
+        const tryDirs = [Directory.Documents, Directory.External, Directory.Data];
+        let saved = false;
+        let lastError = null;
+        for (const d of tryDirs) {
+          try {
+            await Filesystem.writeFile({
+              path: nombreArchivo,
+              data: base64,
+              directory: d,
+              encoding: Encoding.BASE64,
+            });
+            console.log('[Pagos] Archivo escrito en directorio:', d, 'plataforma:', platform);
+            alert('Póliza guardada en tus documentos. Puedes abrirla desde tu gestor de archivos.');
+            saved = true;
+            break;
+          } catch (err) {
+            console.error('[Pagos] writeFile failed for directory', d, err);
+            lastError = err;
+          }
+        }
+        if (!saved) {
+          // Fallback: intentar abrir el signedUrl en el navegador del sistema (Browser plugin)
+          try {
+            console.warn('[Pagos] No se pudo escribir el archivo en FS, se abrirá el enlace en el navegador externo como fallback.', lastError);
+            const { Browser } = await import('@capacitor/browser');
+            await Browser.open({ url: data.signedUrl });
+            alert('No se pudo guardar automáticamente la póliza en la app. Se abrió el enlace en el navegador para que puedas descargarla.');
+          } catch (err2) {
+            console.error('[Pagos] Fallback Browser.open failed:', err2);
+            // Último recurso: intentar descarga por ventana (puede abrir external browser)
+            try {
+              const url = data.signedUrl;
+              window.open(url, '_blank');
+              alert('Intenté abrir el enlace en el navegador. Si la descarga no inicia, intenta desde la versión web.');
+            } catch (err3) {
+              console.error('[Pagos] ultimate fallback failed:', err3);
+              throw lastError || err3;
+            }
+          }
+        }
       } else {
         // Web: descarga normal
         const url = window.URL.createObjectURL(blob);
@@ -79,7 +119,8 @@ const Pagos = () => {
         }, 200);
       }
     } catch (e) {
-      alert('No se pudo descargar la póliza. Intenta más tarde.');
+      console.error('[Pagos] descargar poliza failed:', e);
+      alert(`No se pudo descargar la póliza. ${e?.message || 'Intenta más tarde.'}`);
     } finally {
       setDownloading(false);
     }
@@ -95,6 +136,7 @@ const Pagos = () => {
   // Estado controlado del toggle de notificación y el id del evento en agenda
   const [notifyChecked, setNotifyChecked] = useState(false);
   const [notifyEventId, setNotifyEventId] = useState(null);
+  const [notifyLoading, setNotifyLoading] = useState(false);
 
   React.useEffect(()=>{ (async()=>{
     // Acceso/membresía real
@@ -179,9 +221,11 @@ const Pagos = () => {
   async function handleLocalReminder() {
     // Programa una notificación local un día antes del próximo pago (si hay fecha)
     if (!nextPaymentISO || nextPaymentDate === 'N/A') return;
-    const ok = await asegurarPermisoNotificaciones();
-    if (!ok) return;
     try{
+      // Intentamos asegurar permiso de notificaciones para programar la alarma, pero
+      // incluso si el usuario lo niega, crearemos el evento en la agenda para que
+      // el toggle quede reflejado en la cuenta.
+      try { await asegurarPermisoNotificaciones(); } catch (e) { /* noop - seguimos creando el evento */ }
       // Construimos la fecha local a partir de la ISO almacenada y restamos 1 día
       const [y,m,d] = nextPaymentISO.split('-').map(Number);
       const due = new Date(y, (m-1), d, 9, 0, 0, 0); // 09:00 del día de vencimiento
@@ -208,14 +252,15 @@ const Pagos = () => {
   // Sincroniza el estado del toggle leyendo de Supabase si ya existe el evento
   useEffect(()=>{ (async ()=>{
     try {
-      if (!nextPaymentISO || nextPaymentDate === 'N/A') { setNotifyChecked(false); setNotifyEventId(null); return; }
+      setNotifyLoading(true);
+      if (!nextPaymentISO || nextPaymentDate === 'N/A') { setNotifyChecked(false); setNotifyEventId(null); setNotifyLoading(false); return; }
       // Calcula la fecha previa (un día antes) y busca evento existente del usuario
       const [y,m,d] = nextPaymentISO.split('-').map(Number);
       const due = new Date(y, (m-1), d, 9, 0, 0, 0);
       const pre = new Date(due); pre.setDate(pre.getDate()-1);
       const preISO = `${pre.getFullYear()}-${String(pre.getMonth()+1).padStart(2,'0')}-${String(pre.getDate()).padStart(2,'0')}`;
       const { data: u } = await supabase.auth.getUser();
-      const uid = u?.user?.id; if (!uid) { setNotifyChecked(false); setNotifyEventId(null); return; }
+      const uid = u?.user?.id; if (!uid) { setNotifyChecked(false); setNotifyEventId(null); setNotifyLoading(false); return; }
       const { data } = await supabase
         .from('agenda_events')
         .select('id')
@@ -224,19 +269,30 @@ const Pagos = () => {
         .eq('event_date', preISO)
         .maybeSingle();
       if (data?.id) { setNotifyChecked(true); setNotifyEventId(data.id); } else { setNotifyChecked(false); setNotifyEventId(null); }
-    } catch { /* noop */ }
+      setNotifyLoading(false);
+    } catch { setNotifyLoading(false); }
   })(); }, [nextPaymentISO, nextPaymentDate]);
 
   async function onToggleNotify(checked){
+    setNotifyLoading(true);
     if (checked) {
-      await handleLocalReminder();
+      setNotifyChecked(true);
+      try {
+        const ev = await handleLocalReminder();
+        if (ev && ev.id) setNotifyEventId(ev.id);
+        else setNotifyEventId(null);
+      } catch (err) {
+        console.error('[Pagos] onToggleNotify: create reminder failed', err);
+        setNotifyEventId(null);
+      }
     } else {
       try {
         if (notifyEventId) await deleteAgendaEvent(notifyEventId);
-      } catch { /* noop */ }
+      } catch (err) { console.error('[Pagos] onToggleNotify: delete reminder failed', err); }
       setNotifyChecked(false);
       setNotifyEventId(null);
     }
+    setNotifyLoading(false);
   }
   return (
     <>
@@ -302,7 +358,7 @@ const Pagos = () => {
           {/* Notificación de vencimiento */}
           <div className="mt-6 p-4 rounded-xl bg-white/10 border border-white/20">
             <label className="flex items-center gap-2 cursor-pointer">
-              <input type="checkbox" className="accent-orange-500 h-5 w-5" checked={!!notifyChecked} onChange={async e => { await onToggleNotify(e.target.checked); }} />
+              <input type="checkbox" className="accent-orange-500 h-5 w-5" checked={!!notifyChecked} disabled={notifyLoading} onChange={async e => { await onToggleNotify(e.target.checked); }} />
               <span className="text-white text-sm">Notificarme antes del vencimiento de mi plan</span>
             </label>
             <p className="text-xs text-white/60 mt-2">

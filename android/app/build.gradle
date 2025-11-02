@@ -22,8 +22,8 @@ android {
     namespace "com.vitacard365.app"
     // SDK and app version
     compileSdkVersion rootProject.ext.compileSdkVersion
-    def appVersionCode = 62
-    def appVersionName = project.hasProperty('APP_VERSION_NAME') ? APP_VERSION_NAME : "1.0.62"
+    def appVersionCode = 63
+    def appVersionName = project.hasProperty('APP_VERSION_NAME') ? APP_VERSION_NAME : "1.0.63"
 
     defaultConfig {
         applicationId "com.vitacard365.app"

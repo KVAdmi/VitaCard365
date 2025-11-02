@@ -52,7 +52,7 @@ export default function Wallet() {
     keyDocuments: [], // {docType, idNumber, issuer, expirationDate, notes}
     notes: [] // {text}
   });
-  const neonNotice = 'Tu información está cifrada localmente y no se almacena en servidores. Solo tú puedes acceder con tu contraseña.';
+  const neonNotice = 'Tu información está cifrada localmente y no se almacena en servidores. Solo tú puedes acceder con tu contraseña de inicio de sesión.';
 
   useEffect(() => {
     // nada al montar
@@ -139,7 +139,7 @@ export default function Wallet() {
                 <div className="space-y-2">
                   <Label>Contraseña de tu inicio de sesión</Label>
                   <Input type="password" value={pass} onChange={(e)=>setPass(e.target.value)} placeholder="Ingresa tu contraseña" />
-                  <Button onClick={onUnlock} disabled={!pass}>Desbloquear</Button>
+                  <Button onClick={onUnlock} disabled={!pass}>Ingresar</Button>
                 </div>
               ) : (
                 <div className="space-y-4">
