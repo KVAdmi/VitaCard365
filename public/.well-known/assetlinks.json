@@ -1,0 +1,15 @@
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls",
+      "delegate_permission/common.get_login_creds"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.vitacard365.app",
+      "sha256_cert_fingerprints": [
+        "92:B2:8E:A0:92:EE:99:01:E6:53:10:C8:26:23:DB:A3:29:17:18:D5:96:3E:A1:D9:7A:8B:5F:F5:68:C5:AA:5B"
+      ]
+    }
+  }
+]
