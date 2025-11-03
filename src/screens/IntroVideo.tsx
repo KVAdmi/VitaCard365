@@ -13,7 +13,7 @@ export default function IntroVideo() {
   const navigate = useNavigate();
   const videoRef = useRef<HTMLVideoElement>(null);
   const [showSkip, setShowSkip] = useState(false);
-  const [needsTap, setNeedsTap] = useState(false);
+  const [needsTap, setNeedsTap] = useState(false); // iOS: deshabilitado (no mostrar nunca)
   const [isFading, setIsFading] = useState(false);
   const [starting, setStarting] = useState(false);
   const [ready, setReady] = useState(false);         // El video ya puede pintar
@@ -28,9 +28,9 @@ export default function IntroVideo() {
   // Fuente única y oficial del video
   const videoSrc = '/videos/intro.mp4';
 
-  // Mostramos splash durante 1.5s, luego lo ocultamos y arranca el video
+  // Mostramos splash durante 2s (alineado con plugin nativo), luego lo ocultamos y arranca el video
   useEffect(() => {
-    const splashTimer = setTimeout(() => setShowSplash(false), 1500);
+    const splashTimer = setTimeout(() => setShowSplash(false), 2000);
     return () => { clearTimeout(splashTimer); };
   }, []);
 
@@ -64,11 +64,11 @@ export default function IntroVideo() {
           try { v.currentTime = 0.05; } catch {}
         }
         // Algunos navegadores requieren play() explícito incluso con autoplay
-  await v.play();
+        await v.play();
         setNeedsTap(false);
       } catch {
-        // Autoplay bloqueado: mostramos botón, pero NO navegamos
-        setNeedsTap(true);
+        // iOS: no queremos botón "Tocar para iniciar" en ningún caso
+        setNeedsTap(false);
       }
     };
 
@@ -103,51 +103,28 @@ export default function IntroVideo() {
     const onWaiting = () => {
       console.log('[IntroVideo] EVENT: waiting');
       // está cargando/buffering; no navegar aún
-      setStarting(true);
+      setStarting(false);
     };
     const onError = () => {
       console.log('[IntroVideo] EVENT: error');
       setStarting(false);
-      setNeedsTap(true);
+      setNeedsTap(false);
     };
   v.addEventListener('playing', onPlaying);
   v.addEventListener('waiting', onWaiting);
   v.addEventListener('error', onError);
 
-    // Si el video no avanza tras un breve lapso, mostramos tap
-  let stallTimer: ReturnType<typeof setTimeout> | null = null;
-    const onTimeUpdate = () => {
-      // Si está reproduciendo, limpiamos cualquier stall
-      if (v.currentTime > 0.3 && !v.paused) {
-        if (stallTimer) { clearTimeout(stallTimer); stallTimer = null; }
-        if (posterVisible) setPosterVisible(false);
-      }
-      if (v.currentTime > 0) {
-        console.log('[IntroVideo] EVENT: timeupdate', v.currentTime, v.paused);
-      }
-    };
-    v.addEventListener('timeupdate', onTimeUpdate);
-
-    // Segundo intento por si 'canplay' no dispara en algunos WebViews
-    const fallbackTimer = setTimeout(() => {
-      // Si ni así avanza pronto, mostrar tap (sin navegar)
-      stallTimer = setTimeout(() => {
-        if (v.paused || v.currentTime < 0.2) {
-          setNeedsTap(true);
-        }
-      }, 900);
-    }, 500);
+    // Quitamos fallback agresivo; daremos un margen separado tras quitar el splash
 
     return () => {
   v.removeEventListener('canplay', onCanPlay);
-  v.removeEventListener('timeupdate', onTimeUpdate);
   v.removeEventListener('playing', onPlaying);
   v.removeEventListener('waiting', onWaiting);
   v.removeEventListener('error', onError);
-  clearTimeout(fallbackTimer);
-  if (stallTimer) clearTimeout(stallTimer);
     };
   }, []);
+
+  // iOS: Eliminamos fallback de "Tocar para iniciar" para evitar doble arranque visual
 
   const goLoginWithFade = () => {
     if (isFading) return;
@@ -174,25 +151,7 @@ export default function IntroVideo() {
     setTimeout(() => navigate('/descubre', { replace: true }), 120);
   };
 
-  const onTapToStart = async () => {
-  const v = videoRef.current;
-  if (!v) return; // si no hay video, no navegamos automáticamente
-    try {
-  v.setAttribute('muted', '');
-  v.setAttribute('playsinline', '');
-  v.setAttribute('webkit-playsinline', '');
-  v.muted = true;
-  // eslint-disable-next-line no-unused-expressions
-  v.playsInline = true;
-  setStarting(true);
-  await v.play();
-  setNeedsTap(false);
-    } catch {
-      // Si aún no se puede reproducir, mantenemos el botón para que el usuario vuelva a intentar
-      setStarting(false);
-      setNeedsTap(true);
-    }
-  };
+  // iOS: removido handler de tap manual; no se usa
 
 
 
@@ -260,18 +219,7 @@ export default function IntroVideo() {
         </button>
       )}
 
-      {/* Fallback: Tocar para iniciar */}
-      {needsTap && !showSplash && (
-        <div className="absolute inset-0 flex items-center justify-center">
-          <button
-            onClick={onTapToStart}
-            className="px-6 py-3 rounded-full text-white font-semibold shadow-lg"
-            style={{ backgroundColor: 'rgba(240, 99, 64, 0.95)' }}
-          >
-            {starting ? 'Iniciando…' : 'Tocar para iniciar'}
-          </button>
-        </div>
-      )}
+      {/* iOS: Sin fallback de "Tocar para iniciar" */}
 
       {/* Safe area bottom padding para evitar solapes con gestos */}
       <div className="pointer-events-none" style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }} />

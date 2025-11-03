@@ -22,11 +22,16 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             // Configurar el delegate para monitorear la carga
             webView.navigationDelegate = WebViewDelegate()
             
-            // Forzar fondo blanco para debug
-            webView.backgroundColor = .white
+            // Fondo de marca para evitar flash blanco entre LaunchScreen y primera pintura
+            let brand = UIColor(red: 12.0/255.0, green: 28.0/255.0, blue: 62.0/255.0, alpha: 1.0)
+            webView.backgroundColor = brand
+            webView.scrollView.backgroundColor = brand
             webView.isOpaque = false
         }
-        
+        // Asegurar que el contenedor también tenga el fondo de marca
+        let brand = UIColor(red: 12.0/255.0, green: 28.0/255.0, blue: 62.0/255.0, alpha: 1.0)
+        bridge?.view.backgroundColor = brand
+        window?.backgroundColor = brand
         window?.rootViewController = bridge
         window?.makeKeyAndVisible()
         

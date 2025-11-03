@@ -26,12 +26,19 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         webView.navigationDelegate = NavigationDelegate(onFinish: { success in
             print("SceneDelegate: WebView load finished - success: \(success)")
         })
+        // Color de marca para eliminar cualquier flash blanco
+        let brand = UIColor(red: 12.0/255.0, green: 28.0/255.0, blue: 62.0/255.0, alpha: 1.0)
+        webView.backgroundColor = brand
+        webView.scrollView.backgroundColor = brand
+        webView.isOpaque = false
     } else {
         print("SceneDelegate: WebView not initialized")
     }
     
-    // Forzar fondo blanco para debug
-    bridgeVC.view.backgroundColor = .white
+    // Fondo de marca también en el contenedor y en la ventana
+    let brand = UIColor(red: 12.0/255.0, green: 28.0/255.0, blue: 62.0/255.0, alpha: 1.0)
+    bridgeVC.view.backgroundColor = brand
+    win.backgroundColor = brand
     win.rootViewController = bridgeVC
     self.window = win
     win.makeKeyAndVisible()
