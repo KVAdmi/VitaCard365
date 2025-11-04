@@ -205,3 +205,28 @@ body { overscroll-behavior-y: none; }
   height: calc(64px + var(--sab));
   padding-bottom: var(--sab);
 }
+
+
+/* ============================================
+   Workaround WebKit: backdrop-filter + fixed rompe hit-testing en iOS
+   ============================================ */
+.header-ios-safe { position: relative; }
+.header-ios-safe::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  pointer-events: none !important;
+  z-index: -1;
+}
+.header-ios-safe > * { position: relative; z-index: 1; }
+.header-ios-safe button,
+.header-ios-safe a,
+.header-ios-safe [role="button"],
+.header-ios-safe svg {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  pointer-events: auto !important;
+  touch-action: manipulation;
+}
