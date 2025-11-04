@@ -39,6 +39,7 @@ export function AppHeader({
     <header
       className="fixed top-0 left-0 right-0 h-14 z-[1000] flex items-center px-4
                  bg-[rgba(10,20,40,0.92)] backdrop-blur-sm text-white"
+      style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}
     >
         <div className="flex items-center justify-between w-full h-full">
           <div className="flex items-center space-x-3">
@@ -84,7 +85,7 @@ export function AppHeader({
                     <DropdownMenuItem 
                       key={index} 
                       className="flex flex-col items-start gap-1 p-3 focus:bg-white/15"
-                      onSelect={() => setHasNotifications(false)}
+                      onSelect={() => setHasNotifications?.(false)}
                     >
                       <div className="flex justify-between w-full">
                         <p className="font-semibold">{notification.title}</p>
@@ -94,7 +95,7 @@ export function AppHeader({
                     </DropdownMenuItem>
                   ))}
                   <DropdownMenuSeparator className="bg-white/15" />
-                  <DropdownMenuItem className="justify-center p-2 focus:bg-white/15" onSelect={() => setHasNotifications(false)}>
+                  <DropdownMenuItem className="justify-center p-2 focus:bg-white/15" onSelect={() => setHasNotifications?.(false)}>
                     <p className="text-sm font-semibold">Marcar todas como leídas</p>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
