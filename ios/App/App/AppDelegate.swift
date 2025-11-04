@@ -28,9 +28,13 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             webView.scrollView.backgroundColor = brand
             webView.isOpaque = false
 
-            // Desactivar auto-ajuste de insets del scrollView de WKWebView en iOS 11+
+            // Ajuste recomendado: permitir que iOS aplique safe areas automáticamente
             if #available(iOS 11.0, *) {
-                webView.scrollView.contentInsetAdjustmentBehavior = .never
+                // Con .automatic el contenido no se mete bajo el notch ni el home indicator
+                webView.scrollView.contentInsetAdjustmentBehavior = .automatic
+                // Alinear insets/indicadores con el safe area por defecto
+                webView.scrollView.scrollIndicatorInsets = .zero
+                webView.scrollView.contentInset = .zero
             }
         }
         // Asegurar que el contenedor también tenga el fondo de marca

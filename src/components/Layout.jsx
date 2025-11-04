@@ -176,8 +176,7 @@ const Layout = ({ children, title, showBackButton = false }) => {
   return (
     <div className="min-h-[100dvh] bg-vita-blue text-vita-white">
       <header
-        className="fixed top-0 left-0 right-0 h-14 z-[1000] flex items-center px-4 bg-[rgba(10,20,40,0.92)] backdrop-blur-sm text-white"
-        style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}
+        className="fixed top-0 left-0 right-0 app-header-safe z-[1000] flex items-center px-4 bg-[rgba(10,20,40,0.92)] backdrop-blur-sm text-white"
       >
         <div className="flex items-center justify-between w-full h-full">
           <div className="flex items-center space-x-3">
@@ -255,8 +254,7 @@ const Layout = ({ children, title, showBackButton = false }) => {
       </header>
 
   <main
-        className="min-h-[100dvh] pb-16 relative"
-        style={{ paddingTop: 'calc(3.5rem + env(safe-area-inset-top, 0px))' }}
+        className="min-h-[100dvh] relative app-main-safe"
       >
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -267,7 +265,7 @@ const Layout = ({ children, title, showBackButton = false }) => {
         </motion.div>
       </main>
 
-  <nav className="fixed bottom-0 left-0 right-0 z-40 glass-card footer-menu" style={{ paddingBottom: 'var(--sab)' }}>
+  <nav className="fixed bottom-0 left-0 right-0 z-40 glass-card footer-menu app-tabbar-safe">
         <div className="flex justify-around py-2">
           {navigationItems.map((item) => {
             const Icon = item.icon;

@@ -217,7 +217,7 @@ export default function IntroVideo() {
           aria-label="Omitir"
           className="fixed right-4 z-[1001] inline-flex items-center justify-center rounded-xl px-3 py-1.5 text-[13px] font-semibold text-white shadow-md active:scale-95"
           style={{
-            top: 'calc(12px + env(safe-area-inset-top, 0px))',
+            top: 'calc(12px + var(--sat))',
             backgroundColor: 'rgb(240,99,64)',
             border: '1px solid rgba(255,255,255,0.35)',
           }}

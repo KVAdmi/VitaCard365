@@ -40,6 +40,7 @@
         "ios:rebuild": "npm run guard:unlock-ios-public && npm run build && npm run ios:sync && npm run guard:lock-ios-public"
     },
     "dependencies": {
+        
         "@capacitor-community/bluetooth-le": "6.0.0",
         "@capacitor/app": "6.0.2",
         "@capacitor/browser": "^7.0.2",
@@ -79,7 +80,7 @@
         "react-chartjs-2": "^5.3.0",
         "react-dom": "^18.3.1",
         "react-easy-crop": "^5.0.6",
-        "react-fastclick": "^3.0.2",
+        
         "react-helmet": "^6.1.0",
         "react-helmet-async": "^2.0.5",
         "react-is": "^18.3.1",

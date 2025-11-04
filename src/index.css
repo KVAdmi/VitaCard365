@@ -12,6 +12,15 @@ body { overscroll-behavior-y: none; }
 .header-shadow,
 .header-gradient { pointer-events: none !important; }
 
+/* Guards for any potential top layer overlays */
+#top-layer,
+.top-layer,
+.top-overlay,
+[data-overlay="decorative"] {
+  pointer-events: none !important;
+  position: static !important; /* evita quedar fijo full-screen encima del header */
+}
+
 @keyframes nasa-blue-glow {
   0% {
     box-shadow: 0 0 0px 0 #5CE9E1, 0 0 0px 0 #5CE9E1;
@@ -124,6 +133,13 @@ body { overscroll-behavior-y: none; }
   .bg-vita-light {
     background-color: #f5e6ff;
   }
+
+  /* Fuerza eventos en targets interactivos del header */
+  header button, header a, header svg {
+    pointer-events: auto;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
 }
 
 /* Clase opt-in para SVGs puramente decorativos */
@@ -172,3 +188,20 @@ body { overscroll-behavior-y: none; }
 }
 .animate-bmi-scan { animation: bmiScan 2.8s linear infinite; }
 .animate-bmi-spin { animation: bmiSpin 16s linear infinite; transform-style: preserve-3d; }
+
+/* Convención opcional: si alguna capa global se marca como fixed-full, no intercepta toques */
+*[data-fixed-full] { pointer-events: none; }
+
+/* Safe area helpers */
+.app-header-safe {
+  height: calc(56px + var(--sat));
+  padding-top: var(--sat);
+}
+.app-main-safe {
+  padding-top: calc(56px + var(--sat));
+  padding-bottom: calc(64px + var(--sab));
+}
+.app-tabbar-safe {
+  height: calc(64px + var(--sab));
+  padding-bottom: var(--sab);
+}
