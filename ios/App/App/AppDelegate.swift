@@ -27,6 +27,11 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             webView.backgroundColor = brand
             webView.scrollView.backgroundColor = brand
             webView.isOpaque = false
+
+            // Desactivar auto-ajuste de insets del scrollView de WKWebView en iOS 11+
+            if #available(iOS 11.0, *) {
+                webView.scrollView.contentInsetAdjustmentBehavior = .never
+            }
         }
         // Asegurar que el contenedor también tenga el fondo de marca
         let brand = UIColor(red: 12.0/255.0, green: 28.0/255.0, blue: 62.0/255.0, alpha: 1.0)
