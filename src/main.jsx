@@ -10,8 +10,12 @@ import './index.css';
 import './styles/layers.css';
 import initReactFastclick from 'react-fastclick';
 import { Capacitor } from '@capacitor/core';
+import { enableHitTestDebug } from './utils/hitTestDebug';
 
 initReactFastclick();
+
+// Solo en desarrollo: habilita utilidades de debug para hit-testing
+try { if (import.meta && import.meta.env && import.meta.env.DEV) enableHitTestDebug(); } catch {}
 
 const isAndroid = Capacitor.getPlatform && Capacitor.getPlatform() === 'android';
 const protocol = (typeof window !== 'undefined' && window.location?.protocol) || '';
