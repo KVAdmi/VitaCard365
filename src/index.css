@@ -104,9 +104,8 @@ body { overscroll-behavior-y: none; }
     overscroll-behavior-x: none;
     height: 100%;
   }
-  img, svg {
-    pointer-events: none;
-  }
+  /* Importante: no desactivar eventos globalmente en img/svg para permitir taps en iconos (iOS) */
+  /* Si necesitas desactivar eventos en SVGs decorativos, usa .decorative-svg caso por caso */
   .bg-vita-blue {
     background-color: #0c1c3e;
   }
@@ -125,6 +124,11 @@ body { overscroll-behavior-y: none; }
   .bg-vita-light {
     background-color: #f5e6ff;
   }
+}
+
+/* Clase opt-in para SVGs puramente decorativos */
+.decorative-svg {
+  pointer-events: none;
 }
 
 .glass-card {
