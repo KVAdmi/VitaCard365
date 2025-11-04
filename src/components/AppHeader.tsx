@@ -37,8 +37,12 @@ export function AppHeader({
 
   return (
     <header
-      className="fixed top-0 left-0 right-0 app-header-safe z-[1000] flex items-center px-4
-                 bg-[rgba(10,20,40,0.92)] text-white header-ios-safe"
+      className="fixed top-0 left-0 right-0 z-[1000] flex items-center px-4
+                 bg-[rgba(10,20,40,0.98)] text-white"
+      style={{
+        height: 'calc(56px + env(safe-area-inset-top, 0px))',
+        paddingTop: 'env(safe-area-inset-top, 0px)'
+      }}
     >
         <div className="flex items-center justify-between w-full h-full">
           <div className="flex items-center space-x-3">
