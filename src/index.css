@@ -1,5 +1,17 @@
 @import url('https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;500;700&display=swap');
 
+/* iOS safe area and utility classes */
+html, body, #root { height: 100%; }
+body { overscroll-behavior-y: none; }
+
+/* (Removido) Capa portal y utilidades .layer-* ya no se usan */
+
+/* Cualquier overlay decorativo arriba no captura toques */
+.top-overlay,
+[data-overlay="decorative"],
+.header-shadow,
+.header-gradient { pointer-events: none !important; }
+
 @keyframes nasa-blue-glow {
   0% {
     box-shadow: 0 0 0px 0 #5CE9E1, 0 0 0px 0 #5CE9E1;
@@ -63,6 +75,12 @@
     --vc-primary: #f06340; /* brand orange for focus/selected */
     --vc-card: rgba(20,20,28,0.75); /* translucent dark cards */
     --vc-foreground: #e7e7ea; /* light text on dark bg */
+
+    /* iOS safe area variables */
+    --sat: env(safe-area-inset-top, 0px);
+    --sab: env(safe-area-inset-bottom, 0px);
+    --sal: env(safe-area-inset-left, 0px);
+    --sar: env(safe-area-inset-right, 0px);
   }
 }
 
@@ -76,8 +94,16 @@
     -webkit-user-select: none;
     -moz-user-select: none;
     -ms-user-select: none;
+    /* Evita rebote vertical en iOS */
+    overscroll-behavior-y: none;
   }
-  html, body, #root { background: #0c1c3e; }
+  html, body, #root {
+    background: #0c1c3e;
+    overflow-x: hidden; /* Evita desplazamiento lateral no deseado en iOS/Android */
+    width: 100%;
+    overscroll-behavior-x: none;
+    height: 100%;
+  }
   img, svg {
     pointer-events: none;
   }

@@ -107,6 +107,14 @@ export default function GymCatalog() {
 
         {/* Agrupar por categoría en tarjetas cristal con despliegue */}
         <div className="space-y-3">
+          {/* Encabezado informativo para aclarar que las tarjetas son informativas */}
+          <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 shadow-[0_12px_36px_rgba(0,40,80,0.28)]">
+            <div className="text-white font-semibold">Catálogo de ejercicios</div>
+            <div className="text-xs opacity-80 mt-0.5">
+              Explora los ejercicios por categoría. Estas tarjetas son informativas para que conozcas opciones y variaciones.
+            </div>
+          </div>
+
           {catsInList.map((cat) => {
             const items = list.filter((e) => (e.categoria || 'Otros') === cat);
             const open = !!openCats[cat];
@@ -139,6 +147,17 @@ export default function GymCatalog() {
           {!loading && list.length === 0 && (
             <div className="p-3 text-sm opacity-80 rounded-xl border border-white/10 bg-white/5">Sin resultados</div>
           )}
+
+          {/* CTA al final del listado para llevar a armar el circuito */}
+          <div className="pt-1 pb-2 flex justify-center">
+            <Link
+              to="/fit/gym/circuit"
+              className="px-5 py-2.5 rounded-2xl border border-violet-300/30 bg-violet-400/15 text-violet-100/95 hover:bg-violet-400/25 transition-all"
+              style={{ boxShadow: '0 0 0 1px rgba(179,136,255,0.28)' }}
+            >
+              Arma tu Circuito
+            </Link>
+          </div>
         </div>
         {/* Footer con imagen del atleta */}
         <div className="w-full flex items-center justify-center pt-4 pb-8">

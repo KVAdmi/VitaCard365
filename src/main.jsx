@@ -1,8 +1,13 @@
+// iOS detection for safe-area utility classes
+if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+  document.documentElement.classList.add('ios');
+}
 
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
 import './index.css';
+import './styles/layers.css';
 import initReactFastclick from 'react-fastclick';
 import { Capacitor } from '@capacitor/core';
 

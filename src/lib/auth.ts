@@ -1,4 +1,5 @@
 import { App } from '@capacitor/app';
+import { Browser } from '@capacitor/browser';
 import { Capacitor } from '@capacitor/core';
 import { supabase } from './supabaseClient';
 
@@ -17,35 +18,58 @@ const DEBUG_AUTH: boolean = ((): boolean => {
 const dlog = (...args: unknown[]) => { if (DEBUG_AUTH) console.log('[AUTH-DL]', ...args); };
 
 // Deep link de retorno
-// - En nativo preferimos vitacard365://auth-callback (más claro y ya declarado en el Manifest)
-// - Mantiene compatibilidad aceptando también vitacard365://auth/callback en el listener
+// - En iOS usamos com.vitacard.app://auth-callback (coincide con appId y URL Scheme)
+// - Mantiene compatibilidad aceptando también vitacard365://auth/callback como legado
 // - Se puede forzar con VITE_DEEP_LINK
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore - import.meta puede no estar tipado en todos los contextos
 const ENV_DEEP_LINK = (typeof import.meta !== 'undefined' && (import.meta as any)?.env?.VITE_DEEP_LINK) as string | undefined;
 const isNative = !!(Capacitor.isNativePlatform && Capacitor.isNativePlatform());
 export const DEEP_LINK: string = ENV_DEEP_LINK
-  || (isNative ? 'vitacard365://auth-callback' : 'vitacard365://auth/callback');
+  || (isNative ? 'com.vitacard.app://auth-callback' : 'vitacard365://auth/callback');
 
 export async function signInWithGoogle() {
   // En web, usar el origen completo para evitar problemas con custom schemes
   const webRedirect = (typeof window !== 'undefined' && window.location?.origin)
     ? `${window.location.origin}/auth/callback`
     : undefined;
-  const redirectTo = isNative ? DEEP_LINK : (webRedirect || DEEP_LINK);
+
+  if (isNative) {
+    // En nativo, obtener la URL y abrirla con el in-app browser para poder cerrarlo al volver
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: DEEP_LINK, skipBrowserRedirect: true },
+    });
+    if (error) {
+      console.error('signInWithOAuth (native)', error.message);
+      return;
+    }
+    const url = data?.url;
+    if (url) {
+      try {
+        await Browser.open({ url });
+      } catch (openErr) {
+        console.error('Browser.open failed', openErr);
+      }
+    }
+    return;
+  }
+
+  // En web, dejar que supabase haga el redirect clásico
+  const redirectTo = webRedirect || DEEP_LINK;
   const { error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
     options: { redirectTo, skipBrowserRedirect: false },
   });
-  if (error) console.error('signInWithOAuth', error.message);
+  if (error) console.error('signInWithOAuth (web)', error.message);
 }
 
 let AUTH_DEEPLINK_HANDLED = false;
 App.addListener('appUrlOpen', async ({ url }: { url: string }) => {
   if (!url) return;
   const normalized = url.split('?')[0];
-  const isNew = url.startsWith(DEEP_LINK);
-  const isOld = normalized === 'vitacard365://auth/callback';
+  const isNew = url.startsWith(DEEP_LINK) || normalized === 'com.vitacard.app://auth-callback';
+  const isOld = normalized === 'vitacard365://auth/callback' || normalized === 'vitacard365://auth-callback';
   if (!isNew && !isOld) { dlog('Ignoring non-auth URL'); return; }
 
   // Evitar procesar múltiples veces el mismo retorno
@@ -56,12 +80,8 @@ App.addListener('appUrlOpen', async ({ url }: { url: string }) => {
   try {
     // Intentar cerrar el in-app browser (best-effort)
     try {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const maybeBrowser: any = (globalThis as any).Capacitor?.Plugins?.Browser;
-      if (maybeBrowser?.close) {
-        dlog('Closing in-app browser');
-        await maybeBrowser.close();
-      }
+      dlog('Closing in-app browser');
+      await Browser.close();
     } catch (closeErr) {
       dlog('Browser close attempt failed (non-fatal)', closeErr);
     }

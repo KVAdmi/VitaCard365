@@ -1,8 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import Layout from '@/components/Layout';
 import { useEjerciciosCatalog } from '@/hooks/useEjerciciosCatalog';
-import { Link } from 'react-router-dom';
-import { listMyCircuits, listPublicCircuits, createCircuit, updateCircuit, getCircuitWithItems, replaceCircuitItems } from '@/lib/gymApi';
+import { Link, useNavigate } from 'react-router-dom';
+import { listMyCircuits, /* listPublicCircuits, */ createCircuit, updateCircuit, getCircuitWithItems, replaceCircuitItems } from '@/lib/gymApi';
 import { supabase } from '@/lib/supabaseClient';
 
 function useLocalStorageState(key, initial) {
@@ -15,9 +15,10 @@ function useLocalStorageState(key, initial) {
 
 export default function CircuitBuilder() {
   const { data, loading } = useEjerciciosCatalog();
+  const navigate = useNavigate();
   const [draft, setDraft] = useLocalStorageState('vc.gym.circuit.draft', { id: null, owner_id: null, name: 'Mi circuito', items: [] });
   const [mine, setMine] = useState([]);
-  const [templates, setTemplates] = useState([]);
+  // Se eliminó la sección de 'Plantillas públicas'; no se usa 'templates'.
   const [busy, setBusy] = useState(false);
   const [q, setQ] = useState('');
   const list = useMemo(() => {
@@ -36,9 +37,8 @@ export default function CircuitBuilder() {
   useEffect(() => {
     (async () => {
       try {
-        const [m, t] = await Promise.all([listMyCircuits(), listPublicCircuits()]);
+        const m = await listMyCircuits();
         setMine(m);
-        setTemplates(t);
       } catch (e) { console.error(e); }
     })();
   }, []);
@@ -54,7 +54,9 @@ export default function CircuitBuilder() {
         series: it.series ?? 3,
         descanso: it.descanso_seg ?? 60,
       }));
-  setDraft({ id: circuit?.id || null, owner_id: circuit?.user_id || null, name: circuit?.name || 'Mi circuito', items: mapped });
+      setDraft({ id: circuit?.id || null, owner_id: circuit?.user_id || null, name: circuit?.name || 'Mi circuito', items: mapped });
+      // Después de cargar, ir al Runner para iniciar el circuito
+      setTimeout(() => navigate('/fit/gym/run'), 80);
     } catch (e) {
       alert('No se pudo cargar el circuito');
     } finally { setBusy(false); }
@@ -181,7 +183,7 @@ export default function CircuitBuilder() {
               </ul>
             )}
 
-            <div className="mt-4 grid grid-cols-1 lg:grid-cols-2 gap-3">
+            <div className="mt-4 grid grid-cols-1 lg:grid-cols-1 gap-3">
               <div>
                 <div className="text-sm font-semibold text-white mb-2">Mis circuitos</div>
                 <ul className="max-h-[30vh] overflow-auto divide-y divide-white/10 rounded-xl border border-white/10">
@@ -195,21 +197,6 @@ export default function CircuitBuilder() {
                     </li>
                   ))}
                   {!mine.length && <li className="p-3 text-sm opacity-75">Sin circuitos</li>}
-                </ul>
-              </div>
-              <div>
-                <div className="text-sm font-semibold text-white mb-2">Plantillas públicas</div>
-                <ul className="max-h-[30vh] overflow-auto divide-y divide-white/10 rounded-xl border border-white/10">
-                  {templates.map((c) => (
-                    <li key={c.id} className="p-3 flex items-center justify-between hover:bg-white/5">
-                      <div>
-                        <div className="font-semibold text-white">{c.name}</div>
-                        <div className="text-xs opacity-70">Plantilla</div>
-                      </div>
-                      <button onClick={()=>loadCircuit(c.id)} disabled={busy} className="px-2 py-1 text-xs rounded bg-cyan-500/20 border border-cyan-500/30">Cargar</button>
-                    </li>
-                  ))}
-                  {!templates.length && <li className="p-3 text-sm opacity-75">Sin plantillas</li>}
                 </ul>
               </div>
             </div>

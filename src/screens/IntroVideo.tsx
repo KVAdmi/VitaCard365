@@ -5,9 +5,9 @@ declare global {
   }
 }
 
-
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+// Removed shadcn Button for a native button in TopPortal to avoid style overrides
 
 export default function IntroVideo() {
   const navigate = useNavigate();
@@ -158,7 +158,13 @@ export default function IntroVideo() {
   return (
     <div
       className={`fixed inset-0 ${isFading ? 'opacity-0' : 'opacity-100'}`}
-      style={{ background: '#0c1c3e', transition: 'opacity 250ms ease-in-out' }}
+      style={{
+        background: '#0c1c3e',
+        transition: 'opacity 250ms ease-in-out',
+        // Garantiza que no bloquee toques cuando estamos saliendo
+        pointerEvents: isFading ? 'none' : 'auto',
+        zIndex: 0,
+      }}
     >
       <style>{`
         video::-webkit-media-controls { display: none !important; }
@@ -208,11 +214,13 @@ export default function IntroVideo() {
       {showSkip && !showSplash && (
         <button
           onClick={goLoginWithFade}
-          className="absolute top-4 right-4 z-10 px-3 py-1.5 rounded-full text-white text-sm"
+          aria-label="Omitir"
+          className="fixed right-4 top-3 z-[1001] inline-flex items-center justify-center
+                     rounded-xl px-3 py-1.5 text-[13px] font-semibold text-white
+                     shadow-md active:scale-95"
           style={{
-            backgroundColor: 'rgba(240, 99, 64, 0.9)',
-            border: '1px solid rgba(255,255,255,0.35)',
-            paddingTop: `calc(1rem + env(safe-area-inset-top, 0px))`,
+            backgroundColor: 'rgb(240,99,64)',
+            border: '1px solid rgba(255,255,255,0.35)'
           }}
         >
           Omitir

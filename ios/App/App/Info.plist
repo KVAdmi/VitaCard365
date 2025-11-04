@@ -33,6 +33,18 @@
 	<string>Se usa para comunicar con dispositivos Bluetooth LE.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Se usa para mostrar tu ubicación en el mapa y registrar rutas.</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>com.vitacard.app</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.vitacard.app</string>
+				<string>vitacard365</string>
+			</array>
+		</dict>
+	</array>
 	<key>UIRequiredDeviceCapabilities</key>
 	<array>
 		<string>armv7</string>

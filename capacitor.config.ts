@@ -17,6 +17,11 @@ const config: CapacitorConfig = {
       showDuration: 0,
       fadeOutDuration: 0,
       androidScaleType: 'CENTER_CROP'
+    },
+    StatusBar: {
+      overlays: false,
+      style: 'DARK',
+      backgroundColor: '#0A1428'
     }
   },
   server: {

@@ -73,6 +73,15 @@ async function initAppStateHydration() {
         if (!data?.session) {
           // No session found; nothing to enforce here—guards will redirect if needed
         }
+        // Si la app vuelve al foreground estando en la Intro, navega a /descubre para evitar pantalla azul
+        if (typeof window !== 'undefined') {
+          const hash = window.location.hash || '';
+          const path = window.location.pathname || '';
+          const atIntro = hash === '#/' || hash === '#' || hash === '' || path === '/' || path.endsWith('/index.html');
+          if (atIntro) {
+            try { window.location.hash = '#/descubre'; } catch {}
+          }
+        }
       } catch {}
     }
   });
