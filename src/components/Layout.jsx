@@ -174,9 +174,11 @@ const Layout = ({ children, title, showBackButton = false }) => {
   }, [user?.id]);
 
   return (
-    <div className="min-h-screen bg-vita-blue text-vita-white">
-      <header className="sticky top-0 z-40 glass-card">
-        <div className="flex items-center justify-between px-4 py-3">
+    <div className="min-h-[100dvh] bg-vita-blue text-vita-white">
+      <header
+        className="fixed top-0 left-0 right-0 app-header-safe z-[1000] flex items-center px-4 bg-[rgba(10,20,40,0.92)] text-white header-ios-safe"
+      >
+        <div className="flex items-center justify-between w-full h-full">
           <div className="flex items-center space-x-3">
             {showBackButton ? (
               <Button

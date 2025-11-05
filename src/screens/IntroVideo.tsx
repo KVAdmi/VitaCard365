@@ -208,11 +208,13 @@ export default function IntroVideo() {
       {showSkip && !showSplash && (
         <button
           onClick={goLoginWithFade}
-          className="absolute top-4 right-4 z-10 px-3 py-1.5 rounded-full text-white text-sm"
+          aria-label="Omitir"
+          className="fixed right-4 z-[1001] inline-flex items-center justify-center rounded-xl px-3 py-1.5 text-[13px] font-semibold text-white shadow-md active:scale-95"
           style={{
             backgroundColor: 'rgba(240, 99, 64, 0.9)',
             border: '1px solid rgba(255,255,255,0.35)',
-            paddingTop: `calc(1rem + env(safe-area-inset-top, 0px))`,
+            transform: 'translateZ(0)',
+            backfaceVisibility: 'hidden'
           }}
         >
           Omitir
