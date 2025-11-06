@@ -172,6 +172,7 @@
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
   pointer-events: none !important;
+  border-radius: inherit; /* asegura esquinas redondeadas uniformes */
   z-index: -1;
 }
 .header-ios-safe > * { position: relative; z-index: 1; }

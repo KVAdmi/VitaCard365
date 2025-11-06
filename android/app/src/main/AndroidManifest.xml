@@ -70,7 +70,10 @@
                     <action android:name="android.intent.action.VIEW" />
                     <category android:name="android.intent.category.DEFAULT" />
                     <category android:name="android.intent.category.BROWSABLE" />
-                    <data android:scheme="https" android:host="vitacard365.app" android:pathPrefix="/app" />
+                    <!-- dominio raíz (opcional durante transición) -->
+                    <data android:scheme="https" android:host="vitacard365.com"/>
+                    <!-- subdominio dedicado -->
+                    <data android:scheme="https" android:host="links.vitacard365.com"/>
                 </intent-filter>
             <!-- Deep link nativo para OAuth (Supabase PKCE) -->
             <intent-filter>

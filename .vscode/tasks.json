@@ -1519,6 +1519,59 @@
 			"isBackground": false,
 			"problemMatcher": [],
 			"group": "build"
+		},
+		{
+			"label": "npm run dev",
+			"type": "shell",
+			"command": "npm run dev",
+			"isBackground": true,
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "dev: stop vite (pkill)",
+			"type": "shell",
+			"command": "pkill -f vite || true",
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "dev: start vite",
+			"type": "shell",
+			"command": "npm run dev",
+			"isBackground": true,
+			"problemMatcher": []
+		},
+		{
+			"label": "preview: start vite",
+			"type": "shell",
+			"command": "npm run preview",
+			"isBackground": true,
+			"problemMatcher": []
+		},
+		{
+			"label": "npm run dev (server)",
+			"type": "shell",
+			"command": "npm run dev",
+			"isBackground": true,
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "npm run dev (agent 2)",
+			"type": "shell",
+			"command": "npm run dev",
+			"isBackground": true,
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "vite dev 5176 (agent)",
+			"type": "shell",
+			"command": "npm run dev -- --force --port 5176 --host",
+			"isBackground": true,
+			"problemMatcher": [],
+			"group": "build"
 		}
 	]
 }

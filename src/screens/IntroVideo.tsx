@@ -12,6 +12,8 @@ import { useNavigate } from 'react-router-dom';
 export default function IntroVideo() {
   const navigate = useNavigate();
   const videoRef = useRef<HTMLVideoElement>(null);
+  const skipRef = useRef<HTMLButtonElement | null>(null);
+  // navegatedRef eliminado para evitar guards que bloqueen reintentos
   const [showSkip, setShowSkip] = useState(false);
   const [needsTap, setNeedsTap] = useState(false); // iOS: deshabilitado (no mostrar nunca)
   const [isFading, setIsFading] = useState(false);
@@ -20,6 +22,23 @@ export default function IntroVideo() {
   const [posterVisible, setPosterVisible] = useState(true); // Poster visible hasta playing
   const [showSplash, setShowSplash] = useState(true); // Splash visible al inicio
   useEffect(()=>{ try{ console.log('[Intro] mounted'); }catch{} },[]);
+
+  // Feature flag (Vite): VITE_IOS_HITTEST_FALLBACK=true|false (default true)
+  const HITTEST_FALLBACK_ENABLED: boolean = (() => {
+    try {
+      // Vite solo expone variables que empiezan con VITE_
+      const val = (import.meta as any)?.env?.VITE_IOS_HITTEST_FALLBACK;
+      if (val === undefined || val === null) return true; // por defecto habilitado
+      if (typeof val === 'string') return val === 'true' || val === '1';
+      return !!val;
+    } catch {
+      return true;
+    }
+  })();
+
+  // Detección simple de plataforma para layout condicional
+  const isIOS = (() => /iPhone|iPad|iPod/i.test(navigator.userAgent))();
+  const isAndroid = (() => /Android/i.test(navigator.userAgent))();
 
   // Póster inmediato (ruta conocida en assets)
   const poster = '/assets/landing-poster.jpg';
@@ -126,29 +145,65 @@ export default function IntroVideo() {
 
   // iOS: Eliminamos fallback de "Tocar para iniciar" para evitar doble arranque visual
 
-  const goLoginWithFade = () => {
-    if (isFading) return;
-    setIsFading(true);
-    // Asegura ocultar splash al salir hacia Login
-    try {
-  const cap = typeof window !== 'undefined' ? (window as Window).Capacitor : undefined;
-      const hidePlugins = cap?.Plugins?.SplashScreen?.hide;
-      if (typeof hidePlugins === 'function') hidePlugins();
-      const hideGlobal = cap?.SplashScreen?.hide;
-      if (typeof hideGlobal === 'function') hideGlobal();
-    } catch {}
-    // Forzar hash en nativo para evitar edge cases de Router en file://
-    try {
-      const protocol = (typeof window !== 'undefined' && window.location?.protocol) || '';
-  const isNativeEnv = (typeof window !== 'undefined' && (window as Window).Capacitor && typeof (window as Window).Capacitor.isNativePlatform === 'function' && (window as Window).Capacitor.isNativePlatform()) || protocol === 'capacitor:' || protocol === 'file:';
-      if (isNativeEnv) {
-        // cinturón y tirantes: setear hash directamente
-        if (typeof window !== 'undefined') {
-          window.location.hash = '#/descubre';
-        }
+  // Parche móvil (iOS/Android): capturador global en captura; si el toque/click cae dentro del botón, forzar navegación directa
+  useEffect(() => {
+    const isMobileRuntime = () => /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    if (!isMobileRuntime() || !HITTEST_FALLBACK_ENABLED) return;
+    try { (window as any).__introFallbackActive = true; } catch {}
+    const fallbackCooldown = { current: false };
+    const triggerIfInside = (x: number, y: number, ev: Event) => {
+      try { if (!(window as any).__introFallbackActive) return; } catch {}
+      if (fallbackCooldown.current) return;
+      const btn = skipRef.current;
+      if (!btn) return;
+      const r = btn.getBoundingClientRect();
+      if (x >= r.left && x <= r.right && y >= r.top && y <= r.bottom) {
+        fallbackCooldown.current = true;
+        setTimeout(() => { fallbackCooldown.current = false; }, 300);
+        console.log('[SKIP] fallback fired');
+        ev.preventDefault?.();
+        navigate('/descubre', { replace: true });
       }
+    };
+    const onPointerUp = (ev: PointerEvent) => triggerIfInside(ev.clientX, ev.clientY, ev);
+    const onTouchEnd = (ev: TouchEvent) => { const t = ev.changedTouches?.[0]; if (!t) return; triggerIfInside(t.clientX, t.clientY, ev); };
+    const onClickCapture = (ev: MouseEvent) => triggerIfInside(ev.clientX, ev.clientY, ev);
+    document.addEventListener('pointerup', onPointerUp, { passive: false, capture: true });
+    document.addEventListener('touchend', onTouchEnd, { passive: false, capture: true });
+    document.addEventListener('click', onClickCapture, { passive: false, capture: true });
+    return () => {
+      document.removeEventListener('pointerup', onPointerUp, { capture: true } as any);
+      document.removeEventListener('touchend', onTouchEnd, { capture: true } as any);
+      document.removeEventListener('click', onClickCapture, { capture: true } as any);
+      // Desactiva el fallback global fuera del onboarding
+      if (!window.location.pathname.startsWith('/intro')) {
+        try { (window as any).__introFallbackActive = false; } catch {}
+      }
+    };
+  }, []);
+
+  const goLoginWithFade = () => {
+    console.log('[SKIP] navigate called');
+    // 1) Navegación inmediata (sin timers)
+    navigate('/descubre', { replace: true });
+
+    // 2) Oculta Splash si existe (no bloquea)
+    try {
+      const cap = (window as any)?.Capacitor;
+      cap?.Plugins?.SplashScreen?.hide?.();
+      cap?.SplashScreen?.hide?.();
     } catch {}
-    setTimeout(() => navigate('/descubre', { replace: true }), 120);
+
+    // 3) Verificación por rAF; si no cambió, reintentar navigate
+    requestAnimationFrame(() => {
+      const href = (window.location.hash || window.location.pathname || '') as string;
+      console.log('[SKIP] after rAF href=', href);
+      if (!href.includes('/descubre')) {
+        navigate('/descubre', { replace: true });
+      } else {
+        try { setIsFading(true); } catch {}
+      }
+    });
   };
 
   // iOS: removido handler de tap manual; no se usa
@@ -204,17 +259,30 @@ export default function IntroVideo() {
         style={{ backgroundColor: 'transparent', zIndex: 1 }}
       />
 
-      {/* Botón Omitir visible a los 2s */}
+      {/* Botón Omitir visible a los 2s (centrado abajo en todas las plataformas) */}
       {showSkip && !showSplash && (
         <button
-          onClick={goLoginWithFade}
+          id="skip-btn"
+          ref={skipRef}
+          onPointerUp={() => { console.log('[SKIP] pointerup fired'); goLoginWithFade(); }}
+          type="button"
           aria-label="Omitir"
-          className="fixed right-4 z-[1001] inline-flex items-center justify-center rounded-xl px-3 py-1.5 text-[13px] font-semibold text-white shadow-md active:scale-95"
+          className="fixed z-[6000] inline-flex items-center justify-center rounded-xl px-3 py-1.5 text-[13px] font-semibold text-white shadow-md active:scale-95"
           style={{
+<<<<<<< HEAD
             backgroundColor: 'rgba(240, 99, 64, 0.9)',
+=======
+            bottom: 'calc(40px + env(safe-area-inset-bottom, 0px))',
+            left: 0,
+            right: 0,
+            margin: '0 auto',
+            width: 'max-content',
+            backgroundColor: 'rgb(240,99,64)',
+>>>>>>> d2e1a7e (Actualización general: dependencias y sincronización con remoto, sin romper nada)
             border: '1px solid rgba(255,255,255,0.35)',
-            transform: 'translateZ(0)',
-            backfaceVisibility: 'hidden'
+            backfaceVisibility: 'hidden',
+            pointerEvents: 'auto',
+            touchAction: 'manipulation',
           }}
         >
           Omitir
