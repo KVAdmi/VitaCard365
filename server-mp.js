@@ -2,6 +2,10 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import { MercadoPagoConfig, Preference } from "mercadopago";
+import { supabase, onceInsert } from "./src/lib/notif.js";
+import { sendPaymentConfirmationEmail, sendWelcomeEmail } from "./src/lib/email.js";
+
+console.log("[MercadoPago] Helpers cargados correctamente");
 
 dotenv.config();
 
@@ -153,7 +157,83 @@ app.post("/api/mercadopago/preference", async (req, res) => {
 // Webhook para notificaciones de Mercado Pago
 app.post("/api/mercadopago/webhook", (req, res) => {
   console.log('📨 Webhook recibido:', req.body);
+  // --- INICIO INTEGRACIÓN EMAILS Y SUPABASE ---
+
+  // Extraer datos relevantes del webhook
+  const { status, paymentId, userId, amount, plan, paidAt } = req.body || {};
+
+  // Simulación: solo ejecutar si status === 'approved'
+  if (status === 'approved') {
+    // Confirmación de pago (una por paymentId)
+    (async () => {
+      await triggerPaymentConfirmationEmail({
+        userId,
+        paymentId,
+        amount,
+        plan,
+        paidAt
+      });
+      await triggerWelcomeOnce({ userId });
+    })();
+  }
+
   res.status(200).send('OK');
+  // --- FIN INTEGRACIÓN EMAILS Y SUPABASE ---
+// A) Confirmación por pago (una por paymentId)
+async function triggerPaymentConfirmationEmail({
+  userId, paymentId, amount, plan, paidAt
+}) {
+  const first = await onceInsert({
+    tipo: "confirmacion_pago",
+    referencia_id: paymentId,
+    user_id: userId,
+    payload: { amount, plan, paidAt }
+  });
+  if (!first) return;
+
+  const { data: user } = await supabase
+    .from("profiles")
+    .select("email, name")
+    .eq("user_id", userId)
+    .single();
+
+  if (!user?.email) return;
+
+  try {
+    await sendPaymentConfirmationEmail({
+      to: user.email,
+      userName: user.name || "",
+      amount, plan, paidAt, paymentId
+    });
+  } catch (e) {
+    // no romper el webhook; solo log
+    console.error("email:confirmacion_pago failed", e);
+  }
+}
+
+// B) Bienvenida (una vez por usuario; referencia_id = userId)
+async function triggerWelcomeOnce({ userId }) {
+  const first = await onceInsert({
+    tipo: "bienvenida",
+    referencia_id: userId,
+    user_id: userId
+  });
+  if (!first) return;
+
+  const { data: user } = await supabase
+    .from("profiles")
+    .select("email, name")
+    .eq("user_id", userId)
+    .single();
+
+  if (!user?.email) return;
+
+  try {
+    await sendWelcomeEmail({ to: user.email, userName: user.name || "" });
+  } catch (e) {
+    console.error("email:bienvenida failed", e);
+  }
+}
 });
 
 // Middleware de manejo de errores

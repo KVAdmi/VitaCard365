@@ -8,6 +8,9 @@ import VitaCard365Logo from '../components/Vita365Logo';
 import { useToast } from '../components/ui/use-toast';
 import { ArrowLeft, Mail } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { supabase } from '@/lib/supabase';
+
+const APP_SCHEME = 'vitacard365://auth/recovery';
 
 const ResetPassword = () => {
   const [email, setEmail] = useState('');
@@ -18,14 +21,21 @@ const ResetPassword = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    // Aquí iría la lógica real de recuperación con Supabase
-    setTimeout(() => {
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: APP_SCHEME,
+      });
+      if (error) {
+        // No revelamos si existe/no existe el correo
+        console.error(error);
+      }
       toast({
         title: '¡Listo!',
-        description: 'Si tu correo está registrado, recibirás instrucciones para recuperar tu contraseña.',
+        description: 'Si tu correo está registrado, te enviamos instrucciones para recuperar tu contraseña.',
       });
+    } finally {
       setLoading(false);
-    }, 1200);
+    }
   };
 
   return (
