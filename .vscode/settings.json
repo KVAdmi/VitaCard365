@@ -1,7 +1,16 @@
 {
-    "java.configuration.updateBuildConfiguration": "automatic"
-{
-    "yaml.schemas": {
-        "https://json.schemastore.org/github-workflow.json": ".github/workflows/*.yml"
-    }
+  "chat.commandExecution": false,
+  "chat.commandSuggestions": false,
+  "editor.accessibilitySupport": "off",
+  "github.copilot.chat.advancedEditing": false,
+  "github.copilot.chat.commandExecution": "disabled",
+  "github.copilot.chat.terminalExecution": "disabled",
+  "github.copilot.advanced": {
+    "installDependencies": false,
+    "runBuildCommands": false,
+    "editEnvFiles": false
+  },
+  "files.watcherExclude": {
+    "**/.env*": true
+  }
 }
