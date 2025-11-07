@@ -49,10 +49,15 @@ workflows:
             brew update
             brew install rbenv ruby-build
           fi
+          export RBENV_ROOT="$HOME/.rbenv"
+          export PATH="$RBENV_ROOT/bin:$PATH"
           eval "$(rbenv init - bash)"
           rbenv install -s 3.2.2
           rbenv global 3.2.2
+          rbenv rehash
+          export PATH="$RBENV_ROOT/shims:$PATH"
           ruby -v
+          which ruby
           # 2) Bundler y pods en vendor/bundle (aislado)
           gem install bundler -v 2.4.10
           bundle config set path 'vendor/bundle'
