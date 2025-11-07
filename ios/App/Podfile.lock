@@ -3,7 +3,7 @@ PODS:
     - CapacitorCordova
   - CapacitorApp (6.0.2):
     - Capacitor
-  - CapacitorBrowser (7.0.2):
+  - CapacitorBrowser (6.0.3):
     - Capacitor
   - CapacitorCommunityBluetoothLe (6.0.0):
     - Capacitor
@@ -26,7 +26,7 @@ PODS:
     - Capacitor
   - CapacitorShare (6.0.2):
     - Capacitor
-  - CapacitorSplashScreen (7.0.3):
+  - CapacitorSplashScreen (6.0.3):
     - Capacitor
 
 DEPENDENCIES:
@@ -81,7 +81,7 @@ EXTERNAL SOURCES:
 SPEC CHECKSUMS:
   Capacitor: c95400d761e376be9da6be5a05f226c0e865cebf
   CapacitorApp: e1e6b7d05e444d593ca16fd6d76f2b7c48b5aea7
-  CapacitorBrowser: 22541e48442de44dc629c214388290d6eecc6ae9
+  CapacitorBrowser: c765da14ba34dd2418183de8542ee2cb3ccf5785
   CapacitorCommunityBluetoothLe: d9a924768f33c7efcf7a338e9ce854fccfd7bf87
   CapacitorCordova: 8d93e14982f440181be7304aa9559ca631d77fff
   CapacitorDevice: 9efd479d71d1baad74b75df531184c3f730eaa48
@@ -93,7 +93,7 @@ SPEC CHECKSUMS:
   CapacitorPreferences: 997d375b1962f98511e8b3d27a24d90cb8ca87fe
   CapacitorPushNotifications: 88f40c5f06dfe54f2c0619173e11ecbff8661a2f
   CapacitorShare: 5d49f1b220e991372b4d5d34be9a6080a042bae4
-  CapacitorSplashScreen: e388b8e0ed0e982a9d3a40417f478e7a018a8763
+  CapacitorSplashScreen: fd8bf1bf9081d9aa8817b7cd37d740d1bdaf2fb2
 
 PODFILE CHECKSUM: 3b5774751d12be86ca6e017c4db893dd8b425b88
 

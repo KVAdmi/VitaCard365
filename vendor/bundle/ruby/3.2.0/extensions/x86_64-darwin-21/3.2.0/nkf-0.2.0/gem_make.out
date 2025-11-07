@@ -1,0 +1,19 @@
+current directory: /Users/pg/Documents/VitaCard365/vendor/bundle/ruby/3.2.0/gems/nkf-0.2.0/ext/nkf
+/Users/pg/.rbenv/versions/3.2.2/bin/ruby extconf.rb
+creating Makefile
+
+current directory: /Users/pg/Documents/VitaCard365/vendor/bundle/ruby/3.2.0/gems/nkf-0.2.0/ext/nkf
+make DESTDIR\= sitearchdir\=./.gem.20251107-54022-a3vcgx sitelibdir\=./.gem.20251107-54022-a3vcgx clean
+
+current directory: /Users/pg/Documents/VitaCard365/vendor/bundle/ruby/3.2.0/gems/nkf-0.2.0/ext/nkf
+make DESTDIR\= sitearchdir\=./.gem.20251107-54022-a3vcgx sitelibdir\=./.gem.20251107-54022-a3vcgx
+compiling nkf.c
+linking shared-object nkf.bundle
+ld: warning: -undefined dynamic_lookup may not work with chained fixups
+
+current directory: /Users/pg/Documents/VitaCard365/vendor/bundle/ruby/3.2.0/gems/nkf-0.2.0/ext/nkf
+make DESTDIR\= sitearchdir\=./.gem.20251107-54022-a3vcgx sitelibdir\=./.gem.20251107-54022-a3vcgx install
+/usr/bin/install -c -m 0755 nkf.bundle ./.gem.20251107-54022-a3vcgx
+
+current directory: /Users/pg/Documents/VitaCard365/vendor/bundle/ruby/3.2.0/gems/nkf-0.2.0/ext/nkf
+make DESTDIR\= sitearchdir\=./.gem.20251107-54022-a3vcgx sitelibdir\=./.gem.20251107-54022-a3vcgx clean
