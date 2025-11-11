@@ -1,6 +1,6 @@
 require_relative '../../node_modules/@capacitor/ios/scripts/pods_helpers'
 
-platform :ios, '14.0'
+platform :ios, '13.0'
 use_frameworks!
 
 # workaround to avoid Xcode caching of Pods that requires
@@ -31,42 +31,6 @@ target 'App' do
   # Add your Pods here
 end
 
-
 post_install do |installer|
-  # Patch CapacitorBridge (isInspectable) si existe
-  bridge_paths = [
-    "Pods/Development Pods/Capacitor/CapacitorBridge/CapacitorBridge.swift",
-    "../../node_modules/@capacitor/ios/Capacitor/Capacitor/CapacitorBridge.swift"
-  ]
-  bridge_paths.each do |p|
-    path = File.expand_path(p, __dir__)
-    next unless File.exist?(path)
-    s = File.read(path)
-    s2 = s.gsub(/if\s*#available\s*\(\s*iOS\s*16\.4\s*,\s*\*\s*\)\s*\{\s*self\.webView\?\.\s*isInspectable\s*=\s*isWebDebuggable\s*\}/m,
-                "/* patched for Xcode14: isInspectable not available */")
-    File.write(path, s2) if s2 != s
-  end
-
-  # Patch JSValueEncoder getter sin return (raro en algunas distros)
-  enc_paths = [
-    "Pods/Development Pods/Capacitor/Codable/JSValueEncoder.swift",
-    "../../node_modules/@capacitor/ios/Capacitor/Codable/JSValueEncoder.swift"
-  ]
-  enc_paths.each do |p|
-    path = File.expand_path(p, __dir__)
-    next unless File.exist?(path)
-    s = File.read(path)
-    if s =~ /var\s+type:\s*String\s*\{[^}]*case\s*\.singleValue:\s*\"SingleValueContainer\"/m
-      fixed = "var type: String {\n  switch self {\n  case .singleValue:\n    return \"SingleValueContainer\"\n  case .unkeyed:\n    return \"UnkeyedContainer\"\n  case .keyed:\n    return \"KeyedContainer\"\n  }\n}"
-      s2 = s.sub(/var\s+type:\s*String\s*\{[^\}]*\}/m, fixed)
-      File.write(path, s2) if s2 != s
-    end
-  end
-
-  # Forzar iOS 14.0 en TODOS los Pods
-  installer.pods_project.targets.each do |t|
-    t.build_configurations.each do |config|
-      config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '14.0'
-    end
-  end
+  assertDeploymentTarget(installer)
 end

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { supabase } from '../lib/supabaseClient';
 import { Helmet } from 'react-helmet';
 import { motion } from 'framer-motion';
 import { Button } from '../components/ui/button';
@@ -18,14 +19,27 @@ const ResetPassword = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    // Aquí iría la lógica real de recuperación con Supabase
-    setTimeout(() => {
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: 'vitacard365://auth/recovery'
+      });
+      if (error) {
+        toast({
+          title: 'Error',
+          description: error.message || 'No se pudo enviar el correo. Verifica el email e intenta de nuevo.',
+          variant: 'destructive',
+        });
+        console.error('[auth-recovery] Error:', error);
+        return;
+      }
       toast({
         title: '¡Listo!',
         description: 'Si tu correo está registrado, recibirás instrucciones para recuperar tu contraseña.',
       });
+      console.log('[auth-recovery] Email de recuperación enviado a', email);
+    } finally {
       setLoading(false);
-    }, 1200);
+    }
   };
 
   return (

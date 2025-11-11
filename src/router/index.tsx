@@ -5,6 +5,12 @@ import { useEntitlements } from '@/hooks/useEntitlements';
 import { useAuth } from '@/contexts/AuthContext';
 import PaymentGateway from '@/pages/PaymentGateway';
 import ProtectedRoute from '@/components/ProtectedRoute';
+// @ts-ignore
+declare module '@contexts/AuthContext';
+// @ts-ignore
+declare module '@pages/PaymentGateway';
+// @ts-ignore
+declare module '@components/ProtectedRoute';
 import KvGateHard from '@/guards/KvGateHard';
 
 const { session } = useAuth();
@@ -37,6 +43,8 @@ export default function AppRouter() {
           </KvGateHard>
         }
       />
+      {/* Recuperación de contraseña por deep link */}
+      <Route path="/set-new-password" element={React.createElement(require('@/pages/SetNewPassword').default)} />
     </Routes>
   );
 }

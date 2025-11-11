@@ -1,42 +1,48 @@
-import React, { useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
-import { supabase } from '@/lib/supabaseClient';
-import { fetchAccess } from '@/lib/access';
+
+
+import { useEffect, useContext } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { AuthContext } from '../contexts/AuthContext';
+import { supabase } from '../lib/supabaseClient';
 
 export default function AuthCallback() {
-  const navigate = useNavigate();
-  const [params] = useSearchParams();
+  const { setSession, setAccess, setIsReturningFromOAuth } = useContext(AuthContext);
+  const nav = useNavigate();
 
   useEffect(() => {
     (async () => {
-      try {
-        // Supabase detectSessionInUrl maneja parte de esto en web, pero por si acaso
-        const code = params.get('code');
-        if (code) {
-          await supabase.auth.exchangeCodeForSession(code);
-        }
-      } catch {}
-      // Decide adónde ir: si no tiene acceso, a pasarela de pago; si ya está activo, al dashboard
-      try {
-        const { data } = await supabase.auth.getUser();
-        const uid = data?.user?.id || null;
-        if (!uid) { navigate('/login', { replace: true }); return; }
-        const acc = await fetchAccess(uid);
-        const next = params.get('next');
-        if (acc?.acceso_activo) {
-          navigate(next || '/dashboard', { replace: true });
-        } else {
-          navigate('/payment-gateway', { replace: true });
-        }
-      } catch {
-        navigate('/login', { replace: true });
+      // Intercambia código por sesión
+      const { data, error } = await supabase.auth.exchangeCodeForSession({ url: window.location.href });
+      if (error || !data?.session) {
+        nav('/login', { replace: true });
+        return;
       }
-    })();
-  }, []);
 
-  return (
-    <div className="min-h-screen flex items-center justify-center text-white">
-      Procesando autenticación…
-    </div>
-  );
+      // Parche: marca retorno OAuth y bandera persistente
+      localStorage.setItem('oauth_ok', '1');
+      setIsReturningFromOAuth(true);
+      setSession(data.session);
+
+      // Consulta acceso en Supabase
+      let acceso = null;
+      try {
+        const { data: perfil, error: err } = await supabase
+          .from('profiles_certificado_v2')
+          .select('acceso_activo')
+          .eq('user_id', data.session.user.id)
+          .single();
+        acceso = { activo: !!perfil?.acceso_activo };
+      } catch {
+        acceso = { activo: false };
+      }
+      setAccess(acceso);
+
+      // Navega según acceso y limpia bandera
+      localStorage.removeItem('oauth_ok');
+      setIsReturningFromOAuth(false);
+      nav(acceso.activo ? '/dashboard' : '/mi-plan', { replace: true });
+    })();
+  }, [nav, setSession, setAccess, setIsReturningFromOAuth]);
+
+  return <div>Procesando login…</div>;
 }

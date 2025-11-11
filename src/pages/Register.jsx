@@ -73,7 +73,7 @@ const Register = () => {
       }
 
       // Si proporcionó un código de activación, verificar en Supabase si está pagado/activo
-      const code = (formData.activationCode || '').trim().toUpperCase();
+      // Si proporcionó un código de activación, verificar en Supabase si está pagado/activo
       if (code) {
         try {
           // Buscar el código en profiles_certificado_v2
@@ -93,6 +93,11 @@ const Register = () => {
                 .upsert({ user_id: uid, codigo_vita: code, acceso_activo: true, estado_pago: folio.estado_pago || 'pagado', membresia: folio.membresia || 'individual' }, { onConflict: 'user_id' });
             }
             toast({ title: '¡Registro exitoso!', description: 'Tu folio fue validado. Completa tu perfil.' });
+            if (folio.acceso_activo) {
+              navigate('/dashboard');
+            } else {
+              navigate('/payment-gateway');
+            }
             navigate('/perfil');
             return;
           }

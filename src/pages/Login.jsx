@@ -21,6 +21,10 @@ const Login = () => {
   const formRef = useRef(null);
   const emailRef = useRef(null);
   const passwordRef = useRef(null);
+  const [showChangePassword, setShowChangePassword] = useState(false);
+  const [newPassword, setNewPassword] = useState('');
+  const [newPasswordLoading, setNewPasswordLoading] = useState(false);
+  const [newPasswordError, setNewPasswordError] = useState('');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -29,28 +33,27 @@ const Login = () => {
     try {
       console.log('Intentando login con:', formData.email);
       const result = await login(formData.email, formData.password);
-      
-      console.log('Login exitoso:', !!result);
-      
+      // Verificar metadata must_change_password
+      const user = result?.data?.user;
+      if (user?.user_metadata?.must_change_password) {
+        setShowChangePassword(true);
+        return;
+      }
       toast({
         title: '¡Bienvenido!',
         description: 'Has iniciado sesión correctamente.',
       });
-      
-      // Pequeño retraso para asegurar que los estados se actualicen
       setTimeout(() => {
         navigate('/dashboard');
       }, 200);
     } catch (error) {
       console.error('Error de login:', error);
       let errorMessage = 'Credenciales incorrectas. Inténtalo de nuevo.';
-      
       if (error.message?.includes('Invalid login credentials')) {
         errorMessage = 'Email o contraseña incorrectos';
       } else if (error.message?.includes('Email not confirmed')) {
         errorMessage = 'Por favor, confirma tu email antes de iniciar sesión';
       }
-      
       toast({
         title: 'Error de inicio de sesión',
         description: errorMessage,
@@ -59,6 +62,31 @@ const Login = () => {
     } finally {
       setLoading(false);
     }
+  // Modal para cambio de contraseña obligatorio
+  const handleChangePassword = async (e) => {
+    e.preventDefault();
+    setNewPasswordError('');
+    if (newPassword.length < 6) {
+      setNewPasswordError('La contraseña debe tener al menos 6 caracteres.');
+      return;
+    }
+    setNewPasswordLoading(true);
+    try {
+      // Actualiza la contraseña y elimina el flag en metadata
+      const { error } = await window.supabase.auth.updateUser({
+        password: newPassword,
+        data: { must_change_password: false }
+      });
+      if (error) throw error;
+      toast({ title: 'Contraseña actualizada', description: 'Tu nueva contraseña ha sido guardada.' });
+      setShowChangePassword(false);
+      setTimeout(() => navigate('/dashboard'), 300);
+    } catch (err) {
+      setNewPasswordError('Error al actualizar la contraseña. Intenta de nuevo.');
+    } finally {
+      setNewPasswordLoading(false);
+    }
+  };
   };
 
   // Auto-submit si el gestor autollenó (Android/iOS pueden no disparar eventos clásicos)
@@ -114,8 +142,28 @@ const Login = () => {
     try {
       const { sub: id, email, name, picture, accessToken } = googleUser;
       await signInWithGoogle({ id, email, name, picture, accessToken });
-      toast({ title: '¡Bienvenido!', description: 'Has iniciado sesión correctamente con Google.' });
-      navigate('/dashboard');
+      // Consultar perfil certificado por email
+      const { data, error } = await window.supabase
+        .from('profiles_certificado_v2')
+        .select('*')
+        .eq('email', email)
+        .single();
+      if (error || !data) {
+        toast({ title: 'No registrado', description: 'No existe un perfil con ese correo. Completa tu registro.', variant: 'destructive' });
+        navigate('/register');
+        return;
+      }
+      if (data.acceso_activo) {
+        toast({ title: '¡Bienvenido!', description: 'Acceso activo. Ingresando...' });
+        navigate('/dashboard');
+      } else {
+        let msg = 'Tu acceso está restringido.';
+        if (data.estado_pago === 'vencido') msg = 'Tu membresía está vencida.';
+        else if (data.estado_pago === 'pendiente') msg = 'Tu pago está pendiente.';
+        else if (data.estado_pago === 'pagado') msg = 'Tu membresía está activa, pero el acceso está restringido.';
+        toast({ title: 'Acceso restringido', description: msg, variant: 'destructive' });
+        navigate('/payment-gateway');
+      }
     } catch (error) {
       toast({ title: 'Error de Google Login', description: error.message || 'No se pudo iniciar sesión con Google.', variant: 'destructive' });
     }
@@ -123,7 +171,7 @@ const Login = () => {
   };
 
   return (
-    <>
+  <>
       <Helmet>
         <title>Iniciar Sesión - VitaCard 365</title>
         <meta name="description" content="Inicia sesión en VitaCard 365 para acceder a tu cobertura médica, monitoreo de salud y herramientas de bienestar." />
@@ -154,7 +202,6 @@ const Login = () => {
                 <h2 className="text-3xl font-bold text-white">Iniciar Sesión</h2>
                 <p className="text-white/70 mt-2">Accede a tu cuenta VitaCard 365</p>
               </div>
-              
               <form id="loginForm" ref={formRef} onSubmit={handleSubmit} className="space-y-6">
                 <div className="space-y-2">
                   <Label htmlFor="email" className="text-white">Correo Electrónico</Label>
@@ -174,7 +221,6 @@ const Login = () => {
                     />
                   </div>
                 </div>
-
                 <div className="space-y-2">
                   <Label htmlFor="password">Contraseña</Label>
                   <div className="relative">
@@ -201,7 +247,6 @@ const Login = () => {
                     </Button>
                   </div>
                 </div>
-                
                 <div className="flex justify-end items-center text-sm">
                     <Link
                         to="/reset-password"
@@ -210,7 +255,6 @@ const Login = () => {
                         ¿Olvidaste tu contraseña?
                     </Link>
                 </div>
-
                 <Button
                   type="submit"
                   size="lg"
@@ -220,7 +264,6 @@ const Login = () => {
                   {loading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
                 </Button>
               </form>
-
               <div className="relative my-6">
                 <div className="absolute inset-0 flex items-center">
                   <span className="w-full border-t border-white/20" />
@@ -229,9 +272,7 @@ const Login = () => {
                   <span className="bg-transparent px-2 text-white/70 backdrop-blur-sm">O continúa con</span>
                 </div>
               </div>
-
               <GoogleLoginButton onSuccess={handleGoogleSuccess} />
-
               <div className="text-center mt-6 text-sm">
                 <span className="text-white/70">¿No tienes cuenta? </span>
                 <Link
@@ -242,6 +283,35 @@ const Login = () => {
                 </Link>
               </div>
             </div>
+            {/* Modal de cambio de contraseña obligatorio */}
+            {showChangePassword && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+                <div className="glass-card rounded-2xl p-8 shadow-2xl w-full max-w-md">
+                  <h3 className="text-xl font-bold text-white mb-4 text-center">Configura tu nueva contraseña</h3>
+                  <p className="text-white/70 mb-4 text-center">Por seguridad, debes establecer una nueva contraseña antes de continuar.</p>
+                  <form onSubmit={handleChangePassword} className="space-y-4">
+                    <Input
+                      type="password"
+                      placeholder="Nueva contraseña (mínimo 6 caracteres)"
+                      value={newPassword}
+                      onChange={e => setNewPassword(e.target.value)}
+                      minLength={6}
+                      required
+                      className="bg-white/10 text-white"
+                    />
+                    {newPasswordError && <div className="text-red-400 text-sm text-center">{newPasswordError}</div>}
+                    <Button
+                      type="submit"
+                      size="lg"
+                      className="w-full bg-vita-orange text-white font-bold"
+                      disabled={newPasswordLoading}
+                    >
+                      {newPasswordLoading ? 'Guardando...' : 'Guardar nueva contraseña'}
+                    </Button>
+                  </form>
+                </div>
+              </div>
+            )}
           </motion.div>
         </div>
       </div>

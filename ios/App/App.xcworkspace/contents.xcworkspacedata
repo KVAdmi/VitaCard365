@@ -2,15 +2,9 @@
 <Workspace
    version = "1.0">
    <FileRef
-      location = "group:MyLibrary">
-   </FileRef>
-   <FileRef
-      location = "group:App/Assets.xcassets">
+      location = "group:App.xcodeproj">
    </FileRef>
    <FileRef
       location = "group:Pods/Pods.xcodeproj">
-   </FileRef>
-   <FileRef
-      location = "group:App.xcodeproj">
    </FileRef>
 </Workspace>
