@@ -272,7 +272,7 @@ const Login = () => {
                   <span className="bg-transparent px-2 text-white/70 backdrop-blur-sm">O continúa con</span>
                 </div>
               </div>
-              <GoogleLoginButton onSuccess={handleGoogleSuccess} />
+              <GoogleLoginButton context="login" />
               <div className="text-center mt-6 text-sm">
                 <span className="text-white/70">¿No tienes cuenta? </span>
                 <Link

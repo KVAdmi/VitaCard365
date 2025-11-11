@@ -234,7 +234,7 @@ const Register = () => {
                 <div className="relative flex justify-center text-sm"><span className="bg-transparent px-2 text-white/70 backdrop-blur-sm">O continúa con</span></div>
               </div>
 
-              <GoogleLoginButton nextPath="/payment-gateway" onSuccess={handleGoogleSuccess} />
+              <GoogleLoginButton context="register" />
 
               <div className="text-center mt-6 text-sm">
                 <span className="text-white/70">¿Ya tienes cuenta? </span>

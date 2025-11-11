@@ -3,8 +3,8 @@ import React from 'react';
 import { Button } from '../ui/button';
 import { signInWithGoogle } from '@/lib/auth';
 
-const GoogleLoginButton = ({ nextPath } = {}) => {
-  const handleGoogleLogin = async () => { await signInWithGoogle(); };
+const GoogleLoginButton = ({ context, nextPath } = {}) => {
+  const handleGoogleLogin = async () => { await signInWithGoogle(context); };
 
   return (
     <Button onClick={handleGoogleLogin} variant="outline" size="lg" className="w-full border border-white/20 bg-white/10 text-white hover:bg-white/20 flex items-center justify-center">
