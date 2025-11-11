@@ -66,15 +66,15 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
             <!-- Deep links HTTPS (App Links) -->
-                <intent-filter android:autoVerify="true">
-                    <action android:name="android.intent.action.VIEW" />
-                    <category android:name="android.intent.category.DEFAULT" />
-                    <category android:name="android.intent.category.BROWSABLE" />
-                    <!-- dominio raíz (opcional durante transición) -->
-                    <data android:scheme="https" android:host="vitacard365.com"/>
-                    <!-- subdominio dedicado -->
-                    <data android:scheme="https" android:host="links.vitacard365.com"/>
-                </intent-filter>
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <!-- dominio raíz (opcional durante transición) -->
+                <data android:scheme="https" android:host="vitacard365.com" />
+                <!-- subdominio dedicado -->
+                <data android:scheme="https" android:host="links.vitacard365.com" />
+            </intent-filter>
             <!-- Deep link nativo para OAuth (Supabase PKCE) -->
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
@@ -90,6 +90,33 @@
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="vitacard365" android:host="mp-return" />
             </intent-filter>
+        </activity>
+
+        <!-- Activity para Capacitor -->
+        <activity
+            android:name="com.capacitorjs.app.CapacitorActivity"
+            android:exported="true"
+            android:launchMode="singleTask"
+            android:theme="@style/AppTheme.NoActionBar"
+            android:windowSoftInputMode="adjustResize">
+
+            <!-- Deep Link principal para Supabase OAuth -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="vitacard365" android:host="auth" android:pathPrefix="/callback" />
+            </intent-filter>
+
+            <!-- Deep Link para recuperación de contraseña -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="vitacard365" android:host="auth" android:pathPrefix="/recovery" />
+            </intent-filter>
+
+            <!-- Otros filtros (Mercado Pago, HTTPS, etc.) pueden quedarse -->
         </activity>
 
         <!-- FileProvider (Capacitor) -->
