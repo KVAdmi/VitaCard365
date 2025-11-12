@@ -11,12 +11,28 @@ export default function AuthCallback() {
 
   useEffect(() => {
     (async () => {
-      // Intercambia código por sesión
-      const { data, error } = await supabase.auth.exchangeCodeForSession({ url: window.location.href });
-      if (error || !data?.session) {
+      // Extraer el código de la URL
+      const urlParams = new URLSearchParams(window.location.search);
+      const code = urlParams.get('code');
+      
+      console.log('[AuthCallback] Código extraído:', code);
+      
+      if (!code) {
+        console.error('[AuthCallback] No se encontró código en la URL');
         nav('/login', { replace: true });
         return;
       }
+      
+      // Intercambia código por sesión
+      console.log('[AuthCallback] Intercambiando código...');
+      const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+      if (error || !data?.session) {
+        console.error('[AuthCallback] Error en exchangeCodeForSession:', error);
+        console.log('[AuthCallback] data:', data);
+        nav('/login', { replace: true });
+        return;
+      }
+      console.log('[AuthCallback] Sesión obtenida, user:', data.session.user.id);
 
       // Marca retorno OAuth
       localStorage.setItem('oauth_ok', '1');
@@ -25,6 +41,7 @@ export default function AuthCallback() {
 
       // Leer contexto (login o register)
       const context = localStorage.getItem('oauth_context');
+      console.log('[AuthCallback] Contexto leído:', context);
       localStorage.removeItem('oauth_context'); // Limpiar inmediatamente
 
       // Si viene de REGISTER, ir directo a payment
