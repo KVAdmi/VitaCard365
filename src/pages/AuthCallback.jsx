@@ -11,28 +11,20 @@ export default function AuthCallback() {
 
   useEffect(() => {
     (async () => {
-      // Extraer el código de la URL
-      const urlParams = new URLSearchParams(window.location.search);
-      const code = urlParams.get('code');
+      console.log('[AuthCallback] Iniciando callback de OAuth...');
       
-      console.log('[AuthCallback] Código extraído:', code);
+      // Supabase maneja automáticamente el intercambio PKCE
+      // Solo necesitamos obtener la sesión actual
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
       
-      if (!code) {
-        console.error('[AuthCallback] No se encontró código en la URL');
+      if (sessionError || !sessionData?.session) {
+        console.error('[AuthCallback] Error obteniendo sesión:', sessionError);
         nav('/login', { replace: true });
         return;
       }
       
-      // Intercambia código por sesión
-      console.log('[AuthCallback] Intercambiando código...');
-      const { data, error } = await supabase.auth.exchangeCodeForSession(code);
-      if (error || !data?.session) {
-        console.error('[AuthCallback] Error en exchangeCodeForSession:', error);
-        console.log('[AuthCallback] data:', data);
-        nav('/login', { replace: true });
-        return;
-      }
-      console.log('[AuthCallback] Sesión obtenida, user:', data.session.user.id);
+      console.log('[AuthCallback] Sesión obtenida, user:', sessionData.session.user.id);
+      const data = sessionData;
 
       // Marca retorno OAuth
       localStorage.setItem('oauth_ok', '1');
