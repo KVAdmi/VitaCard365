@@ -45,18 +45,63 @@ export function initAuthDeepLinks() {
       // Deep link de login OAuth
       if (u.protocol === 'vitacard365:' && u.host === 'auth' && u.pathname.startsWith('/callback')) {
         try {
-          const { error } = await supabase.auth.exchangeCodeForSession(url);
-          if (error) {
-            console.error('[exchangeCodeForSession][native][error]', error);
+          console.log('[deeplink][native] OAuth callback recibido');
+          
+          // Supabase maneja automáticamente el intercambio PKCE
+          // Solo necesitamos obtener la sesión actual
+          const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+          
+          if (sessionError || !sessionData?.session) {
+            console.error('[deeplink][native] Error obteniendo sesión:', sessionError);
+            if (typeof window !== 'undefined') {
+              window.location.hash = '#/login';
+            }
             return;
           }
-          console.info('[exchangeCodeForSession][native][ok]');
-          // Aquí deberías llamar a tu función de ruteo post-login
-          if (typeof window !== 'undefined') {
-            window.location.hash = '#/dashboard';
+          
+          console.log('[deeplink][native] Sesión obtenida, user:', sessionData.session.user.id);
+          
+          // Leer el contexto guardado (login o register)
+          const context = localStorage.getItem('oauth_context') || 'login';
+          console.log('[deeplink][native] Contexto:', context);
+          
+          if (context === 'register') {
+            // Usuario nuevo -> payment-gateway
+            console.log('[deeplink][native] Navegando a: /payment-gateway');
+            if (typeof window !== 'undefined') {
+              window.location.hash = '#/payment-gateway';
+            }
+            localStorage.removeItem('oauth_context');
+            return;
           }
+          
+          // Context = login: consultar acceso
+          console.log('[deeplink][native] Consultando acceso...');
+          const { data: perfil, error: perfilError } = await supabase
+            .from('profiles_certificado_v2')
+            .select('acceso_activo')
+            .eq('user_id', sessionData.session.user.id)
+            .maybeSingle();
+          
+          const accesoActivo = !!perfil?.acceso_activo;
+          console.log('[deeplink][native] Acceso activo:', accesoActivo);
+          
+          if (typeof window !== 'undefined') {
+            if (accesoActivo) {
+              console.log('[deeplink][native] Navegando a: /dashboard');
+              window.location.hash = '#/dashboard';
+            } else {
+              console.log('[deeplink][native] Navegando a: /mi-plan');
+              window.location.hash = '#/mi-plan';
+            }
+          }
+          
+          localStorage.removeItem('oauth_context');
         } catch (e) {
-          console.error('[appUrlOpen][catch]', e);
+          console.error('[deeplink][native][catch]', e);
+          if (typeof window !== 'undefined') {
+            window.location.hash = '#/login';
+          }
         }
         return;
       }
