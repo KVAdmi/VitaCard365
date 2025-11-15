@@ -49,7 +49,7 @@ import SetNewPassword from './pages/SetNewPassword.jsx';
 import ResetPassword from './pages/ResetPassword';
 import AuthCallback from './pages/AuthCallback';
 import { initAuthDeepLinks } from '@/lib/deeplinks';
-import '@/lib/auth'; // inicializa listener de deep link (auth-callback)
+// Eliminado porque la lógica de deep links vive únicamente en initAuthDeepLinks() (src/lib/deeplinks.ts)
 import IntroVideo from './screens/IntroVideo';
 import OnboardingShowcase from './pages/OnboardingShowcase';
 import ScrollToTop from './components/ScrollToTop';

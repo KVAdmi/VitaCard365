@@ -29,7 +29,10 @@ const dlog = (...args: unknown[]) => { if (DEBUG_AUTH) console.log('[AUTH-DL]', 
 // Detección robusta de plataforma nativa
 const ENV_DEEP_LINK = (typeof import.meta !== 'undefined' && (import.meta as any)?.env?.VITE_DEEP_LINK) as string | undefined;
 export const NATIVE_DEEP_LINK: string = ENV_DEEP_LINK || 'vitacard365://auth/callback';
-export const isNative = typeof Capacitor !== 'undefined' && !!Capacitor.isNativePlatform && Capacitor.isNativePlatform();
+export const isNative =
+  typeof window !== 'undefined' &&
+  typeof Capacitor?.isNativePlatform === 'function' &&
+  Capacitor.isNativePlatform() === true;
 
 // Calcula la URL de redirect web según el router real (HashRouter en nativo, BrowserRouter en web)
 function getWebRedirectUrl() {

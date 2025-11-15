@@ -40,7 +40,8 @@ export function initAuthDeepLinks() {
       if (url.startsWith('vitacard365://auth/recovery')) {
         console.log('[auth-recovery] deep link recibido:', url);
         if (typeof window !== 'undefined') {
-          window.location.href = `${window.location.origin}/set-new-password`;
+          // En nativo usamos HashRouter, por eso navegamos via hash.
+          window.location.hash = '#/set-new-password';
         }
         return;
       }

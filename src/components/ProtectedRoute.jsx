@@ -15,9 +15,8 @@ export default function ProtectedRoute({ children }) {
   if (path.startsWith('/auth/callback')) return children;
 
   // Espera a que el auth esté listo (evita rebotes)
-  if (!ready || (oauthFlag === '1' && (!session || access == null))) {
-    return <div>Cargando…</div>;
-  }
+  // Eliminado: este guard bloqueaba el retorno de OAuth cuando session todavía no está hidratada.
+  // La navegación del OAuth la controla deeplinks.ts, no ProtectedRoute.
 
   // Si vienes del OAuth, no regreses a /login aunque session tarde un ms
   if (isReturningFromOAuth && path === '/login') return <Navigate to="/mi-plan" replace />;
