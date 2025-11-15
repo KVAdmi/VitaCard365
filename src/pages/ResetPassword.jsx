@@ -20,9 +20,15 @@ const ResetPassword = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: 'vitacard365://auth/recovery'
-      });
+      // Detectar plataforma
+      let redirectTo;
+      if (window && window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) {
+        redirectTo = 'vitacard365://auth/recovery';
+      } else {
+        // Siempre usar URL pública en web
+        redirectTo = 'https://vitacard365.com/set-new-password';
+      }
+      const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo });
       if (error) {
         toast({
           title: 'Error',

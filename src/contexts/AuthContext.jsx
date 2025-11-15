@@ -183,10 +183,15 @@ export function AuthProvider({ children }) {
       console.log('[AuthContext][logout]');
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
-      
+
       setSession(null);
       setAccess(null);
       localStorage.removeItem('oauth_ok');
+
+      // Redirigir a login tras logout exitoso
+      if (typeof window !== 'undefined') {
+        window.location.href = '/login';
+      }
     } catch (error) {
       console.error('[AuthContext][logout][error]', error);
       throw error;

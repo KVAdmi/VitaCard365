@@ -25,75 +25,56 @@ const dlog = (...args: unknown[]) => { if (DEBUG_AUTH) console.log('[AUTH-DL]', 
 // - Se puede forzar con VITE_DEEP_LINK
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore - import.meta puede no estar tipado en todos los contextos
+
+// Detección robusta de plataforma nativa
 const ENV_DEEP_LINK = (typeof import.meta !== 'undefined' && (import.meta as any)?.env?.VITE_DEEP_LINK) as string | undefined;
-const isNative = !!(Capacitor.isNativePlatform && Capacitor.isNativePlatform());
-export const DEEP_LINK: string = ENV_DEEP_LINK
-  || (isNative ? 'com.vitacard.app://auth-callback' : 'vitacard365://auth/callback');
+export const NATIVE_DEEP_LINK: string = ENV_DEEP_LINK || 'vitacard365://auth/callback';
+export const isNative = typeof Capacitor !== 'undefined' && !!Capacitor.isNativePlatform && Capacitor.isNativePlatform();
+
+// Calcula la URL de redirect web según el router real (HashRouter en nativo, BrowserRouter en web)
+function getWebRedirectUrl() {
+  const origin = typeof window !== 'undefined' && window.location?.origin ? window.location.origin : 'https://vitacard365.com';
+  // El proyecto usa HashRouter en nativo y BrowserRouter en web. En web, la ruta /auth/callback existe y es manejada por AuthCallback.jsx
+  // Por lo tanto, en web se debe usar: `${origin}/auth/callback`
+  return `${origin}/auth/callback`;
+}
+
 
 export async function signInWithGoogle(context?: 'login' | 'register') {
   // Guardar contexto para que AuthCallback sepa de dónde viene
   if (context) {
     localStorage.setItem('oauth_context', context);
   }
-  if (isNative) {
-    // En nativo, usar el deep link scheme
-    const { data, error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: { redirectTo: DEEP_LINK, skipBrowserRedirect: true },
-    });
-    if (error) {
-      console.error('signInWithOAuth (native)', error.message);
-      return;
-    }
-    const url = data?.url;
-    if (url) {
-      try {
-        await Browser.open({ url });
-      } catch (openErr) {
-        console.error('Browser.open failed', openErr);
-      }
-    }
+  const webRedirect = getWebRedirectUrl();
+  const redirectTo = isNative ? NATIVE_DEEP_LINK : webRedirect;
+
+  // Mantener opciones adicionales y queryParams
+  const options: any = {
+    redirectTo,
+    skipBrowserRedirect: isNative,
+    queryParams: {
+      prompt: 'select_account',
+    },
+  };
+
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider: 'google',
+    options,
+  });
+
+  if (error) {
+    console.error(`signInWithOAuth (${isNative ? 'native' : 'web'})`, error.message);
     return;
   }
-  // En web, usar el callback web
-  const redirectTo = `${window.location.origin}/auth/callback`;
-  const { error } = await supabase.auth.signInWithOAuth({
-    provider: 'google',
-    options: { 
-      redirectTo, 
-      skipBrowserRedirect: false,
-      queryParams: {
-        prompt: 'select_account' // Forzar selector de cuentas de Google
-      }
-    },
-  });
-  if (error) console.error('signInWithOAuth (web)', error.message);
+
+  if (isNative && data?.url) {
+    try {
+      await Browser.open({ url: data.url });
+    } catch (openErr) {
+      console.error('Browser.open failed', openErr);
+    }
+  }
 }
 
-let AUTH_DEEPLINK_HANDLED = false;
-App.addListener('appUrlOpen', async ({ url }: { url: string }) => {
-  if (!url) return;
-  const normalized = url.split('?')[0];
-  const isNew = url.startsWith(DEEP_LINK) || normalized === 'com.vitacard.app://auth-callback';
-  const isOld = normalized === 'vitacard365://auth/callback' || normalized === 'vitacard365://auth-callback';
-  if (!isNew && !isOld) { dlog('Ignoring non-auth URL'); return; }
 
-  // Evitar procesar múltiples veces el mismo retorno
-  if (AUTH_DEEPLINK_HANDLED) { dlog('Deep link already handled, skipping'); return; }
-  AUTH_DEEPLINK_HANDLED = true;
-
-  dlog('Inbound deep link', url);
-  if (!url?.startsWith('vitacard365://')) return;
-  console.info('[appUrlOpen]', url);
-  try {
-  const { data, error } = await supabase.auth.exchangeCodeForSession(url);
-    if (error) {
-      console.error('[exchangeCodeForSession][native][error]', error);
-      return;
-    }
-    console.info('[exchangeCodeForSession][native][ok]', data?.session?.user?.id);
-    await routeAfterLogin();
-  } catch (e) {
-    console.error('[appUrlOpen][catch]', e);
-  }
-});
+// Listener de deep links eliminado de auth.ts. Toda la lógica queda en src/lib/deeplinks.ts
