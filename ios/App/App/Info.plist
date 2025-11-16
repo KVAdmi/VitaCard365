@@ -43,7 +43,18 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
-	<key>UIViewControllerBasedStatusBarAppearance</key>
-	<true/>
+		<key>UIViewControllerBasedStatusBarAppearance</key>
+		<true/>
+
+		<!-- Deep link scheme para vitacard365 -->
+		<key>CFBundleURLTypes</key>
+		<array>
+			<dict>
+				<key>CFBundleURLSchemes</key>
+				<array>
+					<string>vitacard365</string>
+				</array>
+			</dict>
+		</array>
 </dict>
 </plist>
