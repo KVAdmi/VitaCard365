@@ -3,7 +3,7 @@ PODS:
     - CapacitorCordova
   - CapacitorApp (6.0.2):
     - Capacitor
-  - CapacitorBrowser (6.0.3):
+  - CapacitorBrowser (7.0.2):
     - Capacitor
   - CapacitorCommunityBluetoothLe (6.0.0):
     - Capacitor
@@ -26,7 +26,7 @@ PODS:
     - Capacitor
   - CapacitorShare (6.0.2):
     - Capacitor
-  - CapacitorSplashScreen (6.0.3):
+  - CapacitorSplashScreen (7.0.3):
     - Capacitor
 
 DEPENDENCIES:
@@ -79,22 +79,22 @@ EXTERNAL SOURCES:
     :path: "../../node_modules/@capacitor/splash-screen"
 
 SPEC CHECKSUMS:
-  Capacitor: c95400d761e376be9da6be5a05f226c0e865cebf
-  CapacitorApp: e1e6b7d05e444d593ca16fd6d76f2b7c48b5aea7
-  CapacitorBrowser: c765da14ba34dd2418183de8542ee2cb3ccf5785
-  CapacitorCommunityBluetoothLe: d9a924768f33c7efcf7a338e9ce854fccfd7bf87
+  Capacitor: 1e0d0e7330dea9f983b50da737d8918abcf273f8
+  CapacitorApp: 2a8c3a0b0814322e5e6e15fe595f02c3808f0f8b
+  CapacitorBrowser: 45c681e7abc3b4384e54eb52bafeef1347d98fa8
+  CapacitorCommunityBluetoothLe: 53eb347a559c15b0e6ff6b83ee383ed6b0825b6a
   CapacitorCordova: 8d93e14982f440181be7304aa9559ca631d77fff
-  CapacitorDevice: 9efd479d71d1baad74b75df531184c3f730eaa48
-  CapacitorFilesystem: 59270a63c60836248812671aa3b15df673fbaf74
-  CapacitorGeolocation: 3c560702c595f26f4adcfe9e10ba1226bc71b7f6
-  CapacitorHaptics: 4fc15afe22b123d093e6ace24d95e8e3b1f261b9
-  CapacitorKeyboard: 5bf4458dd989b56a60ea15c92cbca5fbfae6e9f9
-  CapacitorLocalNotifications: d051c73ec8bf38807214f5b905ee6426e13756f8
-  CapacitorPreferences: 997d375b1962f98511e8b3d27a24d90cb8ca87fe
-  CapacitorPushNotifications: 88f40c5f06dfe54f2c0619173e11ecbff8661a2f
-  CapacitorShare: 5d49f1b220e991372b4d5d34be9a6080a042bae4
-  CapacitorSplashScreen: fd8bf1bf9081d9aa8817b7cd37d740d1bdaf2fb2
+  CapacitorDevice: 1a215717f0b5061503b21a03508b0ec458a57d78
+  CapacitorFilesystem: fa3099b3c3aa43a1b51362d0c999301ab1a9a752
+  CapacitorGeolocation: 9db9e7ed7cfb5d5d8f01b108ab483ad9c9d2865d
+  CapacitorHaptics: b53409aaca1203f79c6d0eb3ed5de40556339518
+  CapacitorKeyboard: 2700f9b18687be021e28b5a09b59eb151a46d5e0
+  CapacitorLocalNotifications: 4ab68f0be5f697a579558fadd307d823a9ec1c26
+  CapacitorPreferences: e8284bf740cf8c6d3f25409af3c01df87dfeb5a1
+  CapacitorPushNotifications: ccd797926c030acad3d5498ef452c735c90a2c89
+  CapacitorShare: 591ae4693d85686ceb590db8e8b44aa014ec6490
+  CapacitorSplashScreen: d06ae8804808e9f649a08e7bb7f283c77b688084
 
 PODFILE CHECKSUM: 33af532d0002cbd057a55cd76497a29cdf449033
 
-COCOAPODS: 1.15.2
+COCOAPODS: 1.16.2
