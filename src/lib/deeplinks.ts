@@ -47,11 +47,36 @@ export function initAuthDeepLinks() {
         try {
           console.log('[deeplink][native] OAuth callback recibido');
           
-          // Supabase maneja automáticamente el intercambio PKCE
-          // Solo necesitamos obtener la sesión actual
-          // Dar tiempo a Supabase para procesar el PKCE callback
-          await new Promise(resolve => setTimeout(resolve, 300));
-          const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+          // Supabase puede devolver tokens en el hash (#access_token) o código PKCE (?code)
+          // Detectar qué tipo de respuesta es
+          const hashParams = new URLSearchParams(u.hash.substring(1)); // Quitar el #
+          const hasAccessToken = hashParams.has('access_token');
+          
+          let sessionData: any = null;
+          let sessionError: any = null;
+          
+          if (hasAccessToken) {
+            // Implicit flow: tokens en el hash
+            console.log('[deeplink][native] Tokens detectados en hash (implicit flow)');
+            const accessToken = hashParams.get('access_token')!;
+            const refreshToken = hashParams.get('refresh_token')!;
+            const expiresIn = parseInt(hashParams.get('expires_in') || '3600');
+            
+            // Setear la sesión manualmente
+            const { data, error } = await supabase.auth.setSession({
+              access_token: accessToken,
+              refresh_token: refreshToken,
+            });
+            sessionData = data;
+            sessionError = error;
+          } else {
+            // PKCE flow: código en query params
+            console.log('[deeplink][native] Esperando PKCE flow');
+            await new Promise(resolve => setTimeout(resolve, 300));
+            const { data, error } = await supabase.auth.getSession();
+            sessionData = data;
+            sessionError = error;
+          }
           
           if (sessionError || !sessionData?.session) {
             console.error('[deeplink][native] Error obteniendo sesión:', sessionError);
