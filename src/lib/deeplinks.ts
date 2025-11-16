@@ -8,7 +8,7 @@ export function initAuthDeepLinks() {
   if (inited) return;
   inited = true;
   // Only meaningful on native platforms
-  if (!(Capacitor.isNativePlatform && Capacitor.isNativePlatform())) return;
+  if (!Capacitor.isNativePlatform || !Capacitor.isNativePlatform()) return;
 
   // Elimina listeners duplicados antes de agregar el único
   App.removeAllListeners();
@@ -38,7 +38,7 @@ export function initAuthDeepLinks() {
       if (u.protocol === 'vitacard365:' && u.host === 'auth' && u.pathname.startsWith('/recovery')) {
         console.log('[auth-recovery] deep link recibido:', url);
         if (typeof window !== 'undefined') {
-          window.location.hash = '#/set-new-password';
+          window.location.replace('#/set-new-password');
         }
         return;
       }
@@ -49,6 +49,8 @@ export function initAuthDeepLinks() {
           
           // Supabase maneja automáticamente el intercambio PKCE
           // Solo necesitamos obtener la sesión actual
+          // Dar tiempo a Supabase para procesar el PKCE callback
+          await new Promise(resolve => setTimeout(resolve, 300));
           const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
           
           if (sessionError || !sessionData?.session) {
@@ -69,7 +71,7 @@ export function initAuthDeepLinks() {
             // Usuario nuevo -> payment-gateway
             console.log('[deeplink][native] Navegando a: /payment-gateway');
             if (typeof window !== 'undefined') {
-              window.location.hash = '#/payment-gateway';
+              window.location.replace('#/payment-gateway');
             }
             localStorage.removeItem('oauth_context');
             return;
@@ -89,10 +91,10 @@ export function initAuthDeepLinks() {
           if (typeof window !== 'undefined') {
             if (accesoActivo) {
               console.log('[deeplink][native] Navegando a: /dashboard');
-              window.location.hash = '#/dashboard';
+              window.location.replace('#/dashboard');
             } else {
               console.log('[deeplink][native] Navegando a: /mi-plan');
-              window.location.hash = '#/mi-plan';
+              window.location.replace('#/mi-plan');
             }
           }
           
