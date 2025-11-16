@@ -58,9 +58,24 @@ export function initAuthDeepLinks() {
           if (hasAccessToken) {
             // Implicit flow: tokens en el hash
             console.log('[deeplink][native] Tokens detectados en hash (implicit flow)');
-            const accessToken = hashParams.get('access_token')!;
-            const refreshToken = hashParams.get('refresh_token')!;
+            console.log('[deeplink][native][DEBUG] Extrayendo accessToken...');
+            const accessToken = hashParams.get('access_token');
+            console.log('[deeplink][native][DEBUG] accessToken length:', accessToken?.length || 0);
+            
+            console.log('[deeplink][native][DEBUG] Extrayendo refreshToken...');
+            const refreshToken = hashParams.get('refresh_token');
+            console.log('[deeplink][native][DEBUG] refreshToken length:', refreshToken?.length || 0);
+            
+            if (!accessToken || !refreshToken) {
+              console.error('[deeplink][native][ERROR] Tokens missing!', { hasAccess: !!accessToken, hasRefresh: !!refreshToken });
+              if (typeof window !== 'undefined') {
+                window.location.hash = '#/login';
+              }
+              return;
+            }
+            
             const expiresIn = parseInt(hashParams.get('expires_in') || '3600');
+            console.log('[deeplink][native][DEBUG] expiresIn:', expiresIn);
             
             console.log('[deeplink][native][DEBUG] Intentando setSession...');
             try {
