@@ -70,6 +70,10 @@ export async function signInWithGoogle(context?: 'login' | 'register') {
   if (error) console.error('signInWithOAuth (web)', error.message);
 }
 
+// DISABLED: This listener conflicts with the one in src/lib/deeplinks.ts
+// The deeplinks.ts listener handles both PKCE and implicit flow correctly
+// Keeping this code commented for reference
+/*
 let AUTH_DEEPLINK_HANDLED = false;
 App.addListener('appUrlOpen', async ({ url }: { url: string }) => {
   if (!url) return;
@@ -97,3 +101,4 @@ App.addListener('appUrlOpen', async ({ url }: { url: string }) => {
     console.error('[appUrlOpen][catch]', e);
   }
 });
+*/
