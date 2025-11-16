@@ -62,14 +62,20 @@ export function initAuthDeepLinks() {
             const refreshToken = hashParams.get('refresh_token')!;
             const expiresIn = parseInt(hashParams.get('expires_in') || '3600');
             
-            // Setear la sesión manualmente
-            const { data, error } = await supabase.auth.setSession({
-              access_token: accessToken,
-              refresh_token: refreshToken,
-            });
-            sessionData = data;
-            sessionError = error;
-            console.log('[deeplink][native][DEBUG] setSession result:', { hasData: !!data, hasSession: !!data?.session, hasError: !!error, errorMsg: error?.message });
+            console.log('[deeplink][native][DEBUG] Intentando setSession...');
+            try {
+              // Setear la sesión manualmente
+              const { data, error } = await supabase.auth.setSession({
+                access_token: accessToken,
+                refresh_token: refreshToken,
+              });
+              sessionData = data;
+              sessionError = error;
+              console.log('[deeplink][native][DEBUG] setSession result:', { hasData: !!data, hasSession: !!data?.session, hasError: !!error, errorMsg: error?.message });
+            } catch (setSessionErr) {
+              console.error('[deeplink][native][ERROR] setSession threw exception:', setSessionErr);
+              sessionError = setSessionErr as any;
+            }
           } else {
             // PKCE flow: código en query params
             console.log('[deeplink][native] Esperando PKCE flow');
