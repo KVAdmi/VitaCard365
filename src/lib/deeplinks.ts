@@ -69,6 +69,7 @@ export function initAuthDeepLinks() {
             });
             sessionData = data;
             sessionError = error;
+            console.log('[deeplink][native][DEBUG] setSession result:', { hasData: !!data, hasSession: !!data?.session, hasError: !!error, errorMsg: error?.message });
           } else {
             // PKCE flow: código en query params
             console.log('[deeplink][native] Esperando PKCE flow');
@@ -77,6 +78,8 @@ export function initAuthDeepLinks() {
             sessionData = data;
             sessionError = error;
           }
+          
+          console.log('[deeplink][native][DEBUG] Verificando sesión:', { hasError: !!sessionError, hasData: !!sessionData, hasSession: !!sessionData?.session, userId: sessionData?.session?.user?.id });
           
           if (sessionError || !sessionData?.session) {
             console.error('[deeplink][native] Error obteniendo sesión:', sessionError);
