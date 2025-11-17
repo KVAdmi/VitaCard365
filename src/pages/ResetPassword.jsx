@@ -22,10 +22,12 @@ const ResetPassword = () => {
     setLoading(true);
     try {
       // Detecta entorno nativo vs web
-      const isNative = Capacitor.isNativePlatform && Capacitor.isNativePlatform();
-      const redirectTo = isNative
-        ? 'vitacard365://auth/recovery'
-        : 'https://vitacard365-react.netlify.app/#/set-new-password';
+      const isNative = Capacitor.isNativePlatform
+        ? Capacitor.isNativePlatform()
+        : Capacitor.getPlatform() !== 'web';
+      const webRedirect = 'https://vitacard365-react.netlify.app';
+      const mobileRedirect = 'vitacard365://auth/recovery';
+      const redirectTo = isNative ? mobileRedirect : webRedirect;
       console.log('[auth-recovery][env]', isNative ? 'NATIVO' : 'WEB', 'redirectTo:', redirectTo);
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo

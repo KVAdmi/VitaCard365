@@ -1,8 +1,6 @@
-import { App } from '@capacitor/app';
 import { Browser } from '@capacitor/browser';
 import { Capacitor } from '@capacitor/core';
 import { supabase } from './supabaseClient';
-import { routeAfterLogin } from './routeAfterLogin';
 
 
 // Debug flag (set VITE_DEBUG_AUTH=1 in your env to enable verbose logs)
@@ -19,32 +17,34 @@ const DEBUG_AUTH: boolean = ((): boolean => {
 })();
 const dlog = (...args: unknown[]) => { if (DEBUG_AUTH) console.log('[AUTH-DL]', ...args); };
 
-// Deep link de retorno
-// - En iOS usamos com.vitacard.app://auth-callback (coincide con appId y URL Scheme)
-// - Mantiene compatibilidad aceptando también vitacard365://auth/callback como legado
-// - Se puede forzar con VITE_DEEP_LINK
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore - import.meta puede no estar tipado en todos los contextos
-const ENV_DEEP_LINK = (typeof import.meta !== 'undefined' && (import.meta as any)?.env?.VITE_DEEP_LINK) as string | undefined;
-const isNative = !!(Capacitor.isNativePlatform && Capacitor.isNativePlatform());
-export const DEEP_LINK: string = ENV_DEEP_LINK
-  || (isNative ? 'com.vitacard.app://auth-callback' : 'vitacard365://auth/callback');
+const isNative = Capacitor.isNativePlatform
+  ? Capacitor.isNativePlatform()
+  : Capacitor.getPlatform() !== 'web';
+
+const NATIVE_REDIRECT = 'vitacard365://auth/callback';
+const WEB_REDIRECT = 'https://vitacard365.com/auth/callback';
 
 export async function signInWithGoogle(context?: 'login' | 'register') {
   // Guardar contexto para que AuthCallback sepa de dónde viene
   if (context) {
     localStorage.setItem('oauth_context', context);
   }
-    // Helper para decidir ruta post-auth (login/registro)
-    // Se espera que el contexto sea 'login' o 'register'.
-    // Si es 'register', debe navegar a /payment-gateway y NO redirigir luego a /mi-plan.
-    // Si es 'login', navegar según acceso_activo.
-    console.log('[auth][post-auth] Contexto recibido en signInWithGoogle:', context);
+  // Helper para decidir ruta post-auth (login/registro)
+  // Se espera que el contexto sea 'login' o 'register'.
+  // Si es 'register', debe navegar a /payment-gateway y NO redirigir luego a /mi-plan.
+  // Si es 'login', navegar según acceso_activo.
+  console.log('[auth][post-auth] Contexto recibido en signInWithGoogle:', context);
   if (isNative) {
-    // En nativo, usar el deep link scheme
+    const redirectTo = NATIVE_REDIRECT;
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: DEEP_LINK, skipBrowserRedirect: true },
+      options: {
+        redirectTo,
+        skipBrowserRedirect: true,
+        queryParams: {
+          prompt: 'select_account', // Forzar selector de cuentas de Google
+        },
+      },
     });
     if (error) {
       console.error('signInWithOAuth (native)', error.message);
@@ -60,12 +60,12 @@ export async function signInWithGoogle(context?: 'login' | 'register') {
     }
     return;
   }
-  // En web, usar el callback web
-  const redirectTo = `${window.location.origin}/auth/callback`;
+
+  const redirectTo = WEB_REDIRECT;
   const { error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
-    options: { 
-      redirectTo, 
+    options: {
+      redirectTo,
       skipBrowserRedirect: false,
       queryParams: {
         prompt: 'select_account' // Forzar selector de cuentas de Google

@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Recuperar contraseña - VitaCard365</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #0a1f44, #0f4471);
+      color: #f8f8f8;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0;
+      padding: 1.5rem;
+    }
+    .card {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 16px;
+      padding: 24px;
+      max-width: 420px;
+      width: 100%;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+      backdrop-filter: blur(8px);
+    }
+    h1 {
+      margin: 0 0 0.25rem;
+      font-size: 1.5rem;
+    }
+    p.description {
+      margin-top: 0;
+      opacity: 0.85;
+      line-height: 1.45;
+      font-size: 0.95rem;
+    }
+    form {
+      margin-top: 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+    label {
+      font-size: 0.9rem;
+      opacity: 0.9;
+    }
+    input[type="password"] {
+      width: 100%;
+      padding: 0.75rem 0.85rem;
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      background: rgba(255, 255, 255, 0.1);
+      color: #f8f8f8;
+      font-size: 1rem;
+    }
+    input[type="password"]:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+    button {
+      padding: 0.85rem 1rem;
+      border-radius: 12px;
+      border: none;
+      background: linear-gradient(90deg, #f9a825, #f57c00);
+      color: #0a1f44;
+      font-weight: 700;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+    button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      box-shadow: none;
+      transform: none;
+    }
+    button:not(:disabled):hover {
+      box-shadow: 0 12px 24px rgba(245, 124, 0, 0.35);
+      transform: translateY(-1px);
+    }
+    .status {
+      margin-top: 1rem;
+      padding: 0.85rem 1rem;
+      border-radius: 12px;
+      font-size: 0.95rem;
+      line-height: 1.4;
+    }
+    .status.success {
+      background: rgba(76, 175, 80, 0.15);
+      border: 1px solid rgba(76, 175, 80, 0.4);
+      color: #c8f7c5;
+    }
+    .status.error {
+      background: rgba(244, 67, 54, 0.15);
+      border: 1px solid rgba(244, 67, 54, 0.4);
+      color: #ffcdd2;
+    }
+    .actions {
+      margin-top: 1rem;
+      display: none;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .actions.visible {
+      display: flex;
+    }
+    .actions a {
+      color: #f8f8f8;
+      text-decoration: underline;
+      text-align: center;
+      font-size: 0.95rem;
+      opacity: 0.9;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Restablecer contraseña</h1>
+    <p class="description">Define una nueva contraseña para tu cuenta de VitaCard365.</p>
+
+    <div id="status" class="status" style="display: none;"></div>
+
+    <form id="reset-form">
+      <div>
+        <label for="password">Nueva contraseña</label>
+        <input id="password" type="password" minlength="8" autocomplete="new-password" required />
+      </div>
+      <div>
+        <label for="password-confirm">Confirmar contraseña</label>
+        <input id="password-confirm" type="password" minlength="8" autocomplete="new-password" required />
+      </div>
+      <button id="submit-btn" type="submit">Actualizar contraseña</button>
+    </form>
+
+    <div id="actions" class="actions">
+      <button id="open-app-btn" type="button">Abrir app</button>
+      <a id="deeplink-anchor" href="#" rel="noreferrer">Si no se abre, toca aquí</a>
+    </div>
+  </div>
+
+  <script type="module" src="./reset.js"></script>
+</body>
+</html>

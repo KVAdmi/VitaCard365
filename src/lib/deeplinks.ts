@@ -65,6 +65,19 @@ export function initAuthDeepLinks() {
         return;
       }
 
+      // Recuperación completada desde micrositio: vitacard365://auth/recovery-done
+      if (u.protocol === 'vitacard365:' && u.host === 'auth' && u.pathname.startsWith('/recovery-done')) {
+        try {
+          console.log('[auth-recovery-done][native] Deep link recibido:', url);
+          if (typeof window !== 'undefined') {
+            window.location.hash = '#/login';
+          }
+        } catch (err) {
+          console.error('[auth-recovery-done][native][ERROR] Exception en handler recovery-done:', err);
+        }
+        return;
+      }
+
       // Deep link de login OAuth
       if (u.protocol === 'vitacard365:' && u.host === 'auth' && u.pathname.startsWith('/callback')) {
         try {
@@ -140,7 +153,7 @@ export function initAuthDeepLinks() {
             .maybeSingle();
           const accesoActivo = !!perfil?.acceso_activo;
           console.log('[deeplink][native] acceso_activo:', accesoActivo);
-          const rutaFinal = accesoActivo ? '/dashboard' : '/mi-plan';
+          const rutaFinal = accesoActivo ? '/dashboard' : '/payment-gateway';
           console.log('[deeplink][native] Ruta final decidida:', rutaFinal);
           if (typeof window !== 'undefined') {
             window.location.replace(`#${rutaFinal}`);
