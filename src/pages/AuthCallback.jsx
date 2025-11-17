@@ -4,6 +4,7 @@ import { useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabaseClient';
+import { resolvePostAuthRoute } from '../lib/oauthRouting';
 
 export default function AuthCallback() {
   const { setSession, setAccess, setIsReturningFromOAuth } = useContext(AuthContext);
@@ -32,40 +33,19 @@ export default function AuthCallback() {
       setSession(data.session);
 
       // Leer contexto (login o register)
-      const context = localStorage.getItem('oauth_context');
-      console.log('[AuthCallback] Contexto leído:', context);
+      const rawContext = localStorage.getItem('oauth_context');
+      const context = rawContext === 'register' ? 'register' : 'login';
+      console.log('[AuthCallback] Contexto leído:', rawContext);
       localStorage.removeItem('oauth_context'); // Limpiar inmediatamente
 
-      // Si viene de REGISTER, ir directo a payment
-      if (context === 'register') {
-        console.log('[AuthCallback] Contexto: register → /payment-gateway');
-        localStorage.removeItem('oauth_ok');
-        setIsReturningFromOAuth(false);
-        nav('/payment-gateway', { replace: true });
-        return;
+      const { route: targetRoute, access } = await resolvePostAuthRoute(context, data.session.user.id);
+      if (access) {
+        setAccess(access);
+        console.log('[AuthCallback] Acceso activo:', access.activo);
       }
 
-      // Si viene de LOGIN, consultar acceso
-      console.log('[AuthCallback] Contexto: login, consultando acceso...');
-      let acceso = null;
-      try {
-        const { data: perfil, error: err } = await supabase
-          .from('profiles_certificado_v2')
-          .select('acceso_activo')
-          .eq('user_id', data.session.user.id)
-          .single();
-        acceso = { activo: !!perfil?.acceso_activo };
-        console.log('[AuthCallback] Acceso activo:', acceso.activo);
-      } catch {
-        acceso = { activo: false };
-        console.log('[AuthCallback] Sin perfil o error, acceso: false');
-      }
-      setAccess(acceso);
-
-      // Navega según acceso
       localStorage.removeItem('oauth_ok');
       setIsReturningFromOAuth(false);
-      const targetRoute = acceso.activo ? '/dashboard' : '/mi-plan';
       console.log('[AuthCallback] Navegando a:', targetRoute);
       nav(targetRoute, { replace: true });
     })();
