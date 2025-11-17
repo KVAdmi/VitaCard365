@@ -78,19 +78,60 @@ export function initAuthDeepLinks() {
             console.log('[deeplink][native][DEBUG] expiresIn:', expiresIn);
             
             console.log('[deeplink][native][DEBUG] Intentando setSession...');
+            console.log('[deeplink][native][DEBUG] Tokens para setSession:', { 
+              hasAccessToken: !!accessToken, 
+              accessTokenLength: accessToken?.length || 0,
+              hasRefreshToken: !!refreshToken,
+              refreshTokenLength: refreshToken?.length || 0
+            });
+            
             try {
               // Setear la sesión manualmente
+              console.log('[deeplink][native][DEBUG] Llamando supabase.auth.setSession...');
               const { data, error } = await supabase.auth.setSession({
                 access_token: accessToken,
                 refresh_token: refreshToken,
               });
+              
+              console.log('[deeplink][native][DEBUG] setSession completado');
+              console.log('[deeplink][native][DEBUG] setSession data:', {
+                hasData: !!data,
+                hasSession: !!data?.session,
+                hasUser: !!data?.session?.user,
+                userId: data?.session?.user?.id,
+                userEmail: data?.session?.user?.email
+              });
+              console.log('[deeplink][native][DEBUG] setSession error:', {
+                hasError: !!error,
+                errorMessage: error?.message,
+                errorName: error?.name,
+                errorStatus: (error as any)?.status
+              });
+              
               sessionData = data;
               sessionError = error;
-              console.log('[deeplink][native][DEBUG] setSession result:', { hasData: !!data, hasSession: !!data?.session, hasError: !!error, errorMsg: error?.message });
-            } catch (setSessionErr) {
-              console.error('[deeplink][native][ERROR] setSession threw exception:', setSessionErr);
+              
+              if (error) {
+                console.error('[deeplink][native][ERROR] setSession devolvió error:', JSON.stringify(error));
+              }
+              if (data?.session) {
+                console.log('[deeplink][native][SUCCESS] Sesión establecida correctamente, user:', data.session.user.id);
+              }
+            } catch (setSessionErr: any) {
+              console.error('[deeplink][native][ERROR] setSession lanzó excepción:', setSessionErr);
+              console.error('[deeplink][native][ERROR] Exception details:', {
+                message: setSessionErr?.message,
+                name: setSessionErr?.name,
+                stack: setSessionErr?.stack?.substring(0, 200)
+              });
               sessionError = setSessionErr as any;
             }
+            
+            console.log('[deeplink][native][DEBUG] Después de setSession, sessionData:', {
+              hasSessionData: !!sessionData,
+              hasSession: !!sessionData?.session,
+              hasError: !!sessionError
+            });
           } else {
             // PKCE flow: código en query params
             console.log('[deeplink][native] Esperando PKCE flow');
