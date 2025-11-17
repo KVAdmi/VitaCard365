@@ -45,15 +45,40 @@ export function AuthProvider({ children }) {
       }
     })();
 
+    let navigationDone = false;
     const { data: sub } = supabase.auth.onAuthStateChange(async (_e, s) => {
       console.log('[AuthContext][onAuthStateChange]', _e, s?.user?.id || 'none');
       setSession(s ?? null);
-      
-      // Cuando cambia la sesión, actualizar acceso
       if (s) {
         await fetchAccess(s.user.id);
         setReady(true);
         localStorage.removeItem('oauth_ok');
+        // Solo navegar una vez en nativo tras Google login/registro
+        if (window && window.Capacitor && window.Capacitor.isNativePlatform && !navigationDone) {
+          navigationDone = true;
+          // Detectar contexto
+          const context = localStorage.getItem('oauth_context') || 'login';
+          localStorage.removeItem('oauth_context');
+          if (context === 'register') {
+            window.alert('¡Bienvenido! Por favor realiza tu pago para activar tu plan.');
+            window.location.replace('#/payment-gateway');
+            return;
+          }
+          // login: navegar según acceso
+          const { data: perfil } = await supabase
+            .from('profiles_certificado_v2')
+            .select('acceso_activo')
+            .eq('user_id', s.user.id)
+            .maybeSingle();
+          const accesoActivo = !!perfil?.acceso_activo;
+          if (accesoActivo) {
+            window.alert('¡Bienvenido de nuevo! Tu plan está activo.');
+            window.location.replace('#/dashboard');
+          } else {
+            window.alert('Tu plan está vencido o pendiente de pago. Por favor realiza el pago para continuar.');
+            window.location.replace('#/payment-gateway');
+          }
+        }
       } else {
         setAccess(null);
       }
