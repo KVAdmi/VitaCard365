@@ -46,7 +46,7 @@ export function initAuthDeepLinks() {
       if (u.protocol === 'vitacard365:' && u.host === 'auth' && u.pathname.startsWith('/callback')) {
         try {
           console.log('[deeplink][native] OAuth callback recibido');
-          
+
           // Supabase puede devolver tokens en el hash (#access_token) o código PKCE (?code)
           // Detectar qué tipo de respuesta es
           const hashParams = new URLSearchParams(u.hash.substring(1)); // Quitar el #
@@ -76,15 +76,20 @@ export function initAuthDeepLinks() {
             
             const expiresIn = parseInt(hashParams.get('expires_in') || '3600');
             console.log('[deeplink][native][DEBUG] expiresIn:', expiresIn);
-            
+
             console.log('[deeplink][native][DEBUG] Intentando setSession...');
-            console.log('[deeplink][native][DEBUG] Tokens para setSession:', { 
-              hasAccessToken: !!accessToken, 
+            console.log('[deeplink][native][DEBUG] Tokens para setSession:', {
+              hasAccessToken: !!accessToken,
               accessTokenLength: accessToken?.length || 0,
               hasRefreshToken: !!refreshToken,
               refreshTokenLength: refreshToken?.length || 0
             });
-            
+
+            // Marca que venimos de un retorno OAuth para que AuthProvider no redireccione
+            try {
+              localStorage.setItem('oauth_ok', '1');
+            } catch {}
+
             try {
               // Setear la sesión manualmente
               console.log('[deeplink][native][DEBUG] Llamando supabase.auth.setSession...');
