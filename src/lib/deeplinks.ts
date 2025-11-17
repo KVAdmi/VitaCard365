@@ -1,6 +1,7 @@
 import { App } from '@capacitor/app';
 import { Capacitor } from '@capacitor/core';
 import { supabase } from './supabaseClient';
+import { resolvePostAuthRoute } from './oauthRouting';
 
 let inited = false;
 
@@ -17,6 +18,16 @@ export function initAuthDeepLinks() {
     try { console.log('[appUrlOpen]', url); } catch {}
     try {
       const u = new URL(url);
+      try {
+        console.log('[deeplink][native][debug] raw url:', url);
+        console.log('[deeplink][native][debug] parsed url:', {
+          protocol: u.protocol,
+          host: u.host,
+          pathname: u.pathname,
+          search: u.search,
+          hash: u.hash,
+        });
+      } catch {}
       // MercadoPago return: vitacard365://mp-return?status=success|failure|pending
       if (u.protocol === 'vitacard365:' && u.host === 'mp-return') {
         const status = (u.searchParams.get('status') || '').toLowerCase();
@@ -34,16 +45,22 @@ export function initAuthDeepLinks() {
         }
         return;
       }
-      // Recuperación de contraseña: vitacard365://auth/recovery
-      if (u.protocol === 'vitacard365:' && u.host === 'auth' && u.pathname.startsWith('/recovery')) {
-        console.log('[auth-recovery] deep link recibido:', url);
+      const isAuthHost = u.protocol === 'vitacard365:' && u.host === 'auth';
+      const isRecoveryPath =
+        isAuthHost &&
+        (u.pathname.startsWith('/recovery') ||
+          (u.pathname.startsWith('/callback') && (u.search.includes('type=recovery') || u.hash.includes('type=recovery'))));
+
+      // Recuperación de contraseña: vitacard365://auth/recovery o callback con type=recovery
+      if (isRecoveryPath) {
+        console.log('[auth-recovery] deep link recibido (callback o recovery):', url);
         if (typeof window !== 'undefined') {
-            window.location.hash = '#/set-new-password';
+          window.location.hash = '#/set-new-password';
         }
         return;
       }
       // Deep link de login OAuth
-      if (u.protocol === 'vitacard365:' && u.host === 'auth' && u.pathname.startsWith('/callback')) {
+      if (isAuthHost && u.pathname.startsWith('/callback')) {
         try {
           console.log('[deeplink][native] OAuth callback recibido');
           
@@ -154,40 +171,18 @@ export function initAuthDeepLinks() {
           console.log('[deeplink][native] Sesión obtenida, user:', sessionData.session.user.id);
           
           // Leer el contexto guardado (login o register)
-          const context = localStorage.getItem('oauth_context') || 'login';
-          console.log('[deeplink][native] Contexto:', context);
-          
-          if (context === 'register') {
-            // Usuario nuevo -> payment-gateway
-            console.log('[deeplink][native] Navegando a: /payment-gateway');
-            if (typeof window !== 'undefined') {
-              window.location.replace('#/payment-gateway');
-            }
-            localStorage.removeItem('oauth_context');
-            return;
-          }
-          
-          // Context = login: consultar acceso
-          console.log('[deeplink][native] Consultando acceso...');
-          const { data: perfil, error: perfilError } = await supabase
-            .from('profiles_certificado_v2')
-            .select('acceso_activo')
-            .eq('user_id', sessionData.session.user.id)
-            .maybeSingle();
-          
-          const accesoActivo = !!perfil?.acceso_activo;
-          console.log('[deeplink][native] Acceso activo:', accesoActivo);
-          
+          const rawContext = localStorage.getItem('oauth_context');
+          const context = rawContext === 'register' ? 'register' : 'login';
+          console.log('[deeplink][native] Contexto:', rawContext);
+
+          const { route: targetRoute } = await resolvePostAuthRoute(context, sessionData.session.user.id);
+
           if (typeof window !== 'undefined') {
-            if (accesoActivo) {
-              console.log('[deeplink][native] Navegando a: /dashboard');
-              window.location.replace('#/dashboard');
-            } else {
-              console.log('[deeplink][native] Navegando a: /mi-plan');
-              window.location.replace('#/mi-plan');
-            }
+            const hashRoute = targetRoute.startsWith('/') ? `#${targetRoute}` : `#/${targetRoute}`;
+            console.log('[deeplink][native] Navegando a:', hashRoute);
+            window.location.replace(hashRoute);
           }
-          
+
           localStorage.removeItem('oauth_context');
         } catch (e) {
           console.error('[deeplink][native][catch]', e);
