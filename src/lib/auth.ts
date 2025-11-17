@@ -35,6 +35,11 @@ export async function signInWithGoogle(context?: 'login' | 'register') {
   if (context) {
     localStorage.setItem('oauth_context', context);
   }
+    // Helper para decidir ruta post-auth (login/registro)
+    // Se espera que el contexto sea 'login' o 'register'.
+    // Si es 'register', debe navegar a /payment-gateway y NO redirigir luego a /mi-plan.
+    // Si es 'login', navegar según acceso_activo.
+    console.log('[auth][post-auth] Contexto recibido en signInWithGoogle:', context);
   if (isNative) {
     // En nativo, usar el deep link scheme
     const { data, error } = await supabase.auth.signInWithOAuth({
@@ -97,6 +102,7 @@ App.addListener('appUrlOpen', async ({ url }: { url: string }) => {
     }
     console.info('[exchangeCodeForSession][native][ok]', data?.session?.user?.id);
     await routeAfterLogin();
+  // routeAfterLogin decide la ruta final y loguea acceso_activo y destino.
   } catch (e) {
     console.error('[appUrlOpen][catch]', e);
   }

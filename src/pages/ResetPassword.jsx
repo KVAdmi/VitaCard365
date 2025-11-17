@@ -9,6 +9,7 @@ import VitaCard365Logo from '../components/Vita365Logo';
 import { useToast } from '../components/ui/use-toast';
 import { ArrowLeft, Mail } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { Capacitor } from '@capacitor/core';
 
 const ResetPassword = () => {
   const [email, setEmail] = useState('');
@@ -20,8 +21,14 @@ const ResetPassword = () => {
     e.preventDefault();
     setLoading(true);
     try {
+      // Detecta entorno nativo vs web
+      const isNative = Capacitor.isNativePlatform && Capacitor.isNativePlatform();
+      const redirectTo = isNative
+        ? 'vitacard365://auth/recovery'
+        : 'https://vitacard365-react.netlify.app/#/set-new-password';
+      console.log('[auth-recovery][env]', isNative ? 'NATIVO' : 'WEB', 'redirectTo:', redirectTo);
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: 'vitacard365://auth/recovery'
+        redirectTo
       });
       if (error) {
         toast({
@@ -29,14 +36,14 @@ const ResetPassword = () => {
           description: error.message || 'No se pudo enviar el correo. Verifica el email e intenta de nuevo.',
           variant: 'destructive',
         });
-        console.error('[auth-recovery] Error:', error);
+        console.error('[auth-recovery][web] Error:', error);
         return;
       }
       toast({
         title: '¡Listo!',
         description: 'Si tu correo está registrado, recibirás instrucciones para recuperar tu contraseña.',
       });
-      console.log('[auth-recovery] Email de recuperación enviado a', email);
+      console.log('[auth-recovery][web] Email de recuperación enviado a', email);
     } finally {
       setLoading(false);
     }

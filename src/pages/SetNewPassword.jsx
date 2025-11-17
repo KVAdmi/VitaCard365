@@ -22,7 +22,7 @@ export default function SetNewPassword() {
             "El enlace de recuperación expiró o no es válido. Solicita uno nuevo desde ‘Olvidé mi contraseña’.",
         });
       }
-      console.log("[auth-recovery] session", data.session ? "OK" : "MISSING");
+      console.log("[auth-recovery][set-new-password] session", data.session ? "OK" : "MISSING", data.session?.user?.id || null);
     })();
   }, []);
 
@@ -49,16 +49,17 @@ export default function SetNewPassword() {
 
     try {
       setLoading(true);
+      console.log("[auth-recovery][set-new-password] Intentando updateUser...");
       const { error } = await supabase.auth.updateUser({ password: pwd });
       if (error) throw error;
-
+      console.log("[auth-recovery][set-new-password] updateUser OK");
       setMsg({
         type: "success",
         text: "Tu contraseña fue actualizada. Inicia sesión nuevamente.",
       });
       setTimeout(() => nav("/login", { replace: true }), 1200);
     } catch (err) {
-      console.error("[auth-recovery] updateUser error", err);
+      console.error("[auth-recovery][set-new-password] updateUser error", err);
       setMsg({
         type: "error",
         text:
