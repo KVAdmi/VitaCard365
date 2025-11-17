@@ -38,7 +38,7 @@ export function initAuthDeepLinks() {
       if (u.protocol === 'vitacard365:' && u.host === 'auth' && u.pathname.startsWith('/recovery')) {
         console.log('[auth-recovery] deep link recibido:', url);
         if (typeof window !== 'undefined') {
-          window.location.replace('#/set-new-password');
+            window.location.hash = '#/set-new-password';
         }
         return;
       }
