@@ -50,7 +50,7 @@ export function AuthProvider({ children }) {
       console.log('[AuthContext][onAuthStateChange]', _e, s?.user?.id || 'none');
       setSession(s ?? null);
       if (s) {
-        await fetchAccess(s.user.id);
+        const accessInfo = await fetchAccess(s.user.id);
         setReady(true);
         localStorage.removeItem('oauth_ok');
         // Solo navegar una vez en nativo tras Google login/registro
@@ -60,24 +60,12 @@ export function AuthProvider({ children }) {
           const context = localStorage.getItem('oauth_context') || 'login';
           localStorage.removeItem('oauth_context');
           if (context === 'register') {
-            window.alert('¡Bienvenido! Por favor realiza tu pago para activar tu plan.');
             window.location.replace('#/payment-gateway');
             return;
           }
           // login: navegar según acceso
-          const { data: perfil } = await supabase
-            .from('profiles_certificado_v2')
-            .select('acceso_activo')
-            .eq('user_id', s.user.id)
-            .maybeSingle();
-          const accesoActivo = !!perfil?.acceso_activo;
-          if (accesoActivo) {
-            window.alert('¡Bienvenido de nuevo! Tu plan está activo.');
-            window.location.replace('#/dashboard');
-          } else {
-            window.alert('Tu plan está vencido o pendiente de pago. Por favor realiza el pago para continuar.');
-            window.location.replace('#/payment-gateway');
-          }
+          const accesoActivo = !!accessInfo?.accesoActivo;
+          window.location.replace(accesoActivo ? '#/dashboard' : '#/payment-gateway');
         }
       } else {
         setAccess(null);
@@ -102,19 +90,22 @@ export function AuthProvider({ children }) {
       if (error) {
         console.error('[AuthContext][fetchAccess][error]', error);
         setAccess({ activo: false });
-        return;
+        return { accesoActivo: false, perfil: null };
       }
       
       const accesoActivo = !!perfil?.acceso_activo;
       console.log('[AuthContext][fetchAccess][ok] acceso_activo:', accesoActivo);
-      setAccess({ 
+      const acceso = {
         activo: accesoActivo,
         estado_pago: perfil?.estado_pago,
         membresia: perfil?.membresia
-      });
+      };
+      setAccess(acceso);
+      return { accesoActivo, perfil };
     } catch (err) {
       console.error('[AuthContext][fetchAccess][catch]', err);
       setAccess({ activo: false });
+      return { accesoActivo: false, perfil: null };
     }
   };
 
