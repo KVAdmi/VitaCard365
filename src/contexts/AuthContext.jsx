@@ -28,6 +28,7 @@ export function AuthProvider({ children }) {
       const { data } = await supabase.auth.getSession();
       console.log('[AuthContext][init] session:', data?.session?.user?.id || 'none');
       setSession(data?.session ?? null);
+      setIsReturningFromOAuth(oauthFlag === '1');
       
       // Si hay sesión, consultar acceso inmediatamente
       if (data?.session) {
@@ -35,10 +36,11 @@ export function AuthProvider({ children }) {
       }
       
       if (oauthFlag === '1' && !data?.session) {
-        // Espera hasta 5s por la sesión
+        // Espera hasta 5s por la sesión para evitar rebotes post-OAuth
         graceTimeout = setTimeout(() => {
           setReady(true);
           localStorage.removeItem('oauth_ok');
+          setIsReturningFromOAuth(false);
         }, 5000);
       } else {
         setReady(true);
@@ -54,6 +56,7 @@ export function AuthProvider({ children }) {
         await fetchAccess(s.user.id);
         setReady(true);
         localStorage.removeItem('oauth_ok');
+        setIsReturningFromOAuth(false);
       } else {
         setAccess(null);
       }
