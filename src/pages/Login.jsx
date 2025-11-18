@@ -1,4 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { supabase } from '../lib/supabaseClient';
+import { loadRememberMe } from '../lib/rememberMe';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Helmet } from 'react-helmet';
@@ -9,28 +11,80 @@ import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../components/ui/use-toast';
 import { Eye, EyeOff, Mail, Lock, ArrowLeft } from 'lucide-react';
 import VitaCard365Logo from '../components/Vita365Logo';
-import GoogleLoginButton from '../components/ui/GoogleLoginButton';
 
 const Login = () => {
+  const [checkingSession, setCheckingSession] = useState(true);
+  useEffect(() => {
+    (async () => {
+      const data = await loadRememberMe();
+      if (data.rememberEmail && data.email) {
+        setFormData((prev) => ({ ...prev, email: data.email }));
+        setRememberEmail(true);
+      }
+      if (data.keepSession) {
+        setKeepSession(true);
+        console.log('[rememberMe] keepSession desde storage:', data.keepSession);
+        const { data: sessionData } = await supabase.auth.getSession();
+        console.log('[rememberMe] resultado getSession():', sessionData.session);
+        const session = sessionData.session;
+        if (session) {
+          // Consultar acceso y redirigir
+          const { data: perfil } = await supabase
+            .from('profiles_certificado_v2')
+            .select('acceso_activo')
+            .eq('user_id', session.user.id)
+            .maybeSingle();
+          const accesoActivo = !!perfil?.acceso_activo;
+          if (accesoActivo) {
+            navigate('/dashboard', { replace: true });
+          } else {
+            navigate('/mi-plan', { replace: true });
+          }
+          return; // No mostrar login
+        }
+      }
+      setCheckingSession(false);
+    })();
+  }, []);
   const navigate = useNavigate();
   const location = useLocation();
   const { login, isSupabaseConnected, session, access } = useAuth();
-  // Red de seguridad: si ya hay sesión y estamos en /login, redirigir automáticamente
-  useEffect(() => {
-    if (!session) return;
-    if (location.pathname === '/login') {
-      const accesoActivo = access?.acceso_activo === true;
-      if (accesoActivo) {
-        navigate('/dashboard', { replace: true });
-      } else {
-        navigate('/mi-plan', { replace: true }); // Ajusta la ruta si es diferente
-      }
-    }
-  }, [session, access, location.pathname, navigate]);
+  const [rememberEmail, setRememberEmail] = useState(false);
+  const [keepSession, setKeepSession] = useState(false);
+  // Eliminado segundo useEffect de redirección para evitar saltos entre rutas
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({ email: '', password: '' });
+  // Debounce para auto-login
+  const debounceRef = useRef(null);
+
+  // Validación de email
+  const isValidEmail = (email) => {
+    return /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email);
+  };
+
+  // Auto-submit cuando el usuario termina de escribir password
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    // Solo dispara si ambos campos tienen valor
+    if (!formData.email || !formData.password) return;
+    debounceRef.current = setTimeout(() => {
+      if (
+        isValidEmail(formData.email) &&
+        formData.password.length >= 8
+      ) {
+        // Simula un evento submit para handleSubmit
+        if (!loading) {
+          const fakeEvent = { preventDefault: () => {} };
+          handleSubmit(fakeEvent);
+        }
+      }
+    }, 500);
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, [formData.email, formData.password]);
   const formRef = useRef(null);
   const emailRef = useRef(null);
   const passwordRef = useRef(null);
@@ -51,6 +105,17 @@ const Login = () => {
       if (user?.user_metadata?.must_change_password) {
         setShowChangePassword(true);
         return;
+      }
+      // Guardar flags locales si corresponde
+      if (rememberEmail || keepSession) {
+        // Importar dinámicamente el helper para evitar romper el build
+        import('../lib/rememberMe').then(({ saveRememberMe }) => {
+          saveRememberMe({
+            email: rememberEmail ? formData.email : '',
+            rememberEmail,
+            keepSession
+          });
+        });
       }
       toast({
         title: '¡Bienvenido!',
@@ -139,8 +204,9 @@ const Login = () => {
     setLoading(false);
   };
 
+  if (checkingSession) return null;
   return (
-  <>
+    <>
       <Helmet>
         <title>Iniciar Sesión - VitaCard 365</title>
         <meta name="description" content="Inicia sesión en VitaCard 365 para acceder a tu cobertura médica, monitoreo de salud y herramientas de bienestar." />
@@ -216,6 +282,27 @@ const Login = () => {
                     </Button>
                   </div>
                 </div>
+                {/* Controles de recordar y mantener sesión */}
+                <div className="space-y-2 mt-4">
+                  <label className="flex items-center gap-2 text-white">
+                    <input
+                      type="checkbox"
+                      checked={keepSession}
+                      onChange={e => setKeepSession(e.target.checked)}
+                      style={{ accentColor: '#FF6B00' }}
+                    />
+                    Mantener sesión iniciada en este dispositivo
+                  </label>
+                  <label className="flex items-center gap-2 text-white">
+                    <input
+                      type="checkbox"
+                      checked={rememberEmail}
+                      onChange={e => setRememberEmail(e.target.checked)}
+                      style={{ accentColor: '#FF6B00' }}
+                    />
+                    Recordar mi correo para la próxima vez
+                  </label>
+                </div>
                 <div className="flex justify-end items-center text-sm">
                     <Link
                         to="/reset-password"
@@ -233,15 +320,7 @@ const Login = () => {
                   {loading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
                 </Button>
               </form>
-              <div className="relative my-6">
-                <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t border-white/20" />
-                </div>
-                <div className="relative flex justify-center text-sm">
-                  <span className="bg-transparent px-2 text-white/70 backdrop-blur-sm">O continúa con</span>
-                </div>
-              </div>
-              <GoogleLoginButton context="login" />
+              {/* Eliminado GoogleLoginButton */}
               <div className="text-center mt-6 text-sm">
                 <span className="text-white/70">¿No tienes cuenta? </span>
                 <Link

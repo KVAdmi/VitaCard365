@@ -11,7 +11,7 @@ import { useToast } from '../components/ui/use-toast';
 import { Eye, EyeOff, Mail, Lock, User, ArrowLeft, Ticket } from 'lucide-react';
 import { validateSellerCode, PromoStorage } from '@/lib/codes';
 import VitaCard365Logo from '../components/Vita365Logo';
-import GoogleLoginButton from '../components/ui/GoogleLoginButton';
+              {/* Eliminado GoogleLoginButton para evitar error de referencia */}
 
 const Register = () => {
   const navigate = useNavigate();

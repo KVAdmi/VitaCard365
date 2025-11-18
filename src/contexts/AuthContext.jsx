@@ -208,10 +208,13 @@ export function AuthProvider({ children }) {
       console.log('[AuthContext][logout]');
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
-      
       setSession(null);
       setAccess(null);
       localStorage.removeItem('oauth_ok');
+      // Limpiar datos de RememberMe
+      import('../lib/rememberMe').then(({ clearRememberMe }) => {
+        clearRememberMe();
+      });
     } catch (error) {
       console.error('[AuthContext][logout][error]', error);
       throw error;

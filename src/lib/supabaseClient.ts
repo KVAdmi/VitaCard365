@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
-import { SupabaseStorage } from './supabaseStorage';
+// import { SupabaseStorage } from './supabaseStorage';
 
 // Preferir variables de entorno; hacer fallback a valores existentes para no romper builds locales
 const ENV_URL = (import.meta as any)?.env?.VITE_SUPABASE_URL as string | undefined;
@@ -18,7 +18,7 @@ export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
     autoRefreshToken: true,
     persistSession: true,
     detectSessionInUrl: false,
-    storageKey: 'vita-auth',
-    storage: SupabaseStorage as any,
+    // storageKey: 'vita-auth',
+    // storage: SupabaseStorage as any,
   },
 });

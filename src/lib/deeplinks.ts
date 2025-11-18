@@ -32,38 +32,6 @@ export function initAuthDeepLinks() {
       const u = new URL(url);
 
       // --- FIX SOLO FLUJO NATIVO ---
-      if (url.startsWith('vitacard365://') && url.includes('/auth/callback')) {
-        dlog('[deeplink][native][callback] detectado flujo nativo Google OAuth:', url);
-        try {
-          const hydrated = await hydrateSessionFromUrlParams(u);
-          if (!hydrated) {
-            console.error('[deeplink][native][callback] error al hidratar sesión desde URL:', url);
-          }
-        } catch (err) {
-          console.error('[deeplink][native][callback] error al hidratar sesión:', err);
-        }
-        // Verificar que realmente existe sesión
-        let sessionOk = false;
-        try {
-          const { data } = await supabase.auth.getSession();
-          if (data?.session) {
-            sessionOk = true;
-          }
-        } catch (err) {
-          console.error('[deeplink][native][callback] error al obtener sesión:', err);
-        }
-        if (!sessionOk) {
-          console.error('[deeplink][native][callback] sin sesión tras setSession, mandando a #/login');
-          if (typeof window !== 'undefined') window.location.hash = '#/login';
-          AUTH_DEEPLINK_HANDLED = false;
-          return;
-        }
-        // Si hay sesión, NO redirigir a #/auth/callback en nativo
-        // Deja que AuthContext maneje la navegación final
-        dlog('[deeplink][native][callback] sesión OK, esperando navegación de AuthContext');
-        AUTH_DEEPLINK_HANDLED = false;
-        return;
-      }
 
       // --- FLUJO WEB Y OTROS ---
       // Compat: aceptar legacy vitacard365://auth-callback

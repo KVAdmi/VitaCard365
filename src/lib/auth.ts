@@ -22,34 +22,6 @@ const AUTH_RECOVERY = 'vitacard365://auth/recovery';
 const isNative = !!(Capacitor.isNativePlatform && Capacitor.isNativePlatform());
 export const DEEP_LINK = AUTH_CALLBACK;
 
-export async function signInWithGoogle(context = 'login') {
-  // Guardar contexto para que AuthCallback sepa de dónde viene
-  if (context) {
-    localStorage.setItem('oauth_context', context);
-  }
-  if (isNative) {
-    const { data, error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: DEEP_LINK,
-        skipBrowserRedirect: false,
-        queryParams: { prompt: 'select_account' }
-      },
-    });
-    if (error) console.error('signInWithOAuth (native)', error.message);
-    return;
-  }
-  const redirectTo = `${window.location.origin}/auth/callback`;
-  const { error } = await supabase.auth.signInWithOAuth({
-    provider: 'google',
-    options: {
-      redirectTo,
-      skipBrowserRedirect: false,
-      queryParams: { prompt: 'select_account' }
-    },
-  });
-  if (error) console.error('signInWithOAuth (web)', error.message);
-}
 
 let AUTH_DEEPLINK_HANDLED = false;
 
