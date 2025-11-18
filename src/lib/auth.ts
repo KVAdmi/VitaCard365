@@ -68,7 +68,7 @@ async function tryCloseInAppBrowser() {
 }
 
 // Extrae code/tokens de query o hash y los aplica
-async function hydrateSessionFromUrlParams(u: URL) {
+export async function hydrateSessionFromUrlParams(u: URL) {
   // code puede venir en query o en hash (#code=...)
   const codeFromQuery = u.searchParams.get('code');
   const codeFromHash = u.hash ? (u.hash.match(/(?:[?#]|^)code=([^&]+)/)?.[1] || null) : null;
