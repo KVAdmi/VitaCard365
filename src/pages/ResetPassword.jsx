@@ -39,14 +39,9 @@ const ResetPassword = () => {
   const handleSendRecovery = async (e) => {
     e.preventDefault();
     setLoading(true);
-    try {
-      const isNative = Capacitor.isNativePlatform && Capacitor.isNativePlatform();
-      const redirectTo = isNative
-        ? 'vitacard365://auth/recovery'
-        : (typeof window !== 'undefined'
-            ? `${window.location.origin}/#/reset-password?stage=update`
-            : 'vitacard365://auth/recovery');
 
+    try {
+      const redirectTo = 'https://vitacard365-react.netlify.app/#/reset-password?stage=update';
       const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), { redirectTo });
       if (error) throw error;
 
