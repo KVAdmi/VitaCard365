@@ -46,6 +46,7 @@ import Receipt from './pages/Receipt';
 import PaymentGateway from './pages/PaymentGateway';
 import FitCallback from './pages/FitCallback';
 import ResetPassword from './pages/ResetPassword';
+import UpdatePassword from './pages/UpdatePassword';
 import AuthCallback from './pages/AuthCallback';
 import { initAuthDeepLinks } from '@/lib/deeplinks';
 import '@/lib/auth'; // inicializa listener de deep link (auth-callback)
@@ -129,7 +130,7 @@ function App() {
                     <Route path="/politicas-de-privacidad" element={<Policy />} />
                     <Route path="/terminos-y-condiciones" element={<Terms />} />
                     <Route path="/reset-password" element={<ResetPassword />} />
-                    <Route path="/auth/callback" element={<AuthCallback />} />
+                    <Route path="/update-password" element={<UpdatePassword />} />
                     <Route path="/auth/callback" element={<AuthCallback />} />
                     
                     <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />

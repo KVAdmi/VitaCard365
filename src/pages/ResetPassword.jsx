@@ -8,6 +8,8 @@ import VitaCard365Logo from '../components/Vita365Logo';
 import { useToast } from '../components/ui/use-toast';
 import { ArrowLeft, Mail } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { supabase } from '../lib/supabaseClient';
+import { Capacitor } from '@capacitor/core';
 
 const ResetPassword = () => {
   const [email, setEmail] = useState('');
@@ -18,14 +20,56 @@ const ResetPassword = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    // Aquí iría la lógica real de recuperación con Supabase
-    setTimeout(() => {
-      toast({
-        title: '¡Listo!',
-        description: 'Si tu correo está registrado, recibirás instrucciones para recuperar tu contraseña.',
+
+    try {
+      // Determinar la URL de redirección según la plataforma
+      const isNative = Capacitor.isNativePlatform && Capacitor.isNativePlatform();
+      const redirectTo = isNative 
+        ? 'vitacard365://reset-password'
+        : `${window.location.origin}/update-password`;
+
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo,
       });
+
+      if (error) {
+        console.error('Error al enviar email de recuperación:', error);
+        
+        // Mensajes de error claros para el usuario
+        let errorMessage = 'No se pudo enviar el correo de recuperación.';
+        
+        if (error.message?.includes('network') || error.message?.includes('fetch')) {
+          errorMessage = 'Error de conexión. Por favor verifica tu conexión a internet e intenta de nuevo.';
+        } else if (error.message?.includes('API key')) {
+          errorMessage = 'Error de configuración. Por favor contacta con soporte.';
+        }
+        
+        toast({
+          title: 'Error',
+          description: errorMessage,
+          variant: 'destructive',
+        });
+      } else {
+        toast({
+          title: '¡Listo!',
+          description: 'Si tu correo está registrado, recibirás instrucciones para recuperar tu contraseña.',
+        });
+        
+        // Redirigir al login después de 2 segundos
+        setTimeout(() => {
+          navigate('/login');
+        }, 2000);
+      }
+    } catch (error) {
+      console.error('Error crítico en recuperación de contraseña:', error);
+      toast({
+        title: 'Error',
+        description: 'Error inesperado. Por favor intenta de nuevo.',
+        variant: 'destructive',
+      });
+    } finally {
       setLoading(false);
-    }, 1200);
+    }
   };
 
   return (
