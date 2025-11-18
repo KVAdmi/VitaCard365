@@ -1,9 +1,5 @@
 // Utilidad para obtener datos de Supabase para las 6 tarjetas
-import { createClient } from '@supabase/supabase-js';
-
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-const supabase = createClient(supabaseUrl, supabaseKey);
+import { supabase } from './supabaseClient';
 
 export async function fetchUserChartsData(userId) {
   // Últimos 7 días
