@@ -28,16 +28,36 @@ export const DEEP_LINK: string = ENV_DEEP_LINK
   || (isNative ? 'vitacard365://auth-callback' : 'vitacard365://auth/callback');
 
 export async function signInWithGoogle() {
-  // En web, usar el origen completo para evitar problemas con custom schemes
-  const webRedirect = (typeof window !== 'undefined' && window.location?.origin)
-    ? `${window.location.origin}/auth/callback`
-    : undefined;
-  const redirectTo = isNative ? DEEP_LINK : (webRedirect || DEEP_LINK);
-  const { error } = await supabase.auth.signInWithOAuth({
-    provider: 'google',
-    options: { redirectTo, skipBrowserRedirect: false },
-  });
-  if (error) console.error('signInWithOAuth', error.message);
+  try {
+    // En web, usar el origen completo para evitar problemas con custom schemes
+    const webRedirect = (typeof window !== 'undefined' && window.location?.origin)
+      ? `${window.location.origin}/auth/callback`
+      : undefined;
+    const redirectTo = isNative ? DEEP_LINK : (webRedirect || DEEP_LINK);
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo, skipBrowserRedirect: false },
+    });
+    
+    if (error) {
+      console.error('signInWithOAuth error:', error.message);
+      
+      // Mensajes de error claros para el usuario
+      let errorMessage = 'Error al iniciar sesión con Google.';
+      
+      if (error.message?.includes('network') || error.message?.includes('fetch')) {
+        errorMessage = 'Error de conexión. Por favor verifica tu conexión a internet e intenta de nuevo.';
+      } else if (error.message?.includes('API key')) {
+        errorMessage = 'Error de configuración. Por favor contacta con soporte.';
+      }
+      
+      // Lanzar error con mensaje claro para que el componente lo maneje
+      throw new Error(errorMessage);
+    }
+  } catch (error) {
+    console.error('signInWithGoogle critical error:', error);
+    throw error;
+  }
 }
 
 let AUTH_DEEPLINK_HANDLED = false;

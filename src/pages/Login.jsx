@@ -49,6 +49,10 @@ const Login = () => {
         errorMessage = 'Email o contraseña incorrectos';
       } else if (error.message?.includes('Email not confirmed')) {
         errorMessage = 'Por favor, confirma tu email antes de iniciar sesión';
+      } else if (error.message?.includes('network') || error.message?.includes('fetch')) {
+        errorMessage = 'Error de conexión. Por favor verifica tu conexión a internet e intenta de nuevo.';
+      } else if (error.message?.includes('API key')) {
+        errorMessage = 'Error de configuración. Por favor contacta con soporte.';
       }
       
       toast({

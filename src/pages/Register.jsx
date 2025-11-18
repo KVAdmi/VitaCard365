@@ -6,7 +6,7 @@ import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { useAuth } from '../contexts/AuthContext';
-import { supabase } from '../lib/supabase';
+import { supabase } from '../lib/supabaseClient';
 import { useToast } from '../components/ui/use-toast';
 import { Eye, EyeOff, Mail, Lock, User, ArrowLeft, Ticket } from 'lucide-react';
 import { validateSellerCode, PromoStorage } from '@/lib/codes';
@@ -47,9 +47,22 @@ const Register = () => {
         password: formData.password
       });
       if (error) {
+        console.error('Error de registro:', error);
+        
+        let errorMessage = error.message || 'Hubo un problema al crear tu cuenta.';
+        
+        // Mensajes de error más claros
+        if (error.message?.includes('network') || error.message?.includes('fetch')) {
+          errorMessage = 'Error de conexión. Por favor verifica tu conexión a internet e intenta de nuevo.';
+        } else if (error.message?.includes('API key')) {
+          errorMessage = 'Error de configuración. Por favor contacta con soporte.';
+        } else if (error.message?.includes('already registered') || error.message?.includes('already exists')) {
+          errorMessage = 'Este correo ya está registrado. Por favor inicia sesión o usa otro correo.';
+        }
+        
         toast({
           title: 'Error de Registro',
-          description: error.message,
+          description: errorMessage,
           variant: 'destructive',
         });
         setLoading(false);
@@ -118,9 +131,19 @@ const Register = () => {
       });
       navigate('/payment-gateway');
     } catch (error) {
+      console.error('Error crítico en registro:', error);
+      
+      let errorMessage = error.message || 'Hubo un problema al crear tu cuenta. Inténtalo de nuevo.';
+      
+      if (error.message?.includes('network') || error.message?.includes('fetch')) {
+        errorMessage = 'Error de conexión. Por favor verifica tu conexión a internet e intenta de nuevo.';
+      } else if (error.message?.includes('API key')) {
+        errorMessage = 'Error de configuración. Por favor contacta con soporte.';
+      }
+      
       toast({
         title: 'Error de Registro',
-        description: error.message || 'Hubo un problema al crear tu cuenta. Inténtalo de nuevo.',
+        description: errorMessage,
         variant: 'destructive',
       });
     } finally {
