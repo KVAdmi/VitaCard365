@@ -1,16 +1,11 @@
 import { App } from '@capacitor/app';
-import { Browser } from '@capacitor/browser';
 import { Capacitor } from '@capacitor/core';
 import { supabase } from './supabaseClient';
-import { routeAfterLogin } from './routeAfterLogin';
 
-
-// Debug flag (set VITE_DEBUG_AUTH=1 in your env to enable verbose logs)
-// Falls back to false if not defined.
-// We keep logging lightweight unless explicitly enabled to avoid performance impact.
+// Debug flag
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore - import.meta may not be typed in some build contexts / non-ESM tooling
-const DEBUG_AUTH: boolean = ((): boolean => {
+// @ts-ignore
+const DEBUG_AUTH: boolean = (() => {
   try {
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
@@ -19,92 +14,101 @@ const DEBUG_AUTH: boolean = ((): boolean => {
 })();
 const dlog = (...args: unknown[]) => { if (DEBUG_AUTH) console.log('[AUTH-DL]', ...args); };
 
-// Deep link de retorno
-// - En iOS usamos com.vitacard.app://auth-callback (coincide con appId y URL Scheme)
-// - Mantiene compatibilidad aceptando también vitacard365://auth/callback como legado
-// - Se puede forzar con VITE_DEEP_LINK
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore - import.meta puede no estar tipado en todos los contextos
-const ENV_DEEP_LINK = (typeof import.meta !== 'undefined' && (import.meta as any)?.env?.VITE_DEEP_LINK) as string | undefined;
-const isNative = !!(Capacitor.isNativePlatform && Capacitor.isNativePlatform());
-export const DEEP_LINK: string = ENV_DEEP_LINK
-  || (isNative ? 'com.vitacard.app://auth-callback' : 'vitacard365://auth/callback');
+// Deep links oficiales confirmados
+const AUTH_CALLBACK = 'vitacard365://auth/callback';
+const AUTH_RECOVERY = 'vitacard365://auth/recovery';
 
-export async function signInWithGoogle(context?: 'login' | 'register') {
-  // Guardar contexto para que AuthCallback sepa de dónde viene
-  if (context) {
-    localStorage.setItem('oauth_context', context);
-  }
-    // Helper para decidir ruta post-auth (login/registro)
-    // Se espera que el contexto sea 'login' o 'register'.
-    // Si es 'register', debe navegar a /payment-gateway y NO redirigir luego a /mi-plan.
-    // Si es 'login', navegar según acceso_activo.
-    console.log('[auth][post-auth] Contexto recibido en signInWithGoogle:', context);
-  if (isNative) {
-    // En nativo, usar el deep link scheme
-    const { data, error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: { redirectTo: DEEP_LINK, skipBrowserRedirect: true },
-    });
-    if (error) {
-      console.error('signInWithOAuth (native)', error.message);
-      return;
-    }
-    const url = data?.url;
-    if (url) {
-      try {
-        await Browser.open({ url });
-      } catch (openErr) {
-        console.error('Browser.open failed', openErr);
-      }
-    }
-    return;
-  }
-  // En web, usar el callback web
-  const redirectTo = `${window.location.origin}/auth/callback`;
+// En nativo usamos deep link; en web el origen actual
+const isNative = !!(Capacitor.isNativePlatform && Capacitor.isNativePlatform());
+export const DEEP_LINK = AUTH_CALLBACK;
+
+export async function signInWithGoogle() {
+  const webRedirect =
+    (typeof window !== 'undefined' && window.location?.origin)
+      ? `${window.location.origin}/auth/callback`
+      : undefined;
+  const redirectTo = isNative ? DEEP_LINK : (webRedirect || DEEP_LINK);
   const { error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
-    options: { 
-      redirectTo, 
-      skipBrowserRedirect: false,
-      queryParams: {
-        prompt: 'select_account' // Forzar selector de cuentas de Google
-      }
-    },
+    options: { redirectTo, skipBrowserRedirect: false },
   });
-  if (error) console.error('signInWithOAuth (web)', error.message);
+  if (error) console.error('signInWithOAuth', error.message);
 }
 
-// DISABLED: This listener conflicts with the one in src/lib/deeplinks.ts
-// The deeplinks.ts listener handles both PKCE and implicit flow correctly
-// Keeping this code commented for reference
-/*
 let AUTH_DEEPLINK_HANDLED = false;
+
+async function tryCloseInAppBrowser() {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const maybeBrowser: any = (globalThis as any).Capacitor?.Plugins?.Browser;
+    if (maybeBrowser?.close) {
+      dlog('Closing in-app browser');
+      await maybeBrowser.close();
+    }
+  } catch (closeErr) {
+    dlog('Browser close attempt failed (non-fatal)', closeErr);
+  }
+}
+
+async function hydrateSessionFromUrlParams(u: URL) {
+  const code = u.searchParams.get('code');
+  if (code) {
+    dlog('Exchanging code for session');
+    await supabase.auth.exchangeCodeForSession(code);
+    return true;
+  }
+  const at = u.searchParams.get('access_token') || u.hash.match(/access_token=([^&]+)/)?.[1];
+  const rt = u.searchParams.get('refresh_token') || u.hash.match(/refresh_token=([^&]+)/)?.[1];
+  if (at && rt) {
+    dlog('Setting session from access/refresh tokens');
+    await supabase.auth.setSession({ access_token: at, refresh_token: rt });
+    return true;
+  }
+  dlog('No code/tokens found in URL; proceeding without hydration');
+  return false;
+}
+
 App.addListener('appUrlOpen', async ({ url }: { url: string }) => {
   if (!url) return;
-  const normalized = url.split('?')[0];
-  const isNew = url.startsWith(DEEP_LINK) || normalized === 'com.vitacard.app://auth-callback';
-  const isOld = normalized === 'vitacard365://auth/callback' || normalized === 'vitacard365://auth-callback';
-  if (!isNew && !isOld) { dlog('Ignoring non-auth URL'); return; }
 
-  // Evitar procesar múltiples veces el mismo retorno
   if (AUTH_DEEPLINK_HANDLED) { dlog('Deep link already handled, skipping'); return; }
   AUTH_DEEPLINK_HANDLED = true;
 
-  dlog('Inbound deep link', url);
-  if (!url?.startsWith('vitacard365://')) return;
-  console.info('[appUrlOpen]', url);
   try {
-  const { data, error } = await supabase.auth.exchangeCodeForSession(url);
-    if (error) {
-      console.error('[exchangeCodeForSession][native][error]', error);
+    dlog('Inbound deep link', url);
+    const u = new URL(url);
+
+    const isAuthCallback =
+      (u.protocol === 'vitacard365:' && u.host === 'auth' && u.pathname === '/callback') ||
+      (u.protocol === 'vitacard365:' && u.host === 'auth-callback'); // compat legacy
+
+    const isRecovery =
+      (u.protocol === 'vitacard365:' && u.host === 'auth' && u.pathname === '/recovery');
+
+    await tryCloseInAppBrowser();
+
+    if (isAuthCallback) {
+      await hydrateSessionFromUrlParams(u);
+      if (typeof window !== 'undefined') {
+        window.location.hash = '#/auth/callback';
+      }
       return;
     }
-    console.info('[exchangeCodeForSession][native][ok]', data?.session?.user?.id);
-    await routeAfterLogin();
-  // routeAfterLogin decide la ruta final y loguea acceso_activo y destino.
+
+    if (isRecovery) {
+      await hydrateSessionFromUrlParams(u);
+      if (typeof window !== 'undefined') {
+        window.location.hash = '#/reset-password?stage=update';
+      }
+      return;
+    }
+
+    dlog('Ignoring non-auth URL', url);
   } catch (e) {
-    console.error('[appUrlOpen][catch]', e);
+    console.error('appUrlOpen handler', e);
+    dlog('Fatal error in deep link handler', e);
+    if (typeof window !== 'undefined') window.location.replace('#/login');
+  } finally {
+    setTimeout(() => { AUTH_DEEPLINK_HANDLED = false; }, 1000);
   }
 });
-*/
