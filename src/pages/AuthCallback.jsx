@@ -16,6 +16,15 @@ export default function AuthCallback() {
           await supabase.auth.exchangeCodeForSession(code);
         }
       } catch {}
+      
+      // Check if this is a password recovery callback
+      const type = params.get('type');
+      if (type === 'recovery') {
+        // For password recovery, redirect to reset password page in update mode
+        navigate('/reset-password?stage=update', { replace: true });
+        return;
+      }
+      
       // Decide adónde ir: si no tiene acceso, a pasarela de pago; si ya está activo, al dashboard
       try {
         const { data } = await supabase.auth.getUser();
