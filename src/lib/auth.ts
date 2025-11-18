@@ -58,6 +58,9 @@ App.addListener('appUrlOpen', async ({ url }: { url: string }) => {
   // Evitar procesar múltiples veces el mismo retorno
   if (AUTH_DEEPLINK_HANDLED) { dlog('Deep link already handled, skipping'); return; }
   AUTH_DEEPLINK_HANDLED = true;
+  
+  // Reset flag after 5 seconds to allow future authentications
+  setTimeout(() => { AUTH_DEEPLINK_HANDLED = false; }, 5000);
 
   dlog('Inbound deep link', url);
   try {
