@@ -333,19 +333,37 @@ const Layout = ({ children, title, showBackButton = false }) => {
                 </Button>
               );
             }
-            if (item.isExit) {
-              return (
-                <Button
-                  key={item.path}
-                  variant="ghost"
-                  className={`flex flex-col items-center space-y-1 h-auto py-2 px-3 rounded-lg transition-colors duration-300 text-white hover:bg-white/10`}
-                  onClick={() => navigate('/login')}
-                >
-                  <item.icon className="h-6 w-6" />
-                  <span className="text-xs font-bold text-white">{item.label}</span>
-                </Button>
-              );
-            }
+              if (item.isExit) {
+                return (
+                  <Button
+                    key={item.path}
+                    variant="ghost"
+                    className={`flex flex-col items-center space-y-1 h-auto py-2 px-3 rounded-lg transition-colors duration-300 text-white hover:bg-white/10`}
+                    onClick={async () => {
+                      try {
+                        if (Capacitor.isNativePlatform()) {
+                          const { App } = await import('@capacitor/app');
+                          if (App.exitApp) {
+                            await App.exitApp();
+                          }
+                        } else {
+                          // En web: cerrar sesión y redirigir a login
+                          if (typeof supabase !== 'undefined') {
+                            await supabase.auth.signOut();
+                          }
+                          navigate('/login');
+                        }
+                      } catch (err) {
+                        // fallback: redirigir a login
+                        navigate('/login');
+                      }
+                    }}
+                  >
+                    <item.icon className="h-6 w-6" />
+                    <span className="text-xs font-bold text-white">{item.label}</span>
+                  </Button>
+                );
+              }
             return (
               <Button
                 key={item.path}

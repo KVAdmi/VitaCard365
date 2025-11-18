@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Helmet } from 'react-helmet';
 import { Button } from '../components/ui/button';
@@ -13,7 +13,20 @@ import GoogleLoginButton from '../components/ui/GoogleLoginButton';
 
 const Login = () => {
   const navigate = useNavigate();
-  const { login, isSupabaseConnected } = useAuth();
+  const location = useLocation();
+  const { login, isSupabaseConnected, session, access } = useAuth();
+  // Red de seguridad: si ya hay sesión y estamos en /login, redirigir automáticamente
+  useEffect(() => {
+    if (!session) return;
+    if (location.pathname === '/login') {
+      const accesoActivo = access?.acceso_activo === true;
+      if (accesoActivo) {
+        navigate('/dashboard', { replace: true });
+      } else {
+        navigate('/mi-plan', { replace: true }); // Ajusta la ruta si es diferente
+      }
+    }
+  }, [session, access, location.pathname, navigate]);
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);

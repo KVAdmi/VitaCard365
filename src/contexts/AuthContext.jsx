@@ -55,8 +55,11 @@ export function AuthProvider({ children }) {
         // Solo navegar una vez en nativo tras Google login/registro
         if (window && window.Capacitor && window.Capacitor.isNativePlatform && !navigationDone) {
           navigationDone = true;
+          // LOG: sesión recibida
+          console.log('[AuthContext][native][callback] sesión recibida, user:', s.user.id);
           // Detectar contexto
           const context = localStorage.getItem('oauth_context') || 'login';
+          console.log('[AuthContext][native][callback] contexto OAuth:', context);
           localStorage.removeItem('oauth_context');
           if (context === 'register') {
             window.location.replace('#/payment-gateway');
@@ -69,6 +72,7 @@ export function AuthProvider({ children }) {
             .eq('user_id', s.user.id)
             .maybeSingle();
           const accesoActivo = !!perfil?.acceso_activo;
+          console.log('[AuthContext][native][callback] acceso_activo:', accesoActivo, 'ruta destino:', accesoActivo ? '#/dashboard' : '#/mi-plan');
           if (accesoActivo) {
             window.location.replace('#/dashboard');
           } else {
