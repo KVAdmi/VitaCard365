@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Helmet } from 'react-helmet';
 import { Button } from '../components/ui/button';
@@ -13,6 +13,7 @@ import GoogleLoginButton from '../components/ui/GoogleLoginButton';
 
 const Login = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { login, isSupabaseConnected } = useAuth();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
@@ -21,6 +22,18 @@ const Login = () => {
   const formRef = useRef(null);
   const emailRef = useRef(null);
   const passwordRef = useRef(null);
+
+  // Show message from password reset if present
+  useEffect(() => {
+    if (location.state?.message) {
+      toast({
+        title: 'Contraseña actualizada',
+        description: location.state.message,
+      });
+      // Clear the state to prevent showing the message again
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+  }, [location, toast, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
