@@ -41,7 +41,7 @@ const ResetPassword = () => {
     setLoading(true);
 
     try {
-      const redirectTo = 'https://vitacard365-react.netlify.app/#/reset-password?stage=update';
+  const redirectTo = 'https://vitacard365-react.netlify.app/';
       const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), { redirectTo });
       if (error) throw error;
 

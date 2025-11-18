@@ -54,8 +54,8 @@ export default function SetNewPassword() {
       if (error) throw error;
       console.log("[auth-recovery][set-new-password] updateUser OK");
       setMsg({
-        type: "success",
-        text: "Tu contraseña fue actualizada. Inicia sesión nuevamente.",
+  type: "success",
+  text: "Tu contraseña fue actualizada. Puedes abrir la app.",
       });
       setTimeout(() => nav("/login", { replace: true }), 1200);
     } catch (err) {
@@ -85,46 +85,59 @@ export default function SetNewPassword() {
           </div>
         )}
 
-        <form onSubmit={handleSubmit}>
-          <label className="block text-sm mb-1">Nueva contraseña</label>
-          <input
-            type="password"
-            className="w-full mb-3 p-3 rounded bg-white/10 outline-none"
-            value={pwd}
-            onChange={(e) => setPwd(e.target.value)}
-            disabled={loading || !sessionOk}
-            placeholder="Mínimo 8 caracteres"
-            autoComplete="new-password"
-          />
-
-          <label className="block text-sm mb-1">Confirmar contraseña</label>
-          <input
-            type="password"
-            className="w-full mb-4 p-3 rounded bg-white/10 outline-none"
-            value={pwd2}
-            onChange={(e) => setPwd2(e.target.value)}
-            disabled={loading || !sessionOk}
-            autoComplete="new-password"
-          />
-
-          {msg && (
-            <div
-              className={`mb-4 text-sm ${
-                msg.type === "error" ? "text-red-400" : "text-green-400"
-              }`}
+        {msg?.type === "success" ? (
+          <>
+            <div className="mb-4 text-sm text-green-400">{msg.text}</div>
+            <button
+              type="button"
+              className="w-full p-3 rounded bg-vita-orange text-white font-bold text-base mt-2"
+              onClick={() => { window.location.href = 'vitacard365://auth/recovery-done'; }}
             >
-              {msg.text}
-            </div>
-          )}
+              Abrir app
+            </button>
+          </>
+        ) : (
+          <form onSubmit={handleSubmit}>
+            <label className="block text-sm mb-1">Nueva contraseña</label>
+            <input
+              type="password"
+              className="w-full mb-3 p-3 rounded bg-white/10 outline-none"
+              value={pwd}
+              onChange={(e) => setPwd(e.target.value)}
+              disabled={loading || !sessionOk}
+              placeholder="Mínimo 8 caracteres"
+              autoComplete="new-password"
+            />
 
-          <button
-            type="submit"
-            disabled={loading || !sessionOk}
-            className="w-full p-3 rounded bg-blue-600 disabled:opacity-60"
-          >
-            {loading ? "Guardando..." : "Guardar contraseña"}
-          </button>
-        </form>
+            <label className="block text-sm mb-1">Confirmar contraseña</label>
+            <input
+              type="password"
+              className="w-full mb-4 p-3 rounded bg-white/10 outline-none"
+              value={pwd2}
+              onChange={(e) => setPwd2(e.target.value)}
+              disabled={loading || !sessionOk}
+              autoComplete="new-password"
+            />
+
+            {msg && (
+              <div
+                className={`mb-4 text-sm ${
+                  msg.type === "error" ? "text-red-400" : "text-green-400"
+                }`}
+              >
+                {msg.text}
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={loading || !sessionOk}
+              className="w-full p-3 rounded bg-blue-600 disabled:opacity-60"
+            >
+              {loading ? "Guardando..." : "Guardar contraseña"}
+            </button>
+          </form>
+        )}
       </div>
     </div>
   );
