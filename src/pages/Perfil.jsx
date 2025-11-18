@@ -45,20 +45,43 @@ const Perfil = () => {
   const [cropperSrc, setCropperSrc] = useState(null);
 
   useEffect(() => {
-    if (user && user.user_metadata) {
-      setProfileData({
-        name: user.user_metadata.name || '',
-        apellidoPaterno: user.user_metadata.apellidoPaterno || user.user_metadata.apellido_paterno || '',
-        apellidoMaterno: user.user_metadata.apellidoMaterno || user.user_metadata.apellido_materno || '',
-        alias: user.user_metadata.alias || '',
-        email: user.email || '',
-        phone: user.user_metadata.phone || '',
-        curp: user.user_metadata.curp || '',
-        birthDate: user.user_metadata.birthDate || '',
-        avatarUrl: user.user_metadata.avatarUrl || '',
-        bloodType: user.user_metadata.bloodType || '',
-        sexo: user.user_metadata.sexo || ''
-      });
+    // Cargar datos reales desde Supabase primero
+    (async () => {
+      if (!user) return;
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('name,apellido_paterno,apellido_materno,alias,email,phone,curp,birthdate,avatar_url,blood_type,sexo')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      if (!error && data) {
+        setProfileData({
+          name: data.name || user.user_metadata.name || '',
+          apellidoPaterno: data.apellido_paterno || user.user_metadata.apellidoPaterno || user.user_metadata.apellido_paterno || '',
+          apellidoMaterno: data.apellido_materno || user.user_metadata.apellidoMaterno || user.user_metadata.apellido_materno || '',
+          alias: data.alias || user.user_metadata.alias || '',
+          email: data.email || user.email || '',
+          phone: data.phone || user.user_metadata.phone || '',
+          curp: data.curp || user.user_metadata.curp || '',
+          birthDate: data.birthdate || user.user_metadata.birthDate || '',
+          avatarUrl: data.avatar_url || user.user_metadata.avatarUrl || '',
+          bloodType: data.blood_type || user.user_metadata.bloodType || '',
+          sexo: data.sexo || user.user_metadata.sexo || ''
+        });
+      } else if (user && user.user_metadata) {
+        setProfileData({
+          name: user.user_metadata.name || '',
+          apellidoPaterno: user.user_metadata.apellidoPaterno || user.user_metadata.apellido_paterno || '',
+          apellidoMaterno: user.user_metadata.apellidoMaterno || user.user_metadata.apellido_materno || '',
+          alias: user.user_metadata.alias || '',
+          email: user.email || '',
+          phone: user.user_metadata.phone || '',
+          curp: user.user_metadata.curp || '',
+          birthDate: user.user_metadata.birthDate || '',
+          avatarUrl: user.user_metadata.avatarUrl || '',
+          bloodType: user.user_metadata.bloodType || '',
+          sexo: user.user_metadata.sexo || ''
+        });
+      }
       if (user.user_metadata.planStatus === 'active' && (!user.user_metadata.phone || !user.user_metadata.curp || !user.user_metadata.birthDate)) {
         setIsEditing(true);
         toast({
@@ -66,7 +89,7 @@ const Perfil = () => {
           description: 'Ingresa tus datos reales y correctos para que tu póliza se genere perfectamente.',
         });
       }
-    }
+    })();
   }, [user, toast]);
 
   // Cargar estado real de membresía desde Supabase (profiles_certificado_v2)

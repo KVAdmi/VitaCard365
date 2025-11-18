@@ -1,4 +1,5 @@
 import FitIndex from './pages/fit/index';
+// import FitIndex from './pages/fit/index';
 import FitSyncPage from './pages/fit/FitSyncPage.jsx';
 import FitCreate from './pages/fit/create';
 import FitPlan from './pages/fit/plan';

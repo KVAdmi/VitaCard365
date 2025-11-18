@@ -90,51 +90,7 @@ const Login = () => {
   };
 
   // Auto-submit si el gestor autollenó (Android/iOS pueden no disparar eventos clásicos)
-  useEffect(() => {
-    let submitting = false;
-    if (!formRef.current || !emailRef.current || !passwordRef.current) return;
-    const emailEl = emailRef.current;
-    const passEl = passwordRef.current;
-
-    const doPasswordLogin = async () => {
-      if (submitting) return;
-      if (!emailEl.value || !passEl.value || !emailEl.checkValidity()) return;
-      submitting = true;
-      try {
-        const result = await login(emailEl.value.trim(), passEl.value);
-        if (result) {
-          setTimeout(() => navigate('/dashboard', { replace: true }), 50);
-        }
-      } catch (err) {
-        // silencioso: el botón y toasts ya cubren el error en envío manual
-      } finally {
-        submitting = false;
-      }
-    };
-
-    const handlers = ['input', 'change', 'blur', 'keyup', 'paste'].map(evt => {
-      const h = () => void doPasswordLogin();
-      emailEl.addEventListener(evt, h);
-      passEl.addEventListener(evt, h);
-      return { evt, h };
-    });
-
-    let lastE = '', lastP = '';
-    const poll = setInterval(() => {
-      if (emailEl.value !== lastE || passEl.value !== lastP) {
-        lastE = emailEl.value; lastP = passEl.value;
-        void doPasswordLogin();
-      }
-    }, 400);
-
-    return () => {
-      handlers.forEach(({ evt, h }) => {
-        emailEl.removeEventListener(evt, h);
-        passEl.removeEventListener(evt, h);
-      });
-      clearInterval(poll);
-    };
-  }, [login, navigate]);
+  // Eliminado auto-submit por autollenado para evitar múltiples intentos y rate limit
 
   const { signInWithGoogle } = useAuth();
   const handleGoogleSuccess = async (googleUser) => {

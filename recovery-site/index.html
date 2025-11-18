@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Recuperar contraseña · VitaCard365</title>
+  <meta name="description" content="Restablece tu contraseña de VitaCard365 de forma segura." />
+  <style>
+    :root { color-scheme: dark; }
+  body { font-family: system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,sans-serif; margin:0; padding:0; min-height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; background:radial-gradient(circle at 30% 20%,#0f213b,#050910 70%); color:#e2e8f0; }
+    .container { width:100%; max-width:560px; padding:32px 28px; }
+    .card { position:relative; background:linear-gradient(160deg,#142235 0%,#0d1522 60%,#07111c 100%); border:1px solid #1e293b; border-radius:28px; padding:36px 34px 32px; box-shadow: 0 18px 40px -10px rgba(0,0,0,.55),0 4px 14px rgba(0,0,0,.35); overflow:hidden; }
+    .card:before { content:""; position:absolute; inset:0; background:linear-gradient(120deg,rgba(255,255,255,.04),rgba(255,255,255,0)); pointer-events:none; }
+    h1 { margin:4px 0 10px; font-size:26px; font-weight:700; letter-spacing:.5px; }
+    p { margin:0 0 18px; color:#cbd5e1; line-height:1.4; }
+    .field { margin: 16px 0; }
+    label { display:block; font-size:13px; font-weight:600; text-transform:uppercase; letter-spacing:.8px; color:#94a3b8; margin-bottom:6px; }
+    .input-wrap { position:relative; display:flex; align-items:center; }
+    .input-wrap input[type="password"],
+    .input-wrap input[type="text"] {
+      width:100%;
+      padding:14px 46px 14px 16px;
+      border-radius:14px;
+      border:1px solid #2d3d52;
+      background:#0b1623;
+      color:#e2e8f0;
+      outline:none;
+      font-size:15px;
+    }
+    .input-wrap input:focus {
+      border-color:#3fb5ff;
+      box-shadow:0 0 0 4px rgba(63,181,255,.25);
+    }
+    .toggle-visibility {
+      position:absolute;
+      right:10px;
+      padding:6px;
+      border-radius:999px;
+      border:none;
+      background:transparent;
+      color:#94a3b8;
+      cursor:pointer;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:16px;
+      transition:color .2s, background .2s, transform .12s;
+    }
+    .toggle-visibility:hover {
+      background:rgba(148,163,184,.12);
+      color:#e2e8f0;
+      transform:translateY(-1px);
+    }
+    .actions { margin-top: 22px; display:flex; gap: 14px; align-items:center; flex-wrap:wrap; }
+    button { background:#f97316; color:#fff; border:0; padding:14px 20px; border-radius:16px; font-weight:600; cursor:pointer; font-size:15px; letter-spacing:.3px; box-shadow:0 4px 14px -3px rgba(249,115,22,.5); transition:.25s; }
+    button:hover { filter:brightness(1.12); transform:translateY(-2px); }
+    button.secondary { background:#0ea5e9; box-shadow:0 4px 14px -3px rgba(14,165,233,.5); }
+    button.secondary:hover { filter:brightness(1.15); }
+    .muted { color:#64748b; font-size: 12px; margin-top: 8px; }
+    .alert { margin-top: 18px; padding:14px 16px; border-radius:16px; font-size:14px; font-weight:500; letter-spacing:.2px; }
+    .alert.error { background:#3f1717; color:#fecaca; border:1px solid #b91c1c; }
+    .alert.ok { background:#132e1c; color:#86efac; border:1px solid #166534; }
+    .hidden { display:none; }
+    .brand { display:flex; gap:14px; align-items:center; margin-bottom: 6px; }
+    .brand .logoWrap { width:54px; height:54px; border-radius:16px; background:linear-gradient(135deg,#fbbf24,#f97316 60%,#ef4444); display:flex; align-items:center; justify-content:center; box-shadow:0 6px 18px -6px rgba(249,115,22,.6); }
+    .brand svg { width:34px; height:34px; stroke:#fff; }
+  .brand span { font-weight:700; font-size:18px; background:linear-gradient(90deg,#fff,#e2e8f0); -webkit-background-clip:text; background-clip:text; color:transparent; }
+    .strength { height:8px; display:flex; gap:4px; margin-top:8px; }
+    .bar { flex:1; background:#1e293b; border-radius:4px; transition:.35s; }
+    .bar.active { background:#0ea5e9; }
+    .bar.ok { background:#22c55e; }
+    footer { margin-top:32px; text-align:center; font-size:11px; opacity:.45; }
+  </style>
+</head>
+  <body>
+  <header style="width:100%;display:flex;justify-content:center;align-items:center;margin-top:38px;margin-bottom:18px;">
+    <img src="https://ymwhgkeomyuevsckljdw.supabase.co/storage/v1/object/public/logo/Vita.png" alt="VitaCard365" style="width:100%;max-width:560px;height:auto;object-fit:contain;display:block;" />
+  </header>
+  <div class="container" style="display:flex;justify-content:center;align-items:center;min-height:60vh;">
+    <div class="card" style="margin:auto;">
+      <h1>Crear nueva contraseña</h1>
+      <p id="intro">Estamos validando tu enlace de recuperación…</p>
+
+      <form id="reset-form" class="hidden" novalidate>
+        <div class="field">
+          <label for="pwd1">Nueva contraseña</label>
+          <div class="input-wrap">
+            <input id="pwd1" type="password" placeholder="••••••••" minlength="8" required />
+            <button type="button" class="toggle-visibility" data-target="pwd1" aria-label="Mostrar u ocultar contraseña" style="background:none;border:none;padding:0;right:14px;">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+            </button>
+          </div>
+        </div>
+        <div class="field">
+          <label for="pwd2">Confirmar contraseña</label>
+          <div class="input-wrap">
+            <input id="pwd2" type="password" placeholder="••••••••" minlength="8" required />
+            <button type="button" class="toggle-visibility" data-target="pwd2" aria-label="Mostrar u ocultar confirmación" style="background:none;border:none;padding:0;right:14px;">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+            </button>
+          </div>
+        </div>
+        <div class="strength" id="strength-bars">
+          <div class="bar" ></div>
+          <div class="bar" ></div>
+          <div class="bar" ></div>
+          <div class="bar" ></div>
+        </div>
+        <div class="actions">
+          <button type="submit" id="btn-save">Guardar contraseña</button>
+          <button type="button" id="open-app" class="secondary hidden">Abrir app</button>
+        </div>
+        <p class="muted" id="pwd-hint">Mínimo 8 caracteres.</p>
+      </form>
+
+      <div id="msg" class="alert hidden"></div>
+    </div>
+  </div>
+
+  <script type="module" src="./reset.js"></script>
+  <footer style="margin-top:32px; text-align:center; font-size:13px; opacity:.45;">VitaCard365® 2025</footer>
+</body>
+</html>

@@ -47,7 +47,6 @@ export function AuthProvider({ children }) {
 
     let navigationDone = false;
     const { data: sub } = supabase.auth.onAuthStateChange(async (_e, s) => {
-      console.log('[AuthContext][onAuthStateChange]', _e, s?.user?.id || 'none');
       setSession(s ?? null);
       if (s) {
         await fetchAccess(s.user.id);
@@ -60,7 +59,6 @@ export function AuthProvider({ children }) {
           const context = localStorage.getItem('oauth_context') || 'login';
           localStorage.removeItem('oauth_context');
           if (context === 'register') {
-            window.alert('¡Bienvenido! Por favor realiza tu pago para activar tu plan.');
             window.location.replace('#/payment-gateway');
             return;
           }
@@ -72,11 +70,9 @@ export function AuthProvider({ children }) {
             .maybeSingle();
           const accesoActivo = !!perfil?.acceso_activo;
           if (accesoActivo) {
-            window.alert('¡Bienvenido de nuevo! Tu plan está activo.');
             window.location.replace('#/dashboard');
           } else {
-            window.alert('Tu plan está vencido o pendiente de pago. Por favor realiza el pago para continuar.');
-            window.location.replace('#/payment-gateway');
+            window.location.replace('#/mi-plan');
           }
         }
       } else {

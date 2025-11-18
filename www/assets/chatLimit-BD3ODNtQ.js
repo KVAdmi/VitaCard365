@@ -1,2 +1,0 @@
-import{s as c}from"./index-B3pZWg2a.js";const a=10;async function m(){const{data:i,error:e}=await c.rpc("increment_chat_usage",{lim:a});if(e)return console.warn("[chatLimit] RPC error:",e),{allowed:!1,remaining:0,limit:a};const n=Array.isArray(i)?i[0]:i,r=!!(n!=null&&n.allowed),t=Number.isFinite(n==null?void 0:n.remaining)?n.remaining:0;return{allowed:r,remaining:t,limit:a}}export{m as checkAndIncrementChat};
-//# sourceMappingURL=chatLimit-BD3ODNtQ.js.map

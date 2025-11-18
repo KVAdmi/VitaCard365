@@ -88,7 +88,7 @@ const Layout = ({ children, title, showBackButton = false }) => {
   const isIOS = useMemo(() => /iPhone|iPad|iPod/i.test(navigator.userAgent), []);
   const isAndroid = useMemo(() => /Android/i.test(navigator.userAgent), []);
   // Activa CrystalTopBar en iOS y Android; Web mantiene header clásico
-  const crystalActive = (isIOS && IOS_TOPBAR_ENABLED) || (isAndroid && CROSS_TOPBAR_ENABLED);
+  const crystalActive = false; // Apagar barra cristal para que use el header clásico
   // Altura visual aproximada de la barra para padding del contenido
   // Compensar la altura de la CrystalTopBar (56px) + margen extra (24px) cuando está activa
   const contentTopPad = crystalActive 
@@ -114,7 +114,17 @@ const Layout = ({ children, title, showBackButton = false }) => {
     { path: '/agenda', icon: Calendar, label: 'Agenda' },
     { path: '/mi-plan', icon: CreditCard, label: 'Mi Plan' },
     { path: '/perfil', icon: User, label: 'Perfil' },
-  { path: '/i-vita', icon: RobotIcon, label: 'i-Vita', isChat: true }
+    { path: '/i-vita', icon: RobotIcon, label: 'i-Vita', isChat: true },
+    // Puerta naranja Vita (sin sombra)
+    { path: '/salida', icon: (props) => (
+      <svg width="28" height="28" viewBox="0 0 28 28" fill="none" {...props}>
+        <rect x="6" y="4" width="16" height="20" rx="4" fill="#f06340" />
+        <rect x="10" y="10" width="8" height="8" rx="2" fill="#fff" />
+        <rect x="18" y="12" width="2" height="8" rx="1" fill="#fff" />
+        <circle cx="14" cy="14" r="1.5" fill="#f06340"/>
+        <path d="M8 14h8" stroke="#fff" strokeWidth="2" strokeLinecap="round" />
+      </svg>
+    ), label: 'Salir', isExit: true }
   ];
 
   // Fallback: mostrar botón flotante de regreso si no se pidió explícitamente
@@ -206,31 +216,30 @@ const Layout = ({ children, title, showBackButton = false }) => {
     <div className="min-h-[100dvh] bg-vita-blue text-vita-white">
       {!crystalActive && (
         <header
-          className="fixed top-0 left-0 right-0 app-header-safe z-[1000] flex items-center px-4 bg-[rgba(10,20,40,0.92)] text-white header-ios-safe"
+          className="flex items-center justify-center"
+          style={{marginTop: 'calc(env(safe-area-inset-top, 24px) + 16px)'}}
         >
-          <div className="flex items-center justify-between w-full h-full">
-            <div className="flex items-center space-x-3">
-              {showBackButton ? (
+          <div className="card w-full max-w-[820px] mx-auto px-4">
+            <div className="glass-card flex items-center justify-between w-full px-4 py-3 border border-white/15 text-white rounded-xl shadow-lg backdrop-blur-md" style={{minHeight: '64px'}}>
+              <div className="flex items-center gap-2">
                 <Button
                   variant="ghost"
                   size="icon"
                   onClick={() => navigate(-1)}
-                  className="text-vita-white hover:bg-white/10"
+                  className="text-white hover:bg-white/10"
                 >
-                  <ArrowLeft className="h-5 w-5" />
+                  <ArrowLeft className="h-6 w-6" />
                 </Button>
-              ) : <div className="w-10"></div>}
-              {title && <h1 className="text-xl font-bold text-vita-white">{title}</h1>}
-            </div>
-            <div className="flex items-center space-x-2">
-              <DropdownMenu>
+              </div>
+              <div className="flex items-center gap-4">
+                <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="relative text-vita-white hover:bg-white/10"
+                      className="relative text-white hover:bg-white/10"
                     >
-                      <Bell className="h-5 w-5" />
+                      <Bell className="h-6 w-6" />
                       {hasNotifications && (
                         <span className="absolute top-1.5 right-1.5 flex h-2.5 w-2.5">
                           <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
@@ -266,41 +275,43 @@ const Layout = ({ children, title, showBackButton = false }) => {
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
-              <div
-                className="w-8 h-8 rounded-full cursor-pointer"
-                onClick={() => navigate('/perfil')}
-              >
-                <UserAvatar
-                  src={signedAvatar || (metaAvatarValid && user?.user_metadata?.avatarUrl && /^https?:\/\//i.test(user.user_metadata.avatarUrl) ? user.user_metadata.avatarUrl : undefined)}
-                  name={user?.user_metadata?.alias || user?.user_metadata?.name || 'U'}
-                  className="w-8 h-8 rounded-full"
-                />
+                <div
+                  className="w-9 h-9 rounded-full cursor-pointer"
+                  onClick={() => navigate('/perfil')}
+                >
+                  <UserAvatar
+                    src={signedAvatar || (metaAvatarValid && user?.user_metadata?.avatarUrl && /^https?:\/\//i.test(user.user_metadata.avatarUrl) ? user.user_metadata.avatarUrl : undefined)}
+                    name={user?.user_metadata?.alias || user?.user_metadata?.name || 'U'}
+                    className="w-9 h-9 rounded-full"
+                  />
+                </div>
               </div>
             </div>
           </div>
         </header>
       )}
       {crystalActive && (
-        <CrystalTopBar 
-          showBackButton={shouldShowBackTopBar}
-          avatarSrc={signedAvatar || (metaAvatarValid && user?.user_metadata?.avatarUrl && /^https?:\/\//i.test(user.user_metadata.avatarUrl) ? user.user_metadata.avatarUrl : null)}
-          hasNotifications={hasNotifications}
-          notifications={notifications}
-          onMarkAllRead={() => setHasNotifications(false)}
-        />
-      )}
-
-  <main
-        className="min-h-[100dvh] relative app-main-safe"
-        style={{ paddingTop: contentTopPad }}
-      >
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
+        <div
+          className="fixed z-[4000] pointer-events-auto header-ios-safe border border-white/15 text-white w-full max-w-[820px] left-1/2 -translate-x-1/2"
+          style={{
+            top: 'calc(var(--sat, env(safe-area-inset-top, 0px)) + 48px)',
+            height: '56px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            padding: '0 12px',
+            borderRadius: '14px',
+            background: 'rgba(255,255,255,0.05)',
+            boxShadow: '0 4px 16px rgba(0,0,0,0.25)',
+            overflow: 'hidden',
+          }}
+          aria-label="Barra superior iOS"
         >
           {children}
-        </motion.div>
+        </div>
+      )}
+      <main style={{ paddingBottom: '80px' }}>
+        {children}
       </main>
 
   <nav className="fixed bottom-0 left-0 right-0 z-40 glass-card footer-menu app-tabbar-safe">
@@ -317,8 +328,21 @@ const Layout = ({ children, title, showBackButton = false }) => {
                   className={`flex flex-col items-center space-y-1 h-auto py-2 px-3 rounded-lg transition-colors duration-300 text-vita-muted-foreground hover:text-vita-white hover:bg-white/5`}
                   onClick={() => setShowChat(true)}
                 >
-                  <Icon className="h-5 w-5" />
+                  <item.icon className="h-5 w-5" />
                   <span className="text-xs font-medium">{item.label}</span>
+                </Button>
+              );
+            }
+            if (item.isExit) {
+              return (
+                <Button
+                  key={item.path}
+                  variant="ghost"
+                  className={`flex flex-col items-center space-y-1 h-auto py-2 px-3 rounded-lg transition-colors duration-300 text-white hover:bg-white/10`}
+                  onClick={() => navigate('/login')}
+                >
+                  <item.icon className="h-6 w-6" />
+                  <span className="text-xs font-bold text-white">{item.label}</span>
                 </Button>
               );
             }
@@ -333,7 +357,7 @@ const Layout = ({ children, title, showBackButton = false }) => {
                 }`}
                 onClick={() => navigate(item.path)}
               >
-                <Icon className="h-5 w-5" />
+                <item.icon className="h-5 w-5" />
                 <span className="text-xs font-medium">{item.label}</span>
               </Button>
             );
@@ -357,20 +381,27 @@ const Layout = ({ children, title, showBackButton = false }) => {
       {showChat && (
         <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center bg-black/30 backdrop-blur-sm">
           <div className="relative w-full max-w-full h-full m-0 glass-card rounded-none shadow-xl border border-white/20 flex flex-col justify-center items-center">
-            <button
-              className="absolute top-2 right-2 text-vita-muted-foreground hover:text-vita-orange"
-              onClick={() => { setShowChat(false); setChatError(""); }}
-              aria-label="Cerrar chat"
-            >
-              ×
-            </button>
             <div className="p-6 w-full max-w-2xl mx-auto">
               <div className="flex items-center mb-4 gap-2">
                 <RobotIcon style={{ width: 32, height: 32 }} fill="#fff" />
                 <span className="font-bold text-2xl text-vita-orange">i-Vita</span>
               </div>
-              <div className="mb-4 text-vita-white/80 text-lg">
-                ¿En qué puedo ayudarte?
+              {/* Fila con texto y puerta de cierre alineada a la derecha */}
+              <div className="flex items-center justify-between mb-4">
+                <div className="text-vita-white/80 text-lg">¿En qué puedo ayudarte?</div>
+                <button
+                  className="flex items-center justify-center w-9 h-9 rounded-full bg-white/10 backdrop-blur-md border border-white/20 shadow hover:bg-white/20 transition focus:outline-none ml-2"
+                  onClick={() => { setShowChat(false); setChatError(""); }}
+                  aria-label="Cerrar chat"
+                >
+                  <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+                    <rect x="6" y="4" width="16" height="20" rx="4" fill="#f06340" />
+                    <rect x="10" y="10" width="8" height="8" rx="2" fill="#fff" />
+                    <rect x="18" y="12" width="2" height="8" rx="1" fill="#fff" />
+                    <circle cx="14" cy="14" r="1.5" fill="#f06340"/>
+                    <path d="M8 14h8" stroke="#fff" strokeWidth="2" strokeLinecap="round" />
+                  </svg>
+                </button>
               </div>
               {/* Sugerencias de ejemplo */}
               <div className="flex flex-wrap gap-2 mb-3">
