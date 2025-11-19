@@ -13,7 +13,7 @@ import { loadRememberMe } from '../lib/rememberMe';
 
 const Login = () => {
   const navigate = useNavigate();
-  const { login, authLoading } = useAuth();
+  const { login, authLoading, ready, access } = useAuth();
   const { toast } = useToast();
 
   // Estado de formulario
@@ -22,18 +22,28 @@ const Login = () => {
   const [keepSession, setKeepSession] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [formError, setFormError] = useState(null);
+  const [postLogin, setPostLogin] = useState(false);
 
   const formRef = useRef(null);
   const emailRef = useRef(null);
   const passwordRef = useRef(null);
 
-  // Modal cambio de contraseña (lo dejamos como estaba)
+  // Modal cambio de contraseña (lo mantenemos por si lo usas después)
   const [showChangePassword, setShowChangePassword] = useState(false);
   const [newPassword, setNewPassword] = useState('');
   const [newPasswordLoading, setNewPasswordLoading] = useState(false);
   const [newPasswordError, setNewPasswordError] = useState('');
 
-  // Cargar rememberMe (solo para rellenar email y flags, NO auto-login)
+  // Solo para depurar env, se puede quitar luego
+  useEffect(() => {
+    console.log('[ENV CHECK]', {
+      VITE_SUPABASE_URL: import.meta.env.VITE_SUPABASE_URL,
+      VITE_SUPABASE_ANON_KEY: (import.meta.env.VITE_SUPABASE_ANON_KEY || '').slice(0, 20) + '...',
+      VITE_API_BASE_URL: import.meta.env.VITE_API_BASE_URL,
+    });
+  }, []);
+
+  // Cargar rememberMe (RELLENAR, no auto-login)
   useEffect(() => {
     (async () => {
       try {
@@ -79,9 +89,8 @@ const Login = () => {
         description: 'Has iniciado sesión correctamente.',
       });
 
-      // De aquí te mando siempre al dashboard.
-      // ProtectedRoute y AuthContext se encargan de mandarte a /mi-plan si tu acceso no está activo.
-      navigate('/dashboard');
+      // Marcamos que ya hubo login exitoso, y esperamos a que AuthContext resuelva acceso
+      setPostLogin(true);
     } catch (error) {
       console.error('[Login] error de login:', error);
       let errorMessage = 'Credenciales incorrectas. Inténtalo de nuevo.';
@@ -101,7 +110,21 @@ const Login = () => {
     }
   };
 
-  // (Opcional) handler de cambio obligatorio de contraseña que ya tenías
+  // 🔥 Redirección DESPUÉS del login, cuando AuthContext ya resolvió access
+  useEffect(() => {
+    if (!postLogin) return;
+    if (!ready || authLoading) return;
+
+    console.log('[Login][postLogin] ready, access:', { ready, access });
+
+    if (access?.activo) {
+      navigate('/dashboard', { replace: true });
+    } else {
+      navigate('/mi-plan', { replace: true });
+    }
+  }, [postLogin, ready, authLoading, access, navigate]);
+
+  // Handler de cambio obligatorio de contraseña (lo dejamos tal cual)
   const handleChangePassword = async (e) => {
     e.preventDefault();
     setNewPasswordError('');
@@ -325,6 +348,6 @@ const Login = () => {
   );
 };
 
-export default Login;
-
 Login.displayName = 'Login';
+
+export default Login;
