@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Helmet } from 'react-helmet-async';
 import Layout from '../components/Layout';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/card';
@@ -7,7 +7,7 @@ import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabaseClient';
-import { uploadUserAvatar, uploadAvatarBlob, getAvatarUrlCached, clearAvatarUrlCache } from '@/lib/avatar';
+import { uploadAvatarBlob, getAvatarUrlCached, clearAvatarUrlCache } from '@/lib/avatar';
 import AvatarCropper from '../components/AvatarCropper';
 import { useToast } from '../components/ui/use-toast';
 import { LogOut, Save, Copy, Info, Camera, Edit } from 'lucide-react';
@@ -15,10 +15,87 @@ import { useNavigate } from 'react-router-dom';
 
 const Perfil = () => {
   const navigate = useNavigate();
-  const { user, access, ready, loading: authLoading } = useAuth();
+  const { user, access, ready, loading: authLoading, logout } = useAuth();
   const { toast } = useToast();
 
+  // All state declarations before any effects or returns
   const [profileLoading, setProfileLoading] = useState(true);
+  const [isEditing, setIsEditing] = useState(false);
+  const [loadingAccess, setLoadingAccess] = useState(false);
+  const [membership, setMembership] = useState({
+    acceso_activo: null,
+    membresia: null,
+    periodicidad: null,
+    estado_pago: null,
+    codigo_vita: null,
+  });
+  const [profileData, setProfileData] = useState({
+    name: '',
+    apellidoPaterno: '',
+    apellidoMaterno: '',
+    alias: '',
+    email: '',
+    phone: '',
+    curp: '',
+    birthDate: '',
+    avatarUrl: '',
+    bloodType: '',
+    sexo: ''
+  });
+  const [errors, setErrors] = useState({});
+  const fileInputRef = useRef(null);
+  const [cropperSrc, setCropperSrc] = useState(null);
+
+  // Memoized fetchMembership function
+  const fetchMembership = useCallback(async () => {
+    try {
+      setLoadingAccess(true);
+      const { data: u } = await supabase.auth.getUser();
+      const uid = u?.user?.id;
+      if (!uid) { setLoadingAccess(false); return; }
+      const { data, error } = await supabase
+        .from('profiles_certificado_v2')
+        .select('acceso_activo,membresia,periodicidad,estado_pago,codigo_vita,avatar_url')
+        .eq('user_id', uid)
+        .limit(1)
+        .single();
+      if (!error && data) setMembership({
+        acceso_activo: data.acceso_activo ?? null,
+        membresia: data.membresia ?? null,
+        periodicidad: data.periodicidad ?? null,
+        estado_pago: data.estado_pago ?? null,
+        codigo_vita: data.codigo_vita ?? null,
+      });
+      // Traer avatar firmado si existe
+      if (!error && data?.avatar_url) {
+        try {
+          const signed = await getAvatarUrlCached(data.avatar_url);
+          if (signed) setProfileData(prev => ({ ...prev, avatarUrl: signed }));
+        } catch {}
+      }
+    } finally {
+      setLoadingAccess(false);
+    }
+  }, []);
+
+  // Update user metadata function (simple inline implementation)
+  const updateUser = useCallback(async (profileData) => {
+    const { error } = await supabase.auth.updateUser({
+      data: {
+        name: profileData.name,
+        apellidoPaterno: profileData.apellidoPaterno,
+        apellidoMaterno: profileData.apellidoMaterno,
+        alias: profileData.alias,
+        phone: profileData.phone,
+        curp: profileData.curp,
+        birthDate: profileData.birthDate,
+        avatarUrl: profileData.avatarUrl,
+        bloodType: profileData.bloodType,
+        sexo: profileData.sexo
+      }
+    });
+    if (error) throw error;
+  }, []);
 
   useEffect(() => {
     if (!ready || authLoading) {
@@ -76,82 +153,10 @@ const Perfil = () => {
     };
   }, [ready, authLoading, user]);
 
-  console.log('[Perfil][render]', { ready, authLoading, hasUser: !!user, hasAccess: !!access, profileLoading });
-
-  if (!ready || authLoading || profileLoading) {
-    return <div>Cargando datos...</div>;
-  }
-
-  if (ready && !user) {
-    return (
-      <div>
-        Tu sesión ha expirado, entra de nuevo.
-        <button onClick={() => navigate('/login')}>Ir a Login</button>
-      </div>
-    );
-  }
-
-  const [isEditing, setIsEditing] = useState(false);
-  const [loadingAccess, setLoadingAccess] = useState(false);
-  const [membership, setMembership] = useState({
-    acceso_activo: null,
-    membresia: null,
-    periodicidad: null,
-    estado_pago: null,
-    codigo_vita: null,
-  });
-  const [profileData, setProfileData] = useState({
-    name: '',
-    apellidoPaterno: '',
-    apellidoMaterno: '',
-    alias: '',
-    email: '',
-    phone: '',
-    curp: '',
-    birthDate: '',
-    avatarUrl: '',
-    bloodType: '',
-    sexo: ''
-  });
-  const [errors, setErrors] = useState({});
-  const fileInputRef = useRef(null);
-  const [cropperSrc, setCropperSrc] = useState(null);
-
   useEffect(() => {
     // Cargar estado real de membresía desde Supabase (profiles_certificado_v2)
-    const fetchMembership = async () => {
-      try {
-        setLoadingAccess(true);
-        const { data: u } = await supabase.auth.getUser();
-        const uid = u?.user?.id;
-        if (!uid) { setLoadingAccess(false); return; }
-        const { data, error } = await supabase
-          .from('profiles_certificado_v2')
-          .select('acceso_activo,membresia,periodicidad,estado_pago,codigo_vita,avatar_url')
-          .eq('user_id', uid)
-          .limit(1)
-          .single();
-        if (!error && data) setMembership({
-          acceso_activo: data.acceso_activo ?? null,
-          membresia: data.membresia ?? null,
-          periodicidad: data.periodicidad ?? null,
-          estado_pago: data.estado_pago ?? null,
-          codigo_vita: data.codigo_vita ?? null,
-        });
-        // Traer avatar firmado si existe
-        if (!error && data?.avatar_url) {
-          try {
-            const signed = await getAvatarUrlCached(data.avatar_url);
-            if (signed) setProfileData(prev => ({ ...prev, avatarUrl: signed }));
-          } catch {}
-        }
-      } finally {
-        setLoadingAccess(false);
-      }
-    };
-
     fetchMembership();
-  }, []);
+  }, [fetchMembership]);
 
   // Cargar datos básicos del perfil desde public.profiles (incluye "sexo")
   useEffect(() => {
@@ -178,7 +183,7 @@ const Perfil = () => {
           }));
           setMembership(prev => ({
             ...prev,
-            codigo_vita: prev.codigo_vita ?? data.codigo_vita ?? prev.codigo_vita,
+            codigo_vita: data.codigo_vita ?? prev.codigo_vita,
           }));
         }
       } catch {
@@ -186,6 +191,21 @@ const Perfil = () => {
       }
     })();
   }, []);
+
+  console.log('[Perfil][render]', { ready, authLoading, hasUser: !!user, hasAccess: !!access, profileLoading });
+
+  if (!ready || authLoading || profileLoading) {
+    return <div>Cargando datos...</div>;
+  }
+
+  if (ready && !user) {
+    return (
+      <div>
+        Tu sesión ha expirado, entra de nuevo.
+        <button onClick={() => navigate('/login')}>Ir a Login</button>
+      </div>
+    );
+  }
 
   const validateField = (name, value) => {
     let error = '';
@@ -312,16 +332,6 @@ const Perfil = () => {
     navigator.clipboard.writeText(text);
     toast({ title: 'Copiado', description: 'El código ha sido copiado al portapapeles.' });
   };
-
-  if (authLoading || !access) {
-    return (
-      <div style={{ padding: 20, color: 'white' }}>
-        Cargando datos...
-      </div>
-    );
-  }
-
-  if (!user) return null;
 
   const Avatar = () => (
     <div className="relative w-24 h-24">
