@@ -18,8 +18,68 @@ const Perfil = () => {
   const { user, access, ready, loading: authLoading } = useAuth();
   const { toast } = useToast();
 
-  if (!ready) {
-    return <div>Cargando perfil…</div>;
+  const [profileLoading, setProfileLoading] = useState(true);
+
+  useEffect(() => {
+    if (!ready || authLoading) {
+      console.log('[Perfil][effect] Esperando ready y authLoading');
+      return;
+    }
+
+    if (!user) {
+      console.warn('[Perfil] No hay user, regreso a login');
+      setProfileLoading(false);
+      navigate('/login');
+      return;
+    }
+
+    setProfileLoading(true);
+    let isMounted = true;
+
+    const fetchProfileData = async () => {
+      try {
+        console.log('[Perfil][effect] disparando fetch de perfil para user', user?.id);
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('name,apellido_paterno,apellido_materno,alias,email,phone,curp,birthdate,avatar_url,blood_type,sexo')
+          .eq('user_id', user.id)
+          .maybeSingle();
+        if (!error && data) {
+          setProfileData({
+            name: data.name || user.user_metadata.name || '',
+            apellidoPaterno: data.apellido_paterno || user.user_metadata.apellidoPaterno || '',
+            apellidoMaterno: data.apellido_materno || user.user_metadata.apellidoMaterno || '',
+            alias: data.alias || user.user_metadata.alias || '',
+            email: data.email || user.email || '',
+            phone: data.phone || user.user_metadata.phone || '',
+            curp: data.curp || user.user_metadata.curp || '',
+            birthDate: data.birthdate || user.user_metadata.birthDate || '',
+            avatarUrl: data.avatar_url || user.user_metadata.avatarUrl || '',
+            bloodType: data.blood_type || user.user_metadata.bloodType || '',
+            sexo: data.sexo || user.user_metadata.sexo || ''
+          });
+          console.log('[Perfil][effect] perfil cargado OK');
+        }
+      } catch (error) {
+        console.error('[Perfil] Error cargando perfil', error);
+      } finally {
+        if (isMounted) {
+          setProfileLoading(false);
+        }
+      }
+    };
+
+    fetchProfileData();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [ready, authLoading, user]);
+
+  console.log('[Perfil][render]', { ready, authLoading, hasUser: !!user, hasAccess: !!access, profileLoading });
+
+  if (!ready || authLoading || profileLoading) {
+    return <div>Cargando datos...</div>;
   }
 
   if (ready && !user) {
@@ -56,40 +116,6 @@ const Perfil = () => {
   const [errors, setErrors] = useState({});
   const fileInputRef = useRef(null);
   const [cropperSrc, setCropperSrc] = useState(null);
-  const [profileLoading, setProfileLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchProfileData = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('name,apellido_paterno,apellido_materno,alias,email,phone,curp,birthdate,avatar_url,blood_type,sexo')
-          .eq('user_id', user.id)
-          .maybeSingle();
-        if (!error && data) {
-          setProfileData({
-            name: data.name || user.user_metadata.name || '',
-            apellidoPaterno: data.apellido_paterno || user.user_metadata.apellidoPaterno || '',
-            apellidoMaterno: data.apellido_materno || user.user_metadata.apellidoMaterno || '',
-            alias: data.alias || user.user_metadata.alias || '',
-            email: data.email || user.email || '',
-            phone: data.phone || user.user_metadata.phone || '',
-            curp: data.curp || user.user_metadata.curp || '',
-            birthDate: data.birthdate || user.user_metadata.birthDate || '',
-            avatarUrl: data.avatar_url || user.user_metadata.avatarUrl || '',
-            bloodType: data.blood_type || user.user_metadata.bloodType || '',
-            sexo: data.sexo || user.user_metadata.sexo || ''
-          });
-        }
-      } catch (error) {
-        console.error('[Perfil] error al cargar datos:', error);
-      } finally {
-        setProfileLoading(false);
-      }
-    };
-
-    fetchProfileData();
-  }, [user]);
 
   useEffect(() => {
     // Cargar estado real de membresía desde Supabase (profiles_certificado_v2)
@@ -330,10 +356,6 @@ const Perfil = () => {
       {children} <span className="text-red-400">*</span>
     </Label>
   );
-
-  if (profileLoading) {
-    return <div>Cargando datos del perfil…</div>;
-  }
 
   return (
     <>
