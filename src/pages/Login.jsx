@@ -70,7 +70,7 @@ const Login = () => {
     setFormError(null);
 
     try {
-      console.log('[Login] intento de login con', formData.email);
+      // if (DEBUG_AUTH) console.log('[Login] intento de login con', formData.email);
       await login(formData.email, formData.password);
 
       // Guardar flags de rememberMe si corresponde

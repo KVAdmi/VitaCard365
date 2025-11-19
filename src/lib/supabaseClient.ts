@@ -15,8 +15,9 @@ export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
   },
 });
 
-// DEBUG: expone instancia en window (quitar en producción si no se necesita)
-if (typeof window !== 'undefined') {
+import { DEBUG_AUTH } from '@/config/debug';
+if (typeof window !== 'undefined' && DEBUG_AUTH) {
   // @ts-ignore
   window.supabase = supabase;
+  console.log('[supabaseClient] instancia expuesta (DEBUG_AUTH)');
 }

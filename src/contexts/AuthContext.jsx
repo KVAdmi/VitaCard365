@@ -105,26 +105,25 @@ export function AuthProvider({ children }) {
   }, []);
 
   const fetchAccess = async (userId) => {
-    console.log('[AuthContext][fetchAccess] userId:', userId);
+    if (DEBUG_AUTH) console.log('[AuthContext][fetchAccess] userId:', userId);
     try {
       const { data: perfil, error } = await supabase
-        .from('profiles_certificado_v2')
-        .select('acceso_activo, estado_pago, membresia')
+        .from('profiles')
+        .select('acceso_activo, estado_pago')
         .eq('user_id', userId)
         .maybeSingle();
 
       if (error) {
         console.error('[AuthContext][fetchAccess][error]', error);
-        console.warn('[AuthContext][fetchAccess] conservo último estado');
+        if (DEBUG_AUTH) console.warn('[AuthContext][fetchAccess] conservo último estado');
         return;
       }
 
       const accesoActivo = !!perfil?.acceso_activo;
-      console.log('[AuthContext][fetchAccess][ok] acceso_activo:', accesoActivo);
+      if (DEBUG_AUTH) console.log('[AuthContext][fetchAccess][ok] acceso_activo:', accesoActivo);
       const newAccess = {
         activo: accesoActivo,
-        estado_pago: perfil?.estado_pago,
-        membresia: perfil?.membresia
+        estado_pago: perfil?.estado_pago || null
       };
       setAccess(newAccess);
 
@@ -132,7 +131,7 @@ export function AuthProvider({ children }) {
       await Preferences.set({ key: 'access_state', value: JSON.stringify(newAccess) });
     } catch (err) {
       console.error('[AuthContext][fetchAccess][catch]', err);
-      console.warn('[AuthContext][fetchAccess] conservo último estado');
+      if (DEBUG_AUTH) console.warn('[AuthContext][fetchAccess] conservo último estado');
     }
   };
 
