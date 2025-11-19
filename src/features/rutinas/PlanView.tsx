@@ -88,19 +88,19 @@ export default function PlanView() {
       .select('rutina_id,ejercicio_id,series,reps,tiempo_seg,descanso_seg')
       .in('rutina_id', ids.length ? ids : ['__none__']);
 
-    const exIds = Array.from(new Set((detalle??[]).map(d=>d.ejercicio_id)));
+    const exIds = Array.from(new Set((detalle ?? []).map((d: { ejercicio_id: string }) => d.ejercicio_id)));
     let nombres = new Map<string,string>();
     if (exIds.length) {
       const { data: ex } = await supabase
         .from('ejercicios').select('id,nombre').in('id', exIds);
-      nombres = new Map((ex ?? []).map(e => [e.id, e.nombre]));
+      nombres = new Map((ex ?? []).map((e: { id: string; nombre: string }) => [e.id, e.nombre]));
     }
 
     const out: RutinaDia[] = (rutinas ?? []).map((r:any) => ({
       ...r,
       items: (detalle ?? [])
-        .filter(d => d.rutina_id === r.id)
-        .map(d => ({ ...d, nombre: nombres.get(d.ejercicio_id) ?? d.ejercicio_id }))
+        .filter((d: { rutina_id: string }) => d.rutina_id === r.id)
+        .map((d: { ejercicio_id: string; nombre?: string }) => ({ ...d, nombre: nombres.get(d.ejercicio_id) ?? d.ejercicio_id }))
     }));
     setDias(out);
     // Marcas locales: evitar duplicar "hecho" el mismo día
@@ -155,6 +155,54 @@ export default function PlanView() {
       console.error(e);
       alert('No pudimos guardar tu progreso. Inténtalo de nuevo.');
     }
+  };
+
+  // Function to mark a routine as completed and persist it in Supabase
+  const markRoutineAsCompleted = async (userId: string, rutinaId: string): Promise<void> => {
+    try {
+      const { error } = await supabase
+        .from('rutinas_completadas')
+        .insert({
+          user_id: userId,
+          rutina_id: rutinaId,
+          fecha_completada: new Date().toISOString(),
+        });
+
+      if (error) {
+        console.error('Error saving completed routine to Supabase:', error);
+      } else {
+        console.log('Routine marked as completed in Supabase:', rutinaId);
+      }
+    } catch (err) {
+      console.error('Unexpected error marking routine as completed:', err);
+    }
+  };
+
+  // Function to synchronize completed routines from Supabase
+  const syncCompletedRoutines = async (userId: string): Promise<string[]> => {
+    try {
+      const { data, error } = await supabase
+        .from('rutinas_completadas')
+        .select('rutina_id')
+        .eq('user_id', userId);
+
+      if (error) {
+        console.error('Error fetching completed routines from Supabase:', error);
+        return [];
+      }
+
+      return data.map((entry: { rutina_id: string }) => entry.rutina_id);
+    } catch (err) {
+      console.error('Unexpected error fetching completed routines:', err);
+      return [];
+    }
+  };
+
+  // Example usage: Mark a routine as completed and sync state
+  const handleRoutineCompletion = async (userId: string, rutinaId: string): Promise<void> => {
+    await markRoutineAsCompleted(userId, rutinaId);
+    const completedRoutines = await syncCompletedRoutines(userId);
+    console.log('Synchronized completed routines:', completedRoutines);
   };
 
   if (loading) return <Layout title="Mi Plan" showBackButton><div className="p-4">Cargando…</div></Layout>;
