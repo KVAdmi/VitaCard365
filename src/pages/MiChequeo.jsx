@@ -29,7 +29,7 @@ import { Line } from 'react-chartjs-2';
 
 import { triageTests, levelCopy } from '../lib/triageEngine';
 import { useAuth } from '../contexts/AuthContext';
-import { supabase } from '../lib/supabaseClient';
+import { supabase } from '@/lib/supabaseClient';
 // Sleep module totalmente desactivado en UI
 
 ChartJS.register(

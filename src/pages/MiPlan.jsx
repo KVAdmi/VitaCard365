@@ -1,7 +1,7 @@
 // src/pages/MiPlan.jsx
 import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from '../lib/supabaseClient';
+import { supabase } from '@/lib/supabaseClient';
 
 // Simulación de datos de plan y familiares (reemplaza por fetch real/Supabase)
 const mockPlan = {

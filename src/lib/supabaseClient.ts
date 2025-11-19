@@ -1,17 +1,16 @@
+
 import { createClient } from '@supabase/supabase-js';
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
-  throw new Error('Supabase mal configurado: faltan variables de entorno');
+  throw new Error('Faltan VITE_SUPABASE_URL o VITE_SUPABASE_ANON_KEY en el entorno.');
 }
 
 export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
   auth: {
-    flowType: 'pkce',
-    autoRefreshToken: true,
     persistSession: true,
-    detectSessionInUrl: false,
+    autoRefreshToken: true,
   },
 });

@@ -3,7 +3,7 @@
 import { useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../contexts/AuthContext';
-import { supabase } from '../lib/supabaseClient';
+import { supabase } from '@/lib/supabaseClient';
 
 export default function AuthCallback() {
   const { setSession, setAccess, setIsReturningFromOAuth } = useContext(AuthContext);
