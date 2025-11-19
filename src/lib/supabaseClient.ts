@@ -14,3 +14,9 @@ export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
     autoRefreshToken: true,
   },
 });
+
+// DEBUG: expone instancia en window (quitar en producción si no se necesita)
+if (typeof window !== 'undefined') {
+  // @ts-ignore
+  window.supabase = supabase;
+}
