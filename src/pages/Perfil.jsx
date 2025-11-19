@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Helmet } from 'react-helmet-async';
 import Layout from '../components/Layout';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/card';
@@ -7,35 +7,93 @@ import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabaseClient';
-import { uploadUserAvatar, uploadAvatarBlob, getAvatarUrlCached, clearAvatarUrlCache } from '@/lib/avatar';
+import { uploadAvatarBlob, getAvatarUrlCached, clearAvatarUrlCache } from '@/lib/avatar';
 import AvatarCropper from '../components/AvatarCropper';
 import { useToast } from '../components/ui/use-toast';
 import { LogOut, Save, Copy, Info, Camera, Edit } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 const Perfil = () => {
+  // Hooks de librerías / contextos
   const navigate = useNavigate();
-  const { user, access, ready, loading: authLoading } = useAuth();
+  const { user, access, ready, loading: authLoading, updateUser, logout } = useAuth();
   const { toast } = useToast();
 
+  // Estados (todos arriba, antes de cualquier efecto o return)
   const [profileLoading, setProfileLoading] = useState(true);
+  const [isEditing, setIsEditing] = useState(false);
+  const [loadingAccess, setLoadingAccess] = useState(false);
+  const [membership, setMembership] = useState({
+    acceso_activo: null,
+    membresia: null,
+    periodicidad: null,
+    estado_pago: null,
+    codigo_vita: null,
+  });
+  const [profileData, setProfileData] = useState({
+    name: '',
+    apellidoPaterno: '',
+    apellidoMaterno: '',
+    alias: '',
+    email: '',
+    phone: '',
+    curp: '',
+    birthDate: '',
+    avatarUrl: '',
+    bloodType: '',
+    sexo: ''
+  });
+  const [errors, setErrors] = useState({});
+  const fileInputRef = useRef(null);
+  const [cropperSrc, setCropperSrc] = useState(null);
 
+  // fetchMembership extraída y memorizada
+  const fetchMembership = useCallback(async () => {
+    try {
+      setLoadingAccess(true);
+      const { data: u } = await supabase.auth.getUser();
+      const uid = u?.user?.id;
+      if (!uid) { setLoadingAccess(false); return; }
+      const { data, error } = await supabase
+        .from('profiles_certificado_v2')
+        .select('acceso_activo,membresia,periodicidad,estado_pago,codigo_vita,avatar_url')
+        .eq('user_id', uid)
+        .limit(1)
+        .single();
+      if (!error && data) {
+        setMembership({
+          acceso_activo: data.acceso_activo ?? null,
+          membresia: data.membresia ?? null,
+          periodicidad: data.periodicidad ?? null,
+          estado_pago: data.estado_pago ?? null,
+          codigo_vita: data.codigo_vita ?? null,
+        });
+      }
+      if (!error && data?.avatar_url) {
+        try {
+          const signed = await getAvatarUrlCached(data.avatar_url);
+          if (signed) setProfileData(prev => ({ ...prev, avatarUrl: signed }));
+        } catch {}
+      }
+    } finally {
+      setLoadingAccess(false);
+    }
+  }, [supabase, setLoadingAccess, setProfileData, getAvatarUrlCached]);
+
+  // Efecto de carga inicial de perfil
   useEffect(() => {
     if (!ready || authLoading) {
       console.log('[Perfil][effect] Esperando ready y authLoading');
       return;
     }
-
     if (!user) {
       console.warn('[Perfil] No hay user, regreso a login');
       setProfileLoading(false);
       navigate('/login');
       return;
     }
-
     setProfileLoading(true);
     let isMounted = true;
-
     const fetchProfileData = async () => {
       try {
         console.log('[Perfil][effect] disparando fetch de perfil para user', user?.id);
@@ -63,97 +121,17 @@ const Perfil = () => {
       } catch (error) {
         console.error('[Perfil] Error cargando perfil', error);
       } finally {
-        if (isMounted) {
-          setProfileLoading(false);
-        }
+        if (isMounted) setProfileLoading(false);
       }
     };
-
     fetchProfileData();
+    return () => { isMounted = false; };
+  }, [ready, authLoading, user, supabase, navigate]);
 
-    return () => {
-      isMounted = false;
-    };
-  }, [ready, authLoading, user]);
+  // Efecto carga membresía separado
+  useEffect(() => { fetchMembership(); }, [fetchMembership]);
 
-  console.log('[Perfil][render]', { ready, authLoading, hasUser: !!user, hasAccess: !!access, profileLoading });
-
-  if (!ready || authLoading || profileLoading) {
-    return <div>Cargando datos...</div>;
-  }
-
-  if (ready && !user) {
-    return (
-      <div>
-        Tu sesión ha expirado, entra de nuevo.
-        <button onClick={() => navigate('/login')}>Ir a Login</button>
-      </div>
-    );
-  }
-
-  const [isEditing, setIsEditing] = useState(false);
-  const [loadingAccess, setLoadingAccess] = useState(false);
-  const [membership, setMembership] = useState({
-    acceso_activo: null,
-    membresia: null,
-    periodicidad: null,
-    estado_pago: null,
-    codigo_vita: null,
-  });
-  const [profileData, setProfileData] = useState({
-    name: '',
-    apellidoPaterno: '',
-    apellidoMaterno: '',
-    alias: '',
-    email: '',
-    phone: '',
-    curp: '',
-    birthDate: '',
-    avatarUrl: '',
-    bloodType: '',
-    sexo: ''
-  });
-  const [errors, setErrors] = useState({});
-  const fileInputRef = useRef(null);
-  const [cropperSrc, setCropperSrc] = useState(null);
-
-  useEffect(() => {
-    // Cargar estado real de membresía desde Supabase (profiles_certificado_v2)
-    const fetchMembership = async () => {
-      try {
-        setLoadingAccess(true);
-        const { data: u } = await supabase.auth.getUser();
-        const uid = u?.user?.id;
-        if (!uid) { setLoadingAccess(false); return; }
-        const { data, error } = await supabase
-          .from('profiles_certificado_v2')
-          .select('acceso_activo,membresia,periodicidad,estado_pago,codigo_vita,avatar_url')
-          .eq('user_id', uid)
-          .limit(1)
-          .single();
-        if (!error && data) setMembership({
-          acceso_activo: data.acceso_activo ?? null,
-          membresia: data.membresia ?? null,
-          periodicidad: data.periodicidad ?? null,
-          estado_pago: data.estado_pago ?? null,
-          codigo_vita: data.codigo_vita ?? null,
-        });
-        // Traer avatar firmado si existe
-        if (!error && data?.avatar_url) {
-          try {
-            const signed = await getAvatarUrlCached(data.avatar_url);
-            if (signed) setProfileData(prev => ({ ...prev, avatarUrl: signed }));
-          } catch {}
-        }
-      } finally {
-        setLoadingAccess(false);
-      }
-    };
-
-    fetchMembership();
-  }, []);
-
-  // Cargar datos básicos del perfil desde public.profiles (incluye "sexo")
+  // Efecto que sincroniza datos básicos del perfil
   useEffect(() => {
     (async () => {
       try {
@@ -168,7 +146,6 @@ const Perfil = () => {
         if (!error && data) {
           setProfileData(prev => ({
             ...prev,
-            // Prefiere valores del servidor si existen
             name: prev.name || data.name || '',
             apellidoPaterno: prev.apellidoPaterno || data.apellido_paterno || '',
             apellidoMaterno: prev.apellidoMaterno || data.apellido_materno || '',
@@ -185,8 +162,26 @@ const Perfil = () => {
         // Silenciar errores de carga inicial
       }
     })();
-  }, []);
+  }, [supabase]);
 
+  console.log('[Perfil][render]', { ready, authLoading, hasUser: !!user, hasAccess: !!access, profileLoading });
+
+  // Guardias
+  if (!ready || authLoading || profileLoading) return <div>Cargando datos...</div>;
+  if (ready && !user) {
+    return (
+      <div>
+        Tu sesión ha expirado, entra de nuevo.
+        <button onClick={() => navigate('/login')}>Ir a Login</button>
+      </div>
+    );
+  }
+  if (authLoading || !access) {
+    return <div style={{ padding: 20, color: 'white' }}>Cargando datos...</div>;
+  }
+  if (!user) return null;
+
+  // Helpers
   const validateField = (name, value) => {
     let error = '';
     if ((name === 'name' || name === 'apellidoPaterno') && isEditing && !value) {
@@ -215,7 +210,6 @@ const Perfil = () => {
   const handleAvatarChange = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    // Abrir cropper con la imagen seleccionada
     const reader = new FileReader();
     reader.onload = () => setCropperSrc(reader.result);
     reader.readAsDataURL(file);
@@ -223,31 +217,12 @@ const Perfil = () => {
 
   const handleSave = async () => {
     let validationErrors = { ...errors };
-    if (!profileData.name) {
-      validationErrors.name = 'Requerido';
-    } else {
-      validationErrors.name = '';
-    }
-    if (!profileData.apellidoPaterno) {
-      validationErrors.apellidoPaterno = 'Requerido';
-    } else {
-      validationErrors.apellidoPaterno = '';
-    }
-    if (!profileData.phone || profileData.phone.length !== 10) {
-      validationErrors.phone = 'El teléfono debe tener 10 dígitos.';
-    } else {
-      validationErrors.phone = '';
-    }
-    if (!profileData.bloodType || profileData.bloodType.trim().length < 2) {
-      validationErrors.bloodType = 'El tipo de sangre es obligatorio';
-    } else {
-      validationErrors.bloodType = '';
-    }
-    if (!profileData.sexo || !['Masculino','Femenino'].includes(profileData.sexo)) {
-      validationErrors.sexo = 'Selecciona Masculino o Femenino.';
-    } else {
-      validationErrors.sexo = '';
-    }
+    if (!profileData.name) validationErrors.name = 'Requerido'; else validationErrors.name = '';
+    if (!profileData.apellidoPaterno) validationErrors.apellidoPaterno = 'Requerido'; else validationErrors.apellidoPaterno = '';
+    if (!profileData.phone || profileData.phone.length !== 10) validationErrors.phone = 'El teléfono debe tener 10 dígitos.'; else validationErrors.phone = '';
+    if (!profileData.bloodType || profileData.bloodType.trim().length < 2) validationErrors.bloodType = 'El tipo de sangre es obligatorio'; else validationErrors.bloodType = '';
+    if (!profileData.sexo || !['Masculino','Femenino'].includes(profileData.sexo)) validationErrors.sexo = 'Selecciona Masculino o Femenino.'; else validationErrors.sexo = '';
+
     const hasErrors = Object.values(validationErrors).some(e => e !== '');
     if (hasErrors) {
       setErrors(validationErrors);
@@ -261,9 +236,7 @@ const Perfil = () => {
     setErrors(validationErrors);
 
     try {
-      // 1) Persistir en auth.user_metadata para mantener consistencia en cliente
       await updateUser(profileData);
-      // 2) Persistir en tabla profiles (incluye sexo)
       try {
         const { data: u } = await supabase.auth.getUser();
         const uid = u?.user?.id;
@@ -280,8 +253,7 @@ const Perfil = () => {
             sexo: profileData.sexo || null,
           }).eq('user_id', uid);
 
-          // Si no existe el registro, realizar upsert mínimo para crear sexo (sin tocar otras columnas)
-          if (updErr && status === 406 /* Not Acceptable from PostgREST on update without match */) {
+          if (updErr && status === 406) {
             await supabase.from('profiles').upsert({
               user_id: uid,
               name: profileData.name || null,
@@ -294,54 +266,44 @@ const Perfil = () => {
         }
       } catch {}
       setIsEditing(false);
-      toast({
-        title: '¡Éxito!',
-        description: 'Tu perfil ha sido actualizado.',
-      });
+      toast({ title: '¡Éxito!', description: 'Tu perfil ha sido actualizado.' });
     } catch (error) {
-       toast({
+      toast({
         title: 'Error al actualizar',
         description: 'No se pudo guardar tu perfil. Inténtalo de nuevo.',
         variant: 'destructive'
       });
     }
   };
-  
+
   const copyToClipboard = (text) => {
     if (!text) return;
     navigator.clipboard.writeText(text);
     toast({ title: 'Copiado', description: 'El código ha sido copiado al portapapeles.' });
   };
 
-  if (authLoading || !access) {
-    return (
-      <div style={{ padding: 20, color: 'white' }}>
-        Cargando datos...
-      </div>
-    );
-  }
-
-  if (!user) return null;
-
+  // Componentes internos
   const Avatar = () => (
     <div className="relative w-24 h-24">
       <div className="w-24 h-24 bg-vita-orange rounded-full flex items-center justify-center overflow-hidden">
         {(profileData.avatarUrl && /^https?:\/\//i.test(profileData.avatarUrl)) ? (
           <img src={profileData.avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
         ) : (
-          <span className="text-white text-4xl font-bold">{(profileData.alias || profileData.name)?.charAt(0)?.toUpperCase() || 'U'}</span>
+          <span className="text-white text-4xl font-bold">
+            {(profileData.alias || profileData.name)?.charAt(0)?.toUpperCase() || 'U'}
+          </span>
         )}
       </div>
       {isEditing && (
         <Button
           size="icon"
           className="absolute bottom-0 right-0 w-8 h-8 rounded-full bg-vita-blue border-2 border-vita-orange"
-          onClick={() => fileInputRef.current.click()}
+          onClick={() => fileInputRef.current?.click()}
         >
           <Camera className="h-4 w-4 text-vita-orange" />
         </Button>
       )}
-       <input
+      <input
         type="file"
         ref={fileInputRef}
         onChange={handleAvatarChange}
@@ -350,7 +312,7 @@ const Perfil = () => {
       />
     </div>
   );
-  
+
   const FieldLabel = ({ htmlFor, children }) => (
     <Label htmlFor={htmlFor}>
       {children} <span className="text-red-400">*</span>
@@ -369,7 +331,10 @@ const Perfil = () => {
           {cropperSrc && (
             <AvatarCropper
               src={cropperSrc}
-              onCancel={() => { setCropperSrc(null); if (fileInputRef.current) fileInputRef.current.value = ''; }}
+              onCancel={() => {
+                setCropperSrc(null);
+                if (fileInputRef.current) fileInputRef.current.value = '';
+              }}
               onConfirm={async (blob) => {
                 try {
                   const res = await uploadAvatarBlob(blob, { table: 'profiles' });
@@ -381,16 +346,25 @@ const Perfil = () => {
                   if (fileInputRef.current) fileInputRef.current.value = '';
                   fetchMembership();
                 } catch (err) {
-                  toast({ title: 'Error al subir', description: err.message || 'Intenta de nuevo', variant: 'destructive' });
+                  toast({
+                    title: 'Error al subir',
+                    description: err.message || 'Intenta de nuevo',
+                    variant: 'destructive'
+                  });
                 }
               }}
             />
           )}
+
           <Card>
             <CardContent className="p-6 flex items-center space-x-4">
               <Avatar />
               <div>
-                <h2 className="text-xl font-bold text-vita-white">{[profileData.name, profileData.apellidoPaterno, profileData.apellidoMaterno].filter(Boolean).join(' ') || profileData.name}</h2>
+                <h2 className="text-xl font-bold text-vita-white">
+                  {[profileData.name, profileData.apellidoPaterno, profileData.apellidoMaterno]
+                    .filter(Boolean)
+                    .join(' ') || profileData.name}
+                </h2>
                 <p className="text-vita-muted-foreground">{profileData.email}</p>
                 <p className="text-sm text-vita-orange font-semibold mt-1">
                   Folio VitaCard: {membership.codigo_vita || user.user_metadata?.vita_card_id || '—'}
@@ -399,14 +373,18 @@ const Perfil = () => {
             </CardContent>
           </Card>
 
-          {/* Estado de Membresía (datos reales de Supabase) */}
           <Card>
             <CardHeader className="flex flex-row items-center justify-between gap-3">
               <div>
                 <CardTitle>Membresía</CardTitle>
                 <CardDescription>Estado real de tu acceso</CardDescription>
               </div>
-              <Button variant="outline" size="sm" onClick={fetchMembership} disabled={loadingAccess}>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={fetchMembership}
+                disabled={loadingAccess}
+              >
                 {loadingAccess ? 'Actualizando…' : 'Refrescar'}
               </Button>
             </CardHeader>
@@ -418,7 +396,9 @@ const Perfil = () => {
                 Plan: {(membership.membresia || '—')} · {(membership.periodicidad || '—')} · {(membership.estado_pago || '—')}
               </p>
               <p>
-                Folio: <span className="font-semibold">{membership.codigo_vita || user.user_metadata?.vita_card_id || '—'}</span>
+                Folio: <span className="font-semibold">
+                  {membership.codigo_vita || user.user_metadata?.vita_card_id || '—'}
+                </span>
               </p>
             </CardContent>
           </Card>
@@ -429,14 +409,26 @@ const Perfil = () => {
                 <CardTitle>Información del Plan</CardTitle>
               </CardHeader>
               <CardContent className="space-y-2 text-sm text-white/90">
-                <p>Próximo pago: <span className="font-bold">{new Date(user.user_metadata.paymentDetails.nextPaymentDate).toLocaleDateString()}</span></p>
-                <p>Monto: <span className="font-bold">${user.user_metadata.paymentDetails.totalAmount} MXN</span></p>
+                <p>
+                  Próximo pago:{' '}
+                  <span className="font-bold">
+                    {new Date(user.user_metadata.paymentDetails.nextPaymentDate).toLocaleDateString()}
+                  </span>
+                </p>
+                <p>
+                  Monto:{' '}
+                  <span className="font-bold">
+                    ${user.user_metadata.paymentDetails.totalAmount} MXN
+                  </span>
+                </p>
                 {user.user_metadata.familyId && (
                   <div className="pt-2">
                     <Label>Código Familiar para compartir</Label>
                     <div className="flex items-center gap-2 mt-1">
                       <Input value={user.user_metadata.familyId} readOnly />
-                      <Button size="icon" onClick={() => copyToClipboard(user.user_metadata.familyId)}><Copy className="h-4 w-4"/></Button>
+                      <Button size="icon" onClick={() => copyToClipboard(user.user_metadata.familyId)}>
+                        <Copy className="h-4 w-4" />
+                      </Button>
                     </div>
                   </div>
                 )}
@@ -448,30 +440,63 @@ const Perfil = () => {
             <CardHeader>
               <CardTitle>Información Personal</CardTitle>
               <CardDescription className="flex items-center gap-2 text-yellow-400">
-                <Info className="h-4 w-4"/>
+                <Info className="h-4 w-4" />
                 {isEditing ? 'Ingresa tus datos reales para generar tu póliza.' : 'Tus datos personales.'}
               </CardDescription>
-              {isEditing && <p className="text-xs text-vita-muted-foreground pt-2"><span className="text-red-400">*</span> Campo obligatorio</p>}
+              {isEditing && (
+                <p className="text-xs text-vita-muted-foreground pt-2">
+                  <span className="text-red-400">*</span> Campo obligatorio
+                </p>
+              )}
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="alias">Alias (cómo te saludamos)</Label>
-                <Input id="alias" name="alias" value={profileData.alias} onChange={handleInputChange} disabled={!isEditing} placeholder="Ej: Paty" />
+                <Input
+                  id="alias"
+                  name="alias"
+                  value={profileData.alias}
+                  onChange={handleInputChange}
+                  disabled={!isEditing}
+                  placeholder="Ej: Paty"
+                />
               </div>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="space-y-2">
                   <FieldLabel htmlFor="name">Nombre(s)</FieldLabel>
-                  <Input id="name" name="name" value={profileData.name} onChange={handleInputChange} disabled={!isEditing} required />
+                  <Input
+                    id="name"
+                    name="name"
+                    value={profileData.name}
+                    onChange={handleInputChange}
+                    disabled={!isEditing}
+                    required
+                  />
                   {errors.name && <p className="text-xs text-red-400">{errors.name}</p>}
                 </div>
                 <div className="space-y-2">
                   <FieldLabel htmlFor="apellidoPaterno">Apellido Paterno</FieldLabel>
-                  <Input id="apellidoPaterno" name="apellidoPaterno" value={profileData.apellidoPaterno} onChange={handleInputChange} disabled={!isEditing} required />
-                  {errors.apellidoPaterno && <p className="text-xs text-red-400">{errors.apellidoPaterno}</p>}
+                  <Input
+                    id="apellidoPaterno"
+                    name="apellidoPaterno"
+                    value={profileData.apellidoPaterno}
+                    onChange={handleInputChange}
+                    disabled={!isEditing}
+                    required
+                  />
+                  {errors.apellidoPaterno && (
+                    <p className="text-xs text-red-400">{errors.apellidoPaterno}</p>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <FieldLabel htmlFor="apellidoMaterno">Apellido Materno</FieldLabel>
-                  <Input id="apellidoMaterno" name="apellidoMaterno" value={profileData.apellidoMaterno} onChange={handleInputChange} disabled={!isEditing} />
+                  <Input
+                    id="apellidoMaterno"
+                    name="apellidoMaterno"
+                    value={profileData.apellidoMaterno}
+                    onChange={handleInputChange}
+                    disabled={!isEditing}
+                  />
                 </div>
               </div>
               <div className="space-y-2">
@@ -481,18 +506,44 @@ const Perfil = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <FieldLabel htmlFor="phone">Teléfono</FieldLabel>
-                  <Input id="phone" name="phone" value={profileData.phone} onChange={handleInputChange} disabled={!isEditing} placeholder="10 dígitos" maxLength="10" required />
+                  <Input
+                    id="phone"
+                    name="phone"
+                    value={profileData.phone}
+                    onChange={handleInputChange}
+                    disabled={!isEditing}
+                    placeholder="10 dígitos"
+                    maxLength="10"
+                    required
+                  />
                   {errors.phone && <p className="text-xs text-red-400">{errors.phone}</p>}
                 </div>
                 <div className="space-y-2">
                   <FieldLabel htmlFor="curp">CURP</FieldLabel>
-                  <Input id="curp" name="curp" value={profileData.curp} onChange={handleInputChange} disabled={!isEditing} placeholder="18 caracteres" maxLength="18" required />
+                  <Input
+                    id="curp"
+                    name="curp"
+                    value={profileData.curp}
+                    onChange={handleInputChange}
+                    disabled={!isEditing}
+                    placeholder="18 caracteres"
+                    maxLength="18"
+                    required
+                  />
                   {errors.curp && <p className="text-xs text-red-400">{errors.curp}</p>}
                 </div>
               </div>
               <div className="space-y-2">
                 <FieldLabel htmlFor="birthDate">Fecha de Nacimiento</FieldLabel>
-                <Input id="birthDate" name="birthDate" type="date" value={profileData.birthDate} onChange={handleInputChange} disabled={!isEditing} required />
+                <Input
+                  id="birthDate"
+                  name="birthDate"
+                  type="date"
+                  value={profileData.birthDate}
+                  onChange={handleInputChange}
+                  disabled={!isEditing}
+                  required
+                />
               </div>
               <div className="space-y-2">
                 <FieldLabel htmlFor="sexo">Sexo</FieldLabel>
@@ -527,18 +578,30 @@ const Perfil = () => {
                 />
                 {errors.bloodType && <p className="text-xs text-red-400">{errors.bloodType}</p>}
               </div>
-              
+
               {isEditing ? (
-                <Button onClick={handleSave} className="w-full"><Save className="mr-2 h-4 w-4" /> Guardar Cambios</Button>
+                <Button onClick={handleSave} className="w-full">
+                  <Save className="mr-2 h-4 w-4" /> Guardar Cambios
+                </Button>
               ) : (
-                <Button onClick={() => setIsEditing(true)} variant="outline" className="w-full"><Edit className="mr-2 h-4 w-4" />Editar Perfil</Button>
+                <Button
+                  onClick={() => setIsEditing(true)}
+                  variant="outline"
+                  className="w-full"
+                >
+                  <Edit className="mr-2 h-4 w-4" />Editar Perfil
+                </Button>
               )}
             </CardContent>
           </Card>
 
           <Card>
             <CardContent className="p-4">
-              <Button variant="destructive" className="w-full bg-red-500/20 text-red-400 hover:bg-red-500/30" onClick={logout}>
+              <Button
+                variant="destructive"
+                className="w-full bg-red-500/20 text-red-400 hover:bg-red-500/30"
+                onClick={logout}
+              >
                 <LogOut className="h-4 w-4 mr-2" /> Cerrar Sesión
               </Button>
             </CardContent>
