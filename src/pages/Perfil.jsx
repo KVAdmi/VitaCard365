@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../co
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabaseClient';
 import { uploadUserAvatar, uploadAvatarBlob, getAvatarUrlCached, clearAvatarUrlCache } from '@/lib/avatar';
 import AvatarCropper from '../components/AvatarCropper';
@@ -15,9 +15,22 @@ import { useNavigate } from 'react-router-dom';
 
 const Perfil = () => {
   const navigate = useNavigate();
-  const { access, user, logout, updateUser, loading } = useAuth();
+  const { user, access, ready, loading: authLoading } = useAuth();
   const { toast } = useToast();
-  
+
+  if (!ready) {
+    return <div>Cargando perfil…</div>;
+  }
+
+  if (ready && !user) {
+    return (
+      <div>
+        Tu sesión ha expirado, entra de nuevo.
+        <button onClick={() => navigate('/login')}>Ir a Login</button>
+      </div>
+    );
+  }
+
   const [isEditing, setIsEditing] = useState(false);
   const [loadingAccess, setLoadingAccess] = useState(false);
   const [membership, setMembership] = useState({
@@ -43,88 +56,76 @@ const Perfil = () => {
   const [errors, setErrors] = useState({});
   const fileInputRef = useRef(null);
   const [cropperSrc, setCropperSrc] = useState(null);
+  const [profileLoading, setProfileLoading] = useState(true);
 
   useEffect(() => {
-    // Cargar datos reales desde Supabase primero
-    (async () => {
-      if (!user) return;
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('name,apellido_paterno,apellido_materno,alias,email,phone,curp,birthdate,avatar_url,blood_type,sexo')
-        .eq('user_id', user.id)
-        .maybeSingle();
-      if (!error && data) {
-        setProfileData({
-          name: data.name || user.user_metadata.name || '',
-          apellidoPaterno: data.apellido_paterno || user.user_metadata.apellidoPaterno || user.user_metadata.apellido_paterno || '',
-          apellidoMaterno: data.apellido_materno || user.user_metadata.apellidoMaterno || user.user_metadata.apellido_materno || '',
-          alias: data.alias || user.user_metadata.alias || '',
-          email: data.email || user.email || '',
-          phone: data.phone || user.user_metadata.phone || '',
-          curp: data.curp || user.user_metadata.curp || '',
-          birthDate: data.birthdate || user.user_metadata.birthDate || '',
-          avatarUrl: data.avatar_url || user.user_metadata.avatarUrl || '',
-          bloodType: data.blood_type || user.user_metadata.bloodType || '',
-          sexo: data.sexo || user.user_metadata.sexo || ''
-        });
-      } else if (user && user.user_metadata) {
-        setProfileData({
-          name: user.user_metadata.name || '',
-          apellidoPaterno: user.user_metadata.apellidoPaterno || user.user_metadata.apellido_paterno || '',
-          apellidoMaterno: user.user_metadata.apellidoMaterno || user.user_metadata.apellido_materno || '',
-          alias: user.user_metadata.alias || '',
-          email: user.email || '',
-          phone: user.user_metadata.phone || '',
-          curp: user.user_metadata.curp || '',
-          birthDate: user.user_metadata.birthDate || '',
-          avatarUrl: user.user_metadata.avatarUrl || '',
-          bloodType: user.user_metadata.bloodType || '',
-          sexo: user.user_metadata.sexo || ''
-        });
+    const fetchProfileData = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('name,apellido_paterno,apellido_materno,alias,email,phone,curp,birthdate,avatar_url,blood_type,sexo')
+          .eq('user_id', user.id)
+          .maybeSingle();
+        if (!error && data) {
+          setProfileData({
+            name: data.name || user.user_metadata.name || '',
+            apellidoPaterno: data.apellido_paterno || user.user_metadata.apellidoPaterno || '',
+            apellidoMaterno: data.apellido_materno || user.user_metadata.apellidoMaterno || '',
+            alias: data.alias || user.user_metadata.alias || '',
+            email: data.email || user.email || '',
+            phone: data.phone || user.user_metadata.phone || '',
+            curp: data.curp || user.user_metadata.curp || '',
+            birthDate: data.birthdate || user.user_metadata.birthDate || '',
+            avatarUrl: data.avatar_url || user.user_metadata.avatarUrl || '',
+            bloodType: data.blood_type || user.user_metadata.bloodType || '',
+            sexo: data.sexo || user.user_metadata.sexo || ''
+          });
+        }
+      } catch (error) {
+        console.error('[Perfil] error al cargar datos:', error);
+      } finally {
+        setProfileLoading(false);
       }
-      if (user.user_metadata.planStatus === 'active' && (!user.user_metadata.phone || !user.user_metadata.curp || !user.user_metadata.birthDate)) {
-        setIsEditing(true);
-        toast({
-          title: 'Completa tu perfil',
-          description: 'Ingresa tus datos reales y correctos para que tu póliza se genere perfectamente.',
-        });
-      }
-    })();
-  }, [user, toast]);
+    };
 
-  // Cargar estado real de membresía desde Supabase (profiles_certificado_v2)
-  const fetchMembership = async () => {
-    try {
-      setLoadingAccess(true);
-      const { data: u } = await supabase.auth.getUser();
-      const uid = u?.user?.id;
-      if (!uid) { setLoadingAccess(false); return; }
-      const { data, error } = await supabase
-        .from('profiles_certificado_v2')
-        .select('acceso_activo,membresia,periodicidad,estado_pago,codigo_vita,avatar_url')
-        .eq('user_id', uid)
-        .limit(1)
-        .single();
-      if (!error && data) setMembership({
-        acceso_activo: data.acceso_activo ?? null,
-        membresia: data.membresia ?? null,
-        periodicidad: data.periodicidad ?? null,
-        estado_pago: data.estado_pago ?? null,
-        codigo_vita: data.codigo_vita ?? null,
-      });
-      // Traer avatar firmado si existe
-      if (!error && data?.avatar_url) {
-        try {
-          const signed = await getAvatarUrlCached(data.avatar_url);
-          if (signed) setProfileData(prev => ({ ...prev, avatarUrl: signed }));
-        } catch {}
-      }
-    } finally {
-      setLoadingAccess(false);
-    }
-  };
+    fetchProfileData();
+  }, [user]);
 
-  useEffect(()=>{ fetchMembership(); }, []);
+  useEffect(() => {
+    // Cargar estado real de membresía desde Supabase (profiles_certificado_v2)
+    const fetchMembership = async () => {
+      try {
+        setLoadingAccess(true);
+        const { data: u } = await supabase.auth.getUser();
+        const uid = u?.user?.id;
+        if (!uid) { setLoadingAccess(false); return; }
+        const { data, error } = await supabase
+          .from('profiles_certificado_v2')
+          .select('acceso_activo,membresia,periodicidad,estado_pago,codigo_vita,avatar_url')
+          .eq('user_id', uid)
+          .limit(1)
+          .single();
+        if (!error && data) setMembership({
+          acceso_activo: data.acceso_activo ?? null,
+          membresia: data.membresia ?? null,
+          periodicidad: data.periodicidad ?? null,
+          estado_pago: data.estado_pago ?? null,
+          codigo_vita: data.codigo_vita ?? null,
+        });
+        // Traer avatar firmado si existe
+        if (!error && data?.avatar_url) {
+          try {
+            const signed = await getAvatarUrlCached(data.avatar_url);
+            if (signed) setProfileData(prev => ({ ...prev, avatarUrl: signed }));
+          } catch {}
+        }
+      } finally {
+        setLoadingAccess(false);
+      }
+    };
+
+    fetchMembership();
+  }, []);
 
   // Cargar datos básicos del perfil desde public.profiles (incluye "sexo")
   useEffect(() => {
@@ -286,7 +287,7 @@ const Perfil = () => {
     toast({ title: 'Copiado', description: 'El código ha sido copiado al portapapeles.' });
   };
 
-  if (loading || !access) {
+  if (authLoading || !access) {
     return (
       <div style={{ padding: 20, color: 'white' }}>
         Cargando datos...
@@ -329,6 +330,10 @@ const Perfil = () => {
       {children} <span className="text-red-400">*</span>
     </Label>
   );
+
+  if (profileLoading) {
+    return <div>Cargando datos del perfil…</div>;
+  }
 
   return (
     <>

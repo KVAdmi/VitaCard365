@@ -5,11 +5,15 @@ import { supabase } from '@/lib/supabaseClient';
 import { usePayment } from "../hooks/usePayment";
 import { createPreference } from "../lib/api";
 import Layout from "../components/Layout";
+import { useAuth } from '@/contexts/AuthContext';
+
 // import MPWallet from "../components/payments/MPWallet.jsx";
 // Nota: pantalla estabilizada sin lógica de códigos aplicada
 
 export default function PaymentGateway() {
   const navigate = useNavigate();
+
+  const { fetchAccess } = useAuth();
 
   console.log(">>> Estoy en PaymentGateway REAL");
 
@@ -151,6 +155,22 @@ export default function PaymentGateway() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    const queryParams = new URLSearchParams(window.location.search);
+    if (queryParams.get('from') === 'mp') {
+      console.log('[PaymentGateway] Returning from Mercado Pago');
+      (async () => {
+        const { data: session } = await supabase.auth.getSession();
+        if (session?.session) {
+          await fetchAccess(session.session.user.id);
+          navigate('/mi-plan');
+        } else {
+          console.warn('[PaymentGateway] No session found after Mercado Pago return');
+        }
+      })();
+    }
+  }, []);
 
   return (
     <Layout title="Pasarela de pago" showBackButton>

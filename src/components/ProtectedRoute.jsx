@@ -12,6 +12,7 @@ export default function ProtectedRoute({ children }) {
 
   // Mientras AuthContext no esté listo, mostramos loader.
   if (!ready) {
+    console.log('[ProtectedRoute] UI loading');
     return <div>Cargando…</div>;
   }
 
@@ -22,11 +23,13 @@ export default function ProtectedRoute({ children }) {
 
   // Sin sesión -> solo /login
   if (!session) {
+    console.log('[ProtectedRoute] No session, redirecting to login');
     return path === '/login' ? children : <Navigate to="/login" replace />;
   }
 
   // Con sesión, sin acceso -> forzar /mi-plan y bloquear navegación excepto pago
-  if (access && access.activo === false) {
+  if (session && access?.activo === false) {
+    console.log('[ProtectedRoute] Session active but access inactive');
     const allowed = ['/mi-plan', '/payment', '/payment-gateway'];
     return allowed.some(p => path.startsWith(p))
       ? children
@@ -34,5 +37,6 @@ export default function ProtectedRoute({ children }) {
   }
 
   // Con sesión y acceso activo -> pasa
+  console.log('[ProtectedRoute] Session and access active, allowing route');
   return children;
 }

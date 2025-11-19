@@ -40,10 +40,15 @@ export function AuthProvider({ children }) {
         const { data } = await supabase.auth.getSession();
         console.log('[AuthContext][init] session:', data?.session?.user?.id || 'none');
         setSession(data?.session ?? null);
+        setReady(true); // Ensure ready is true immediately
 
         if (data?.session) {
           await fetchAccess(data.session.user.id);
-        } else if (rememberMe) {
+        } else {
+          setReady(true); // Ensure ready is true even if no session
+        }
+
+        if (rememberMe) {
           const { data: restoredSession } = await supabase.auth.getSession();
           if (restoredSession?.session) {
             setSession(restoredSession.session);
@@ -74,8 +79,7 @@ export function AuthProvider({ children }) {
         }
       } catch (error) {
         console.error('[AuthContext][init][error]', error);
-        // Aunque falle Supabase, marcamos ready para que la UI no se quede colgada en "Cargando..."
-        setReady(true);
+        setReady(true); // Ensure ready is true even on error
       } finally {
         setLoading(false);
       }
@@ -83,14 +87,14 @@ export function AuthProvider({ children }) {
 
     const { data: sub } = supabase.auth.onAuthStateChange(async (_e, s) => {
       setSession(s ?? null);
+      setReady(true); // Ensure ready is true immediately
+
       if (s) {
         await fetchAccess(s.user.id);
-        setReady(true);
         localStorage.removeItem('oauth_ok');
       } else {
         console.log('[AuthContext][onAuthStateChange] sesión cerrada');
         setAccess(null);
-        setReady(true);
       }
     });
 

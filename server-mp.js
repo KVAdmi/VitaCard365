@@ -104,9 +104,9 @@ app.post("/api/mercadopago/preference", async (req, res) => {
         currency_id: 'MXN'
       }],
       back_urls: {
-        success: `${process.env.FRONTEND_BASE_URL || 'http://localhost:5174'}/payment/success`,
-        failure: `${process.env.FRONTEND_BASE_URL || 'http://localhost:5174'}/payment/failure`,
-        pending: `${process.env.FRONTEND_BASE_URL || 'http://localhost:5174'}/payment/pending`
+        success: `${process.env.FRONTEND_BASE_URL || 'http://localhost:5174'}/payment-gateway?from=mp`,
+        failure: `${process.env.FRONTEND_BASE_URL || 'http://localhost:5174'}/payment-gateway?from=mp`,
+        pending: `${process.env.FRONTEND_BASE_URL || 'http://localhost:5174'}/payment-gateway?from=mp`
       },
       auto_return: 'approved',
       notification_url: `${process.env.VITE_API_BASE_URL || 'http://localhost:3000'}/api/mercadopago/webhook`,
