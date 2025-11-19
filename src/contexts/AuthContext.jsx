@@ -1,27 +1,22 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { supabase } from '../lib/supabaseClient';
-import { v4 as uuidv4 } from 'uuid';
-import { makeVitaId } from '../utils/generateVitaId';
-import { ENT, SRC } from '../services/entitlements';
+import { supabase } from '@/lib/supabaseClient';
 import { Preferences } from '@capacitor/preferences';
+import { DEBUG_AUTH, DEBUG_ACCESS } from '@/config/debug';
+
 
 export const AuthContext = createContext();
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth debe ser usado dentro de AuthProvider');
-  }
+    if (!context) throw new Error('useAuth debe ser usado dentro de AuthProvider');
   return context;
 };
 
 export function AuthProvider({ children }) {
   const [session, setSession] = useState(null);
   const [access, setAccess] = useState(null);
-  const [isReturningFromOAuth, setIsReturningFromOAuth] = useState(false);
   const [ready, setReady] = useState(false);
   const [authLoading, setAuthLoading] = useState(false);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let graceTimeout;
@@ -29,25 +24,16 @@ export function AuthProvider({ children }) {
       try {
         const rememberMe = localStorage.getItem('remember_me') === 'true';
         const oauthFlag = localStorage.getItem('oauth_ok');
-
-        // Restaurar estado desde almacenamiento persistente
         const storedAccess = await Preferences.get({ key: 'access_state' });
-        if (storedAccess.value) {
+        if (storedAccess.value && SAFE_DEBUG_AUTH) {
           console.log('[AuthContext][restore] sesión recuperada desde storage');
           setAccess(JSON.parse(storedAccess.value));
         }
-
         const { data } = await supabase.auth.getSession();
-        console.log('[AuthContext][init] session:', data?.session?.user?.id || 'none');
+        if (SAFE_DEBUG_AUTH) console.log('[AuthContext][init] session:', data?.session?.user?.id || 'none');
         setSession(data?.session ?? null);
-        setReady(true); // Ensure ready is true immediately
-
-        if (data?.session) {
-          await fetchAccess(data.session.user.id);
-        } else {
-          setReady(true); // Ensure ready is true even if no session
-        }
-
+        setReady(true);
+        if (data?.session) await fetchAccess(data.session.user.id);
         if (rememberMe) {
           const { data: restoredSession } = await supabase.auth.getSession();
           if (restoredSession?.session) {
@@ -55,15 +41,12 @@ export function AuthProvider({ children }) {
             await fetchAccess(restoredSession.session.user.id);
           }
         }
-
-        // Si no hay sesión después de restauración → limpiar access para evitar bloqueos
         const { data: preSession } = await supabase.auth.getSession();
         if (!preSession?.session) {
-          console.log('[AuthContext][init] no session → reset access');
+          if (SAFE_DEBUG_AUTH) console.log('[AuthContext][init] no session → reset access');
           setAccess(null);
           await Preferences.remove({ key: 'access_state' });
         }
-
         if (oauthFlag === '1' && !data?.session) {
           graceTimeout = setTimeout(() => {
             setReady(true);
@@ -72,32 +55,23 @@ export function AuthProvider({ children }) {
         } else {
           setReady(true);
         }
-
-        // Garantizar que si no hay sesión, ready esté en true
-        if (!data?.session) {
-          setReady(true);
-        }
+        if (!data?.session) setReady(true);
       } catch (error) {
         console.error('[AuthContext][init][error]', error);
-        setReady(true); // Ensure ready is true even on error
-      } finally {
-        setLoading(false);
+        setReady(true);
       }
     })();
-
     const { data: sub } = supabase.auth.onAuthStateChange(async (_e, s) => {
       setSession(s ?? null);
-      setReady(true); // Ensure ready is true immediately
-
+      setReady(true);
       if (s) {
         await fetchAccess(s.user.id);
         localStorage.removeItem('oauth_ok');
       } else {
-        console.log('[AuthContext][onAuthStateChange] sesión cerrada');
+        if (SAFE_DEBUG_AUTH) console.log('[AuthContext][onAuthStateChange] sesión cerrada');
         setAccess(null);
       }
     });
-
     return () => {
       sub?.subscription?.unsubscribe?.();
       if (graceTimeout) clearTimeout(graceTimeout);
@@ -105,38 +79,94 @@ export function AuthProvider({ children }) {
   }, []);
 
   const fetchAccess = async (userId) => {
-    if (DEBUG_AUTH) console.log('[AuthContext][fetchAccess] userId:', userId);
+    if (SAFE_DEBUG_AUTH) console.log('[AuthContext][fetchAccess] userId:', userId);
     try {
       const { data: perfil, error } = await supabase
         .from('profiles')
         .select('acceso_activo, estado_pago')
         .eq('user_id', userId)
         .maybeSingle();
-
       if (error) {
         console.error('[AuthContext][fetchAccess][error]', error);
-        if (DEBUG_AUTH) console.warn('[AuthContext][fetchAccess] conservo último estado');
+        if (SAFE_DEBUG_AUTH) console.warn('[AuthContext][fetchAccess] conservo último estado');
         return;
       }
-
       const accesoActivo = !!perfil?.acceso_activo;
-      if (DEBUG_AUTH) console.log('[AuthContext][fetchAccess][ok] acceso_activo:', accesoActivo);
+      if (SAFE_DEBUG_AUTH) console.log('[AuthContext][fetchAccess][ok] acceso_activo:', accesoActivo);
       const newAccess = {
         activo: accesoActivo,
         estado_pago: perfil?.estado_pago || null
       };
       setAccess(newAccess);
-
-      // Guardar estado en almacenamiento persistente
       await Preferences.set({ key: 'access_state', value: JSON.stringify(newAccess) });
     } catch (err) {
       console.error('[AuthContext][fetchAccess][catch]', err);
-      if (DEBUG_AUTH) console.warn('[AuthContext][fetchAccess] conservo último estado');
+      if (SAFE_DEBUG_AUTH) console.warn('[AuthContext][fetchAccess] conservo último estado');
     }
   };
 
-  // Función de login con email y password
+  // Login mejorado: distingue credenciales inválidas vs error interno
   const login = async (email, password) => {
+    setAuthLoading(true);
+    try {
+      if (SAFE_DEBUG_AUTH) console.log('[AuthContext][login] start', { email });
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) {
+        if (error.message && error.message.toLowerCase().includes('invalid login credentials')) {
+          throw new Error('Credenciales incorrectas. Verifica email y contraseña.');
+        }
+        throw new Error('Error interno al iniciar sesión. Intenta más tarde.');
+      }
+      const user = data?.user;
+      if (SAFE_DEBUG_AUTH) console.log('[AuthContext][login] signed in, userId:', user?.id);
+      if (user?.id) {
+        fetchAccess(user.id).catch((err) => {
+          console.error('[AuthContext][login][fetchAccess][error]', err);
+        });
+      }
+    } finally {
+      setAuthLoading(false);
+      if (SAFE_DEBUG_AUTH) console.log('[AuthContext][login] end');
+    }
+  };
+
+  return (
+    <AuthContext.Provider value={{
+      session,
+      setSession,
+      user: session?.user || null,
+      access,
+      setAccess,
+      ready,
+      login,
+      authLoading
+    }}>
+      {children}
+    </AuthContext.Provider>
+  );
+}
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabaseClient';
+import { Preferences } from '@capacitor/preferences';
+import { DEBUG_AUTH, DEBUG_ACCESS } from '@/config/debug';
+
+const SAFE_DEBUG_AUTH = typeof DEBUG_AUTH === 'boolean' ? DEBUG_AUTH : false;
+  return (
+    <AuthContext.Provider value={{
+      session,
+      setSession,
+      user: session?.user || null,
+      access,
+      setAccess,
+      ready,
+      login,
+      authLoading
+    }}>
+      {children}
+    </AuthContext.Provider>
+  );
+
+
     console.log('[AuthContext][login] start', { email });
     setAuthLoading(true);
     try {
@@ -164,7 +194,7 @@ export function AuthProvider({ children }) {
       setAuthLoading(false);
       console.log('[AuthContext][login] end');
     }
-  };
+  ;
 
   // Función de registro con email y password
   const register = async (email, password, metadata = {}) => {
@@ -262,4 +292,4 @@ export function AuthProvider({ children }) {
       {children}
     </AuthContext.Provider>
   );
-}
+

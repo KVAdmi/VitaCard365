@@ -1,4 +1,23 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { DEBUG_AUTH } from '@/config/debug';
+const SAFE_DEBUG_AUTH = typeof DEBUG_AUTH === 'boolean' ? DEBUG_AUTH : false;
+
+// Helper de diagnóstico de email
+async function checkEmailExists(email) {
+  if (!email) return false;
+  try {
+    const { data, error } = await window.supabase
+      .from('auth.users')
+      .select('email')
+      .eq('email', email)
+      .maybeSingle();
+    if (SAFE_DEBUG_AUTH) console.log('[checkEmailExists]', email, !!data);
+    return !!data;
+  } catch (e) {
+    if (SAFE_DEBUG_AUTH) console.error('[checkEmailExists][error]', e);
+    return false;
+  }
+}
 import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Helmet } from 'react-helmet';
@@ -70,7 +89,14 @@ const Login = () => {
     setFormError(null);
 
     try {
-      // if (DEBUG_AUTH) console.log('[Login] intento de login con', formData.email);
+        if (SAFE_DEBUG_AUTH) console.log('[Login] intento de login con', formData.email);
+        // Diagnóstico: verificar email exacto en auth.users
+        const emailExists = await checkEmailExists(formData.email);
+        if (!emailExists) {
+          setFormError('El email no existe en la base de usuarios. Verifica que esté bien escrito.');
+          if (SAFE_DEBUG_AUTH) console.warn('[Login] email no encontrado en auth.users:', formData.email);
+          return;
+        }
       await login(formData.email, formData.password);
 
       // Guardar flags de rememberMe si corresponde
