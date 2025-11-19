@@ -63,7 +63,7 @@ export default function FitPage() {
   return (
     <FitErrorBoundary>
       <Layout title="Fitness" showBackButton>
-        <div className="px-4 pb-24 min-h-screen bg-gradient-to-br from-[#0E1A2B] via-[#101a2e] to-[#0a1120] relative overflow-hidden">
+  <div className="px-4 pb-24 min-h-screen relative overflow-hidden">
           {/* NASA grid lines */}
           <div className="absolute inset-0 pointer-events-none z-0">
             <svg width="100%" height="100%" className="w-full h-full" style={{position:'absolute',top:0,left:0}}>

@@ -190,7 +190,7 @@ export default function FitProgreso() {
 
   return (
     <Layout title="Progreso" showBackButton>
-    <div className="px-4 pb-24 min-h-screen bg-gradient-to-br from-[#0E1A2B] via-[#101a2e] to-[#0a1120] relative overflow-hidden">
+      <div className="px-4 pb-24 min-h-screen relative overflow-hidden">
       {/* Fallback back button (por si un layout viejo no lo trae) */}
       <div className="pt-4 pb-2">
         <button onClick={() => { try { navigate(-1); } catch { navigate('/dashboard', { replace: true }); } }} className="text-cyan-100/80 hover:text-white text-sm border border-cyan-300/20 rounded-lg px-3 py-1 bg-cyan-400/10">

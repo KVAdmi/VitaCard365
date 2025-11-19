@@ -130,7 +130,9 @@ export function useEjerciciosCatalog() {
           )
           .order('nombre', { ascending: true });
         if (error) throw error;
+        console.log('Datos obtenidos de Supabase:', data);
         const list = (data || []).map(toEjercicio);
+        console.log('Datos transformados:', list);
         if (alive) setData(list);
       } catch (e: any) {
         console.error('Error cargando ejercicios', e);

@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { Capacitor } from '@capacitor/core';
 import { requestPermissions as requestHealthPermissions } from '@/lib/healthkit';
 import KeepAliveAccordion from '@/components/ui/KeepAliveAccordion';
-import { sessionHub } from '@/fit/sessionHub';
+import { sessionHub } from '@/pages/fit/sessionHub';
 import {
   startScan,
   stopScan as stopBleScan,

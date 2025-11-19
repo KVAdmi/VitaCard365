@@ -157,7 +157,7 @@ export default function GymProgreso() {
 
   return (
     <Layout title="Progreso (Gym)" showBackButton>
-      <div className="px-4 pb-24 min-h-screen bg-gradient-to-br from-[#0E1224] via-[#0f0f22] to-[#0a0b1a] relative overflow-hidden">
+  <div className="px-4 pb-24 min-h-screen relative overflow-hidden">
         <div className="pt-4 pb-2">
           <button onClick={() => { try { history.back(); } catch {} }} className="text-violet-100/80 hover:text-white text-sm border border-violet-300/20 rounded-lg px-3 py-1 bg-violet-400/10">← Regresar</button>
         </div>

@@ -1,5 +1,5 @@
 import 'dotenv/config';
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '../src/lib/supabaseClient';
 
 const url = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
 const anon = process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY;
@@ -14,8 +14,6 @@ if (!email || !password) {
   console.error('Uso: node scripts/test-login.mjs <email> <password>');
   process.exit(1);
 }
-
-const supabase = createClient(url, anon, { auth: { persistSession: false } });
 
 try {
   const { data, error } = await supabase.auth.signInWithPassword({ email, password });

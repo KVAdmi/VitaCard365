@@ -1,10 +1,9 @@
 import 'dotenv/config';
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '../src/lib/supabaseClient';
 
 const url = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
 const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_SERVICE_ROLE_KEY;
 if (!url || !serviceKey) { console.error('Missing env SUPABASE_URL and service role key'); process.exit(1); }
-const supabase = createClient(url, serviceKey, { auth: { persistSession: false } });
 
 const emails = process.argv.slice(2);
 const newPassword = process.env.BULK_NEW_PASSWORD || 'Vita2025@';

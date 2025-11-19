@@ -1,0 +1,96 @@
+import React, { useEffect, useRef, useState, memo } from 'react';
+import { GoogleMap } from '@capacitor/google-maps';
+
+type Props = { apiKey: string };
+
+const MAP_ID = 'native-map';
+
+function NativeMapImpl({ apiKey }: Props) {
+  const hostRef = useRef<HTMLElement | null>(null);
+  const mapRef = useRef<GoogleMap | null>(null);
+  const [ready, setReady] = useState(false);
+
+  useEffect(() => {
+    let mounted = true;
+
+    (async () => {
+      try {
+        if (!hostRef.current) return;
+        if (mapRef.current) return; // 🔒 evita doble create (StrictMode/reenmounts)
+
+        // Tamaño efectivo (para Android es relevante)
+        const rect = hostRef.current.getBoundingClientRect();
+        console.log('[Maps] rect:', rect.width, rect.height);
+
+        console.log('[Maps] create:start');
+        const map = await GoogleMap.create({
+          id: MAP_ID,
+          element: hostRef.current,
+          apiKey,
+          config: {
+            center: { lat: 19.4326, lng: -99.1332 },
+            zoom: 14,
+            androidLiteMode: false,
+            // Capacitor usa width/height iniciales cuando puede
+            width: rect.width,
+            height: rect.height,
+            x: rect.x,
+            y: rect.y,
+            devicePixelRatio: window.devicePixelRatio || 2,
+          },
+        });
+
+        if (!mounted) {
+          // si se desmontó durante el await
+          await map.destroy();
+          return;
+        }
+
+        mapRef.current = map;
+        console.log('[Maps] create:ok');
+
+        // Posiciona cámara y deja un pin visible
+        await map.setCamera({
+          coordinate: { lat: 19.4326, lng: -99.1332 },
+          zoom: 14,
+        });
+        await map.addMarker({
+          coordinate: { lat: 19.4326, lng: -99.1332 },
+          title: 'CDMX',
+        });
+        await map.setPadding({ top: 8, left: 0, right: 0, bottom: 8 });
+
+        setReady(true);
+      } catch (err) {
+        console.error('[Maps] create:error', err);
+      }
+    })();
+
+    return () => {
+      mounted = false;
+      if (mapRef.current) {
+        mapRef.current.destroy();
+        mapRef.current = null;
+      }
+    };
+  }, [apiKey]);
+
+  return (
+    <capacitor-google-map
+      ref={hostRef as any}
+      // ⚠️ NO usar transform/backdrop-filter en ancestros
+      style={{
+        display: 'block',
+        width: '100%',
+        height: '100%',
+        position: 'relative',
+        contain: 'layout style paint',
+        willChange: 'transform',
+      }}
+      data-ready={ready ? '1' : '0'}
+    />
+  );
+}
+
+// Memoriza por apiKey (evita rerenders tontos)
+export default memo(NativeMapImpl, (prev, next) => prev.apiKey === next.apiKey);

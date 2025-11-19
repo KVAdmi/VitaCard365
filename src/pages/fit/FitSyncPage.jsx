@@ -25,7 +25,7 @@ import { Capacitor } from '@capacitor/core';
 import { useRunTracking } from '@/hooks/useRunTracking';
 import MapView from '../../components/fit/MapView';
 import { supabase } from '@/lib/supabaseClient';
-import { sessionHub } from '@/fit/sessionHub';
+import { sessionHub } from '@/pages/fit/sessionHub';
 import KeepAliveAccordion from '../../components/ui/KeepAliveAccordion';
 import BlePanelUnified from '../../components/fit/BlePanelUnified';
 import Layout from '../../components/Layout';

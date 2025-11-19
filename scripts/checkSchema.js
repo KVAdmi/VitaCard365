@@ -1,9 +1,4 @@
-import { createClient } from '@supabase/supabase-js';
-
-const url = 'https://ymwhgkeomyuevsckljdw.supabase.co';
-const anon = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inltd2hna2VvbXl1ZXZzY2tsamR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTY4NTg1NTEsImV4cCI6MjA3MjQzNDU1MX0.MGrQkn4-XQFCWD-RrKjLnAIQQNFvr8eVO8HeOfpWW7o';
-
-const supabase = createClient(url, anon);
+import { supabase } from '@/lib/supabaseClient';
 
 async function checkSchema() {
   try {

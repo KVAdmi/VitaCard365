@@ -204,6 +204,10 @@ const Login = () => {
     setLoading(false);
   };
 
+  useEffect(() => {
+    console.log("[Login] renderizado");
+  }, []);
+
   if (checkingSession) return null;
   return (
     <>

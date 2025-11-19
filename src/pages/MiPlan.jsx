@@ -51,6 +51,11 @@ export default function MiPlan() {
         console.error('[MiPlan] createSignedUrl error:', error, data);
         throw new Error(error?.message || 'No se pudo obtener el certificado.');
       }
+      // Validar que la URL generada sea la esperada
+      const expectedPath = 'certificados/certificado_vitacard365.pdf';
+      if (!data?.signedUrl.includes(expectedPath)) {
+        throw new Error(`La URL generada no coincide con la esperada. Ruta esperada: ${expectedPath}`);
+      }
       // Descarga el archivo
       const response = await fetch(data.signedUrl);
       if (!response.ok) {

@@ -1,5 +1,5 @@
 import 'dotenv/config';
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '@/lib/supabaseClient';
 
 // Prefer server-side vars; fall back to Vite vars for convenience when running locally
 const url = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
@@ -13,8 +13,6 @@ if (!serviceKey) {
   console.error('⛔ Missing service role key. Set SUPABASE_SERVICE_ROLE_KEY (or VITE_SUPABASE_SERVICE_ROLE_KEY) in your environment (.env)');
   process.exit(1);
 }
-
-const supabase = createClient(url, serviceKey, { auth: { persistSession: false } });
 
 const users = [
   { email: 'ivettedelmoral@gmail.com', password: 'Vita2025@' },

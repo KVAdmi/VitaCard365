@@ -4,7 +4,7 @@
 import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from './src/lib/supabaseClient';
 
 // ===== ENV =====
 // ===== ENV (con fallbacks a VITE_*) =====
@@ -63,15 +63,6 @@ app.use(
     optionsSuccessStatus: 200,
   })
 );
-
-// ===== Supabase (admin) =====
-if (!SUPABASE_URL) console.warn('[EMAIL] Falta SUPABASE_URL');
-if (!SUPABASE_SERVICE_ROLE_KEY) console.warn('[EMAIL] Falta SUPABASE_SERVICE_ROLE_KEY');
-
-const supabaseAdmin =
-  SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY
-    ? createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
-    : null;
 
 // ===== Resend helper =====
 async function sendEmailResend({ to, subject, html, tags = [] }) {
@@ -180,10 +171,10 @@ app.post('/email/auth/request-password-reset', async (req, res) => {
   try {
     const { email, redirectTo } = req.body || {};
     if (!email) return res.status(400).json({ error: 'email requerido' });
-    if (!supabaseAdmin) return res.status(500).json({ error: 'supabase admin no configurado' });
+    if (!supabase) return res.status(500).json({ error: 'supabase admin no configurado' });
 
     const redirect = redirectTo || `${APP_BASE_URL}/auth/reset-password`;
-    const { data, error } = await supabaseAdmin.auth.admin.generateLink({
+    const { data, error } = await supabase.auth.admin.generateLink({
       type: 'recovery',
       email,
       options: { redirectTo: redirect },

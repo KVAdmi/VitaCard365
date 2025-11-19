@@ -56,13 +56,13 @@ import ScrollToTop from './components/ScrollToTop';
 import { Capacitor } from '@capacitor/core';
 import Eco from './pages/Eco';
 import Wallet from './pages/perfil/Wallet';
-import '@/lib/sessionHydrator';
-import '@/lib/nativeGuards';
-import '@/lib/backGuard';
 import { useEntitlements } from '@/hooks/useEntitlements';
+import DebugHUD from '@/components/debug/DebugHUD';
 
-
-
+// TEMPORAL: Desactivado para evitar bloqueos de navegación en web
+// import '@/lib/sessionHydrator';
+// import '@/lib/nativeGuards';
+// import '@/lib/backGuard';
 
 
 function App() {
@@ -90,7 +90,7 @@ function App() {
               const protocol = (typeof window !== 'undefined' && window.location?.protocol) || '';
               const isNative = (typeof Capacitor?.isNativePlatform === 'function' && Capacitor.isNativePlatform()) || protocol === 'capacitor:' || protocol === 'file:';
               const RouterCmp = isNative ? HashRouter : BrowserRouter;
-              const notFoundTarget = isNative ? '/' : '/dashboard';
+              const notFoundTarget = isNative ? '/' : '/login';
               return (
                 <RouterCmp>
                   <ScrollToTop />
@@ -169,6 +169,7 @@ function App() {
               );
             })()}
             <Toaster />
+            <DebugHUD />
           </UserProvider>
         </AuthProvider>
       </>

@@ -1,9 +1,9 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { v4 as uuidv4 } from 'uuid';
 import { makeVitaId } from '../utils/generateVitaId';
 import { ENT, SRC } from '../services/entitlements';
+import { Preferences } from '@capacitor/preferences';
 
 export const AuthContext = createContext();
 
@@ -20,130 +20,146 @@ export function AuthProvider({ children }) {
   const [access, setAccess] = useState(null);
   const [isReturningFromOAuth, setIsReturningFromOAuth] = useState(false);
   const [ready, setReady] = useState(false);
+  const [authLoading, setAuthLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let graceTimeout;
     (async () => {
-      const oauthFlag = localStorage.getItem('oauth_ok');
-      const { data } = await supabase.auth.getSession();
-      console.log('[AuthContext][init] session:', data?.session?.user?.id || 'none');
-      setSession(data?.session ?? null);
-      
-      // Si hay sesión, consultar acceso inmediatamente
-      if (data?.session) {
-        await fetchAccess(data.session.user.id);
-      }
-      
-      if (oauthFlag === '1' && !data?.session) {
-        // Espera hasta 5s por la sesión
-        graceTimeout = setTimeout(() => {
+      try {
+        const rememberMe = localStorage.getItem('remember_me') === 'true';
+        const oauthFlag = localStorage.getItem('oauth_ok');
+
+        // Restaurar estado desde almacenamiento persistente
+        const storedAccess = await Preferences.get({ key: 'access_state' });
+        if (storedAccess.value) {
+          console.log('[AuthContext][restore] sesión recuperada desde storage');
+          setAccess(JSON.parse(storedAccess.value));
+        }
+
+        const { data } = await supabase.auth.getSession();
+        console.log('[AuthContext][init] session:', data?.session?.user?.id || 'none');
+        setSession(data?.session ?? null);
+
+        if (data?.session) {
+          await fetchAccess(data.session.user.id);
+        } else if (rememberMe) {
+          const { data: restoredSession } = await supabase.auth.getSession();
+          if (restoredSession?.session) {
+            setSession(restoredSession.session);
+            await fetchAccess(restoredSession.session.user.id);
+          }
+        }
+
+        // Si no hay sesión después de restauración → limpiar access para evitar bloqueos
+        const { data: preSession } = await supabase.auth.getSession();
+        if (!preSession?.session) {
+          console.log('[AuthContext][init] no session → reset access');
+          setAccess(null);
+          await Preferences.remove({ key: 'access_state' });
+        }
+
+        if (oauthFlag === '1' && !data?.session) {
+          graceTimeout = setTimeout(() => {
+            setReady(true);
+            localStorage.removeItem('oauth_ok');
+          }, 5000);
+        } else {
           setReady(true);
-          localStorage.removeItem('oauth_ok');
-        }, 5000);
-      } else {
+        }
+
+        // Garantizar que si no hay sesión, ready esté en true
+        if (!data?.session) {
+          setReady(true);
+        }
+      } catch (error) {
+        console.error('[AuthContext][init][error]', error);
+        // Aunque falle Supabase, marcamos ready para no dejar la UI colgada en "Cargando..."
         setReady(true);
+      } finally {
+        setLoading(false);
       }
     })();
 
-    let navigationDone = false;
     const { data: sub } = supabase.auth.onAuthStateChange(async (_e, s) => {
       setSession(s ?? null);
       if (s) {
         await fetchAccess(s.user.id);
         setReady(true);
         localStorage.removeItem('oauth_ok');
-        // Solo navegar una vez en nativo tras Google login/registro
-        if (window && window.Capacitor && window.Capacitor.isNativePlatform && !navigationDone) {
-          navigationDone = true;
-          // LOG: sesión recibida
-          console.log('[AuthContext][native][callback] sesión recibida, user:', s.user.id);
-          // Detectar contexto
-          const context = localStorage.getItem('oauth_context') || 'login';
-          console.log('[AuthContext][native][callback] contexto OAuth:', context);
-          localStorage.removeItem('oauth_context');
-          if (context === 'register') {
-            window.location.replace('#/payment-gateway');
-            return;
-          }
-          // login: navegar según acceso
-          const { data: perfil } = await supabase
-            .from('profiles_certificado_v2')
-            .select('acceso_activo')
-            .eq('user_id', s.user.id)
-            .maybeSingle();
-          const accesoActivo = !!perfil?.acceso_activo;
-          console.log('[AuthContext][native][callback] acceso_activo:', accesoActivo, 'ruta destino:', accesoActivo ? '#/dashboard' : '#/mi-plan');
-          if (accesoActivo) {
-            window.location.replace('#/dashboard');
-          } else {
-            window.location.replace('#/mi-plan');
-          }
-        }
       } else {
+        console.log('[AuthContext][onAuthStateChange] sesión cerrada');
         setAccess(null);
+        setReady(true);
       }
     });
+
     return () => {
       sub?.subscription?.unsubscribe?.();
       if (graceTimeout) clearTimeout(graceTimeout);
     };
   }, []);
 
-  // Función para consultar el acceso desde Supabase
   const fetchAccess = async (userId) => {
+    console.log('[AuthContext][fetchAccess] userId:', userId);
     try {
-      console.log('[AuthContext][fetchAccess] userId:', userId);
       const { data: perfil, error } = await supabase
         .from('profiles_certificado_v2')
         .select('acceso_activo, estado_pago, membresia')
         .eq('user_id', userId)
         .maybeSingle();
-      
+
       if (error) {
         console.error('[AuthContext][fetchAccess][error]', error);
-        setAccess({ activo: false });
+        console.warn('[AuthContext][fetchAccess] conservo último estado');
         return;
       }
-      
+
       const accesoActivo = !!perfil?.acceso_activo;
       console.log('[AuthContext][fetchAccess][ok] acceso_activo:', accesoActivo);
-      setAccess({ 
+      const newAccess = {
         activo: accesoActivo,
         estado_pago: perfil?.estado_pago,
         membresia: perfil?.membresia
-      });
+      };
+      setAccess(newAccess);
+
+      // Guardar estado en almacenamiento persistente
+      await Preferences.set({ key: 'access_state', value: JSON.stringify(newAccess) });
     } catch (err) {
       console.error('[AuthContext][fetchAccess][catch]', err);
-      setAccess({ activo: false });
+      console.warn('[AuthContext][fetchAccess] conservo último estado');
     }
   };
 
   // Función de login con email y password
   const login = async (email, password) => {
+    console.log('[AuthContext][login] start', { email });
+    setAuthLoading(true);
     try {
-      console.log('[AuthContext][login] email:', email);
       const { data, error } = await supabase.auth.signInWithPassword({
-        email: email.trim(),
-        password: password
+        email,
+        password,
       });
-      
+
       if (error) {
-        console.error('[AuthContext][login][error]', error.message);
+        console.error('[AuthContext][login][error]', error);
         throw error;
       }
-      
-      console.log('[AuthContext][login][ok] user:', data.user?.id);
-      
-      // Actualizar sesión y consultar acceso
-      setSession(data.session);
-      if (data.user?.id) {
-        await fetchAccess(data.user.id);
+
+      const user = data?.user;
+      console.log('[AuthContext][login] signed in, userId:', user?.id);
+
+      try {
+        await fetchAccess(user.id);
+      } catch (err) {
+        console.error('[AuthContext][login][fetchAccess][error]', err);
+        // NO relances el error, solo lo logueas
       }
-      
-      return data;
-    } catch (error) {
-      console.error('[AuthContext][login][catch]', error);
-      throw error;
+    } finally {
+      // Pase lo que pase, apagamos el loader
+      setAuthLoading(false);
+      console.log('[AuthContext][login] end');
     }
   };
 
@@ -211,6 +227,7 @@ export function AuthProvider({ children }) {
       setSession(null);
       setAccess(null);
       localStorage.removeItem('oauth_ok');
+      localStorage.removeItem('remember_me');
       // Limpiar datos de RememberMe
       import('../lib/rememberMe').then(({ clearRememberMe }) => {
         clearRememberMe();
@@ -235,7 +252,9 @@ export function AuthProvider({ children }) {
       register,
       signInWithGoogle,
       logout,
-      fetchAccess
+      fetchAccess,
+      authLoading,
+      loading
     }}>
       {children}
     </AuthContext.Provider>

@@ -15,7 +15,7 @@ import { useNavigate } from 'react-router-dom';
 
 const Perfil = () => {
   const navigate = useNavigate();
-  const { user, logout, updateUser } = useAuth();
+  const { access, user, logout, updateUser, loading } = useAuth();
   const { toast } = useToast();
   
   const [isEditing, setIsEditing] = useState(false);
@@ -285,6 +285,14 @@ const Perfil = () => {
     navigator.clipboard.writeText(text);
     toast({ title: 'Copiado', description: 'El código ha sido copiado al portapapeles.' });
   };
+
+  if (loading || !access) {
+    return (
+      <div style={{ padding: 20, color: 'white' }}>
+        Cargando datos...
+      </div>
+    );
+  }
 
   if (!user) return null;
 

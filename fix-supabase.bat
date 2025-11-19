@@ -38,7 +38,7 @@ if exist "%SUPABASE_CLIENT%" (
   
   REM Actualizar el archivo con la lógica corregida
   (
-    echo import { createClient } from '@supabase/supabase-js';
+    echo import { supabase } from '@/lib/supabaseClient';
     echo.
     echo // Asegurar que la URL tenga el formato correcto (https://^)
     echo const urlRaw = import.meta.env.VITE_SUPABASE_URL;

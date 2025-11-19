@@ -1,10 +1,5 @@
 // Netlify Function: update-profile
-import { createClient } from '@supabase/supabase-js';
-
-const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
-);
+import { supabase } from '../../src/lib/supabaseClient';
 
 export async function handler(event) {
   if (event.httpMethod !== 'POST') {

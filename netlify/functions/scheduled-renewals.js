@@ -2,13 +2,13 @@
 // NOTE: Does NOT change Mercado Pago config; it just creates new one-time preferences
 // Schedule this function with Netlify Scheduled Functions (daily)
 
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '@/lib/supabaseClient';
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const MP_SERVER_URL = process.env.MP_SERVER_URL || 'http://54.175.250.15:3000';
 
-const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+// const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
 export async function handler(event, context) {
   // simple guard to avoid accidental web trigger unless scheduled

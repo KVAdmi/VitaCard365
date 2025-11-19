@@ -47,7 +47,7 @@ if [ -f "$SUPABASE_CLIENT" ]; then
   
   # Actualizar el archivo con la lógica corregida
   cat > "$SUPABASE_CLIENT" << EOF
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '@/lib/supabaseClient';
 
 // Asegurar que la URL tenga el formato correcto (https://)
 const urlRaw = import.meta.env.VITE_SUPABASE_URL;
@@ -69,15 +69,7 @@ if (!url || !anon) {
 }
 
 // exporta una sola instancia
-export const supabase = createClient(url, anon, {
-  auth: {
-    persistSession: true,
-    detectSessionInUrl: true,
-    autoRefreshToken: true,
-    storageKey: 'vita-auth',
-    storage: window.localStorage
-  },
-});
+export const supabase = supabase;
 EOF
   
   echo -e "${GREEN}✓ Archivo $SUPABASE_CLIENT actualizado correctamente${NC}"

@@ -247,6 +247,9 @@ export default function CreateRoutine() {
         localStorage.setItem('vita-last-plan-ts', String(Date.now()));
       } catch {}
 
+      // Verificar estado de itemsPorDia
+      console.log('Estado de itemsPorDia:', itemsPorDia);
+
       // Rutinas semana 1 + detalle
       for (const d of dias) {
         const foco = focoPorDia[d] ?? 'full';
@@ -261,7 +264,45 @@ export default function CreateRoutine() {
             descanso_seg: rest.descanso_seg ?? 60,
             rpe: rest.rpe ?? 7,
           }));
-          await agregarEjerciciosARutina(rutina_id, user_id as any, cleanItems);
+          // Validar valores antes de enviar a Supabase
+          const validFoco = ['full', 'upper', 'lower', 'movilidad', 'cardio'];
+          const validEstado = ['pendiente', 'completa', 'omitida'];
+          const validDiaSemana = [1, 2, 3, 4, 5, 6, 7];
+          const validMinutosSesion = [25];
+
+          if (!validFoco.includes(foco)) {
+            console.error('Valor inválido para foco:', foco);
+            return;
+          }
+          if (!validEstado.includes('pendiente')) {
+            console.error('Valor inválido para estado:', 'pendiente');
+            return;
+          }
+          if (!validDiaSemana.includes(d)) {
+            console.error('Valor inválido para dia_semana:', d);
+            return;
+          }
+          if (!validMinutosSesion.includes(minutos)) {
+            console.error('Valor inválido para minutos_sesion:', minutos);
+            return;
+          }
+
+          console.log('Valores validados correctamente:', { foco, estado: 'pendiente', dia_semana: d, minutos_sesion: minutos });
+
+          // Imprimir datos completos de la solicitud POST
+          console.log('Datos completos enviados a Supabase:', {
+            rutina_id,
+            user_id,
+            foco,
+            minutos,
+            cleanItems
+          });
+          try {
+            const response = await agregarEjerciciosARutina(rutina_id, user_id as any, cleanItems);
+            console.log('Respuesta completa de Supabase:', response);
+          } catch (error) {
+            console.error('Error detallado al agregar ejercicios a la rutina:', error);
+          }
         }
       }
 
@@ -684,7 +725,7 @@ export default function CreateRoutine() {
                 <div className="mt-2 text-xs opacity-80">
                   {(itemsPorDia[d]?.length ?? 0) > 0 ? (
                     <ul className="list-disc pl-5">
-                      {itemsPorDia[d].map((it,idx)=>(
+                      {itemsPorDia[d].map((it: RutinaItemLocal, idx: number) => (
                         <li key={idx}>{it.displayName ?? `ex ${it.ejercicio_id.slice(0,6)}…`} — {it.series}×{it.reps ?? `${it.tiempo_seg}s`} / rest {it.descanso_seg ?? 60}s</li>
                       ))}
                     </ul>

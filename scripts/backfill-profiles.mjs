@@ -1,5 +1,5 @@
 import 'dotenv/config';
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '@/lib/supabaseClient';
 
 const url = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
 const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_SERVICE_ROLE_KEY;
@@ -8,8 +8,6 @@ if (!url || !serviceKey) {
   console.error('⛔ Falta SUPABASE_URL/VITE_SUPABASE_URL o SUPABASE_SERVICE_ROLE_KEY/VITE_SUPABASE_SERVICE_ROLE_KEY en tu entorno (.env)');
   process.exit(1);
 }
-
-const supabase = createClient(url, serviceKey, { auth: { persistSession: false } });
 
 // Emails objetivo; puedes pasar otros por CLI separados por comas
 const arg = process.argv[2];

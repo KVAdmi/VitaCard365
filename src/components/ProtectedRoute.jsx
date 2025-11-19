@@ -1,5 +1,3 @@
-
-
 import { useContext } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { AuthContext } from '../contexts/AuthContext';
@@ -14,8 +12,9 @@ export default function ProtectedRoute({ children }) {
   // Permitir callback siempre
   if (path.startsWith('/auth/callback')) return children;
 
-  // Espera a que el auth esté listo (evita rebotes)
-  if (!ready || (oauthFlag === '1' && (!session || access == null))) {
+  // Espera únicamente a que AuthContext marque ready.
+  // No usamos oauthFlag aquí para evitar bloqueos eternos.
+  if (!ready) {
     return <div>Cargando…</div>;
   }
 
