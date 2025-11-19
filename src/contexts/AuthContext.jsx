@@ -74,7 +74,7 @@ export function AuthProvider({ children }) {
         }
       } catch (error) {
         console.error('[AuthContext][init][error]', error);
-        // Aunque falle Supabase, marcamos ready para no dejar la UI colgada en "Cargando..."
+        // Aunque falle Supabase, marcamos ready para que la UI no se quede colgada en "Cargando..."
         setReady(true);
       } finally {
         setLoading(false);
@@ -150,11 +150,11 @@ export function AuthProvider({ children }) {
       const user = data?.user;
       console.log('[AuthContext][login] signed in, userId:', user?.id);
 
-      try {
-        await fetchAccess(user.id);
-      } catch (err) {
-        console.error('[AuthContext][login][fetchAccess][error]', err);
-        // NO relances el error, solo lo logueas
+      if (user?.id) {
+        // Lanzamos fetchAccess en segundo plano para no bloquear el login ni dejar el botón en "Iniciando sesión..."
+        fetchAccess(user.id).catch((err) => {
+          console.error('[AuthContext][login][fetchAccess][error]', err);
+        });
       }
     } finally {
       // Pase lo que pase, apagamos el loader

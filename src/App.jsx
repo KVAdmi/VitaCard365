@@ -157,7 +157,7 @@ function App() {
                       <Route path="*" element={<Navigate to={notFoundTarget} replace />} />
 
                     <Route path="/mi-plan" element={<ProtectedRoute><Pagos /></ProtectedRoute>} />
-                    <Route path="/payment-gateway" element={<ProtectedRoute><PaymentGatewayWrapper profile={{}} /></ProtectedRoute>} />
+                    <Route path="/payment-gateway" element={<PaymentGatewayWrapper profile={{}} />} />
                     <Route path="/paymentgateway" element={<Navigate to="/payment-gateway" replace />} />
                     <Route path="/perfil" element={<ProtectedRoute><Perfil /></ProtectedRoute>} />
                     <Route path="/perfil/wallet" element={<ProtectedRoute><Wallet /></ProtectedRoute>} />
