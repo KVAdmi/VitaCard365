@@ -16,7 +16,8 @@ import { useNavigate } from 'react-router-dom';
 const Perfil = () => {
   // Hooks de librerías / contextos
   const navigate = useNavigate();
-  const { user, access, ready, loading: authLoading, updateUser, logout } = useAuth();
+  // 👇 IMPORTANTE: usamos authLoading correcto y NO pedimos updateUser (no existe en el contexto)
+  const { user, access, ready, authLoading, logout } = useAuth();
   const { toast } = useToast();
 
   // Estados (todos arriba, antes de cualquier efecto o return)
@@ -53,13 +54,17 @@ const Perfil = () => {
       setLoadingAccess(true);
       const { data: u } = await supabase.auth.getUser();
       const uid = u?.user?.id;
-      if (!uid) { setLoadingAccess(false); return; }
+      if (!uid) {
+        setLoadingAccess(false);
+        return;
+      }
       const { data, error } = await supabase
         .from('profiles_certificado_v2')
         .select('acceso_activo,membresia,periodicidad,estado_pago,codigo_vita,avatar_url')
         .eq('user_id', uid)
         .limit(1)
         .single();
+
       if (!error && data) {
         setMembership({
           acceso_activo: data.acceso_activo ?? null,
@@ -68,17 +73,22 @@ const Perfil = () => {
           estado_pago: data.estado_pago ?? null,
           codigo_vita: data.codigo_vita ?? null,
         });
-      }
-      if (!error && data?.avatar_url) {
-        try {
-          const signed = await getAvatarUrlCached(data.avatar_url);
-          if (signed) setProfileData(prev => ({ ...prev, avatarUrl: signed }));
-        } catch {}
+
+        if (data.avatar_url) {
+          try {
+            const signed = await getAvatarUrlCached(data.avatar_url);
+            if (signed) {
+              setProfileData(prev => ({ ...prev, avatarUrl: signed }));
+            }
+          } catch {
+            // si falla el firmado, no tumbamos la pantalla
+          }
+        }
       }
     } finally {
       setLoadingAccess(false);
     }
-  }, [supabase, setLoadingAccess, setProfileData, getAvatarUrlCached]);
+  }, []);
 
   // Efecto de carga inicial de perfil
   useEffect(() => {
@@ -86,14 +96,17 @@ const Perfil = () => {
       console.log('[Perfil][effect] Esperando ready y authLoading');
       return;
     }
+
     if (!user) {
       console.warn('[Perfil] No hay user, regreso a login');
       setProfileLoading(false);
       navigate('/login');
       return;
     }
+
     setProfileLoading(true);
     let isMounted = true;
+
     const fetchProfileData = async () => {
       try {
         console.log('[Perfil][effect] disparando fetch de perfil para user', user?.id);
@@ -102,19 +115,20 @@ const Perfil = () => {
           .select('name,apellido_paterno,apellido_materno,alias,email,phone,curp,birthdate,avatar_url,blood_type,sexo')
           .eq('user_id', user.id)
           .maybeSingle();
+
         if (!error && data) {
           setProfileData({
-            name: data.name || user.user_metadata.name || '',
-            apellidoPaterno: data.apellido_paterno || user.user_metadata.apellidoPaterno || '',
-            apellidoMaterno: data.apellido_materno || user.user_metadata.apellidoMaterno || '',
-            alias: data.alias || user.user_metadata.alias || '',
+            name: data.name || user.user_metadata?.name || '',
+            apellidoPaterno: data.apellido_paterno || user.user_metadata?.apellidoPaterno || '',
+            apellidoMaterno: data.apellido_materno || user.user_metadata?.apellidoMaterno || '',
+            alias: data.alias || user.user_metadata?.alias || '',
             email: data.email || user.email || '',
-            phone: data.phone || user.user_metadata.phone || '',
-            curp: data.curp || user.user_metadata.curp || '',
-            birthDate: data.birthdate || user.user_metadata.birthDate || '',
-            avatarUrl: data.avatar_url || user.user_metadata.avatarUrl || '',
-            bloodType: data.blood_type || user.user_metadata.bloodType || '',
-            sexo: data.sexo || user.user_metadata.sexo || ''
+            phone: data.phone || user.user_metadata?.phone || '',
+            curp: data.curp || user.user_metadata?.curp || '',
+            birthDate: data.birthdate || user.user_metadata?.birthDate || '',
+            avatarUrl: data.avatar_url || user.user_metadata?.avatarUrl || '',
+            bloodType: data.blood_type || user.user_metadata?.bloodType || '',
+            sexo: data.sexo || user.user_metadata?.sexo || ''
           });
           console.log('[Perfil][effect] perfil cargado OK');
         }
@@ -124,25 +138,33 @@ const Perfil = () => {
         if (isMounted) setProfileLoading(false);
       }
     };
+
     fetchProfileData();
-    return () => { isMounted = false; };
-  }, [ready, authLoading, user, supabase, navigate]);
+
+    return () => {
+      isMounted = false;
+    };
+  }, [ready, authLoading, user, navigate]);
 
   // Efecto carga membresía separado
-  useEffect(() => { fetchMembership(); }, [fetchMembership]);
+  useEffect(() => {
+    fetchMembership();
+  }, [fetchMembership]);
 
-  // Efecto que sincroniza datos básicos del perfil
+  // Efecto que sincroniza datos básicos del perfil con profiles
   useEffect(() => {
     (async () => {
       try {
         const { data: u } = await supabase.auth.getUser();
         const uid = u?.user?.id;
         if (!uid) return;
+
         const { data, error } = await supabase
           .from('profiles')
           .select('user_id,name,apellido_paterno,apellido_materno,birthdate,phone,sexo,codigo_vita,plan_status')
           .eq('user_id', uid)
           .maybeSingle();
+
         if (!error && data) {
           setProfileData(prev => ({
             ...prev,
@@ -150,8 +172,8 @@ const Perfil = () => {
             apellidoPaterno: prev.apellidoPaterno || data.apellido_paterno || '',
             apellidoMaterno: prev.apellidoMaterno || data.apellido_materno || '',
             phone: data.phone ?? prev.phone ?? '',
-            birthDate: (data.birthdate ?? prev.birthDate ?? ''),
-            sexo: (data.sexo ?? prev.sexo ?? ''),
+            birthDate: data.birthdate ?? prev.birthDate ?? '',
+            sexo: data.sexo ?? prev.sexo ?? '',
           }));
           setMembership(prev => ({
             ...prev,
@@ -162,12 +184,21 @@ const Perfil = () => {
         // Silenciar errores de carga inicial
       }
     })();
-  }, [supabase]);
+  }, []);
 
-  console.log('[Perfil][render]', { ready, authLoading, hasUser: !!user, hasAccess: !!access, profileLoading });
+  console.log('[Perfil][render]', {
+    ready,
+    authLoading,
+    hasUser: !!user,
+    hasAccess: !!access,
+    profileLoading
+  });
 
   // Guardias
-  if (!ready || authLoading || profileLoading) return <div>Cargando datos...</div>;
+  if (!ready || authLoading || profileLoading) {
+    return <div>Cargando datos...</div>;
+  }
+
   if (ready && !user) {
     return (
       <div>
@@ -176,9 +207,15 @@ const Perfil = () => {
       </div>
     );
   }
-  if (authLoading || !access) {
-    return <div style={{ padding: 20, color: 'white' }}>Cargando datos...</div>;
+
+  if (!access) {
+    return (
+      <div style={{ padding: 20, color: 'white' }}>
+        Cargando datos de acceso...
+      </div>
+    );
   }
+
   if (!user) return null;
 
   // Helpers
@@ -193,7 +230,7 @@ const Perfil = () => {
     if (name === 'curp' && value && value.length !== 18) {
       error = 'El CURP debe tener 18 caracteres.';
     }
-    if (name === 'sexo' && value && !['Masculino','Femenino'].includes(value)) {
+    if (name === 'sexo' && value && !['Masculino', 'Femenino'].includes(value)) {
       error = 'Selecciona Masculino o Femenino.';
     }
     setErrors(prev => ({ ...prev, [name]: error }));
@@ -217,11 +254,12 @@ const Perfil = () => {
 
   const handleSave = async () => {
     let validationErrors = { ...errors };
+
     if (!profileData.name) validationErrors.name = 'Requerido'; else validationErrors.name = '';
     if (!profileData.apellidoPaterno) validationErrors.apellidoPaterno = 'Requerido'; else validationErrors.apellidoPaterno = '';
     if (!profileData.phone || profileData.phone.length !== 10) validationErrors.phone = 'El teléfono debe tener 10 dígitos.'; else validationErrors.phone = '';
     if (!profileData.bloodType || profileData.bloodType.trim().length < 2) validationErrors.bloodType = 'El tipo de sangre es obligatorio'; else validationErrors.bloodType = '';
-    if (!profileData.sexo || !['Masculino','Femenino'].includes(profileData.sexo)) validationErrors.sexo = 'Selecciona Masculino o Femenino.'; else validationErrors.sexo = '';
+    if (!profileData.sexo || !['Masculino', 'Femenino'].includes(profileData.sexo)) validationErrors.sexo = 'Selecciona Masculino o Femenino.'; else validationErrors.sexo = '';
 
     const hasErrors = Object.values(validationErrors).some(e => e !== '');
     if (hasErrors) {
@@ -236,22 +274,44 @@ const Perfil = () => {
     setErrors(validationErrors);
 
     try {
-      await updateUser(profileData);
+      // Actualizar metadata del usuario en Supabase Auth
+      try {
+        await supabase.auth.updateUser({
+          data: {
+            name: profileData.name || null,
+            apellidoPaterno: profileData.apellidoPaterno || null,
+            apellidoMaterno: profileData.apellidoMaterno || null,
+            alias: profileData.alias || null,
+            phone: profileData.phone || null,
+            curp: profileData.curp || null,
+            birthDate: profileData.birthDate || null,
+            bloodType: profileData.bloodType || null,
+            sexo: profileData.sexo || null,
+          }
+        });
+      } catch (err) {
+        console.warn('[Perfil] Error al actualizar user_metadata:', err);
+      }
+
+      // Actualizar tabla profiles
       try {
         const { data: u } = await supabase.auth.getUser();
         const uid = u?.user?.id;
         if (uid) {
-          const { error: updErr, status } = await supabase.from('profiles').update({
-            phone: profileData.phone || null,
-            curp: profileData.curp || null,
-            birthdate: profileData.birthDate || null,
-            blood_type: profileData.bloodType || null,
-            name: profileData.name || null,
-            apellido_paterno: profileData.apellidoPaterno || null,
-            apellido_materno: profileData.apellidoMaterno || null,
-            alias: profileData.alias || null,
-            sexo: profileData.sexo || null,
-          }).eq('user_id', uid);
+          const { error: updErr, status } = await supabase
+            .from('profiles')
+            .update({
+              phone: profileData.phone || null,
+              curp: profileData.curp || null,
+              birthdate: profileData.birthDate || null,
+              blood_type: profileData.bloodType || null,
+              name: profileData.name || null,
+              apellido_paterno: profileData.apellidoPaterno || null,
+              apellido_materno: profileData.apellidoMaterno || null,
+              alias: profileData.alias || null,
+              sexo: profileData.sexo || null,
+            })
+            .eq('user_id', uid);
 
           if (updErr && status === 406) {
             await supabase.from('profiles').upsert({
@@ -264,7 +324,10 @@ const Perfil = () => {
             }, { onConflict: 'user_id' });
           }
         }
-      } catch {}
+      } catch (err) {
+        console.warn('[Perfil] Error al actualizar tabla profiles:', err);
+      }
+
       setIsEditing(false);
       toast({ title: '¡Éxito!', description: 'Tu perfil ha sido actualizado.' });
     } catch (error) {
@@ -323,7 +386,10 @@ const Perfil = () => {
     <>
       <Helmet>
         <title>Perfil - VitaCard 365</title>
-        <meta name="description" content="Gestiona tu perfil, miembros familiares y preferencias en Vita365." />
+        <meta
+          name="description"
+          content="Gestiona tu perfil, miembros familiares y preferencias en Vita365."
+        />
       </Helmet>
 
       <Layout title="Mi Perfil" showBackButton>
@@ -390,13 +456,20 @@ const Perfil = () => {
             </CardHeader>
             <CardContent className="space-y-2 text-sm text-white/90">
               <p>
-                Acceso: {membership.acceso_activo === null ? '—' : membership.acceso_activo ? '✅ Activo' : '❌ Inactivo'}
+                Acceso:{' '}
+                {membership.acceso_activo === null
+                  ? '—'
+                  : membership.acceso_activo
+                  ? '✅ Activo'
+                  : '❌ Inactivo'}
               </p>
               <p>
-                Plan: {(membership.membresia || '—')} · {(membership.periodicidad || '—')} · {(membership.estado_pago || '—')}
+                Plan:{' '}
+                {(membership.membresia || '—')} · {(membership.periodicidad || '—')} · {(membership.estado_pago || '—')}
               </p>
               <p>
-                Folio: <span className="font-semibold">
+                Folio:{' '}
+                <span className="font-semibold">
                   {membership.codigo_vita || user.user_metadata?.vita_card_id || '—'}
                 </span>
               </p>
@@ -441,7 +514,9 @@ const Perfil = () => {
               <CardTitle>Información Personal</CardTitle>
               <CardDescription className="flex items-center gap-2 text-yellow-400">
                 <Info className="h-4 w-4" />
-                {isEditing ? 'Ingresa tus datos reales para generar tu póliza.' : 'Tus datos personales.'}
+                {isEditing
+                  ? 'Ingresa tus datos reales para generar tu póliza.'
+                  : 'Tus datos personales.'}
               </CardDescription>
               {isEditing && (
                 <p className="text-xs text-vita-muted-foreground pt-2">
@@ -513,7 +588,7 @@ const Perfil = () => {
                     onChange={handleInputChange}
                     disabled={!isEditing}
                     placeholder="10 dígitos"
-                    maxLength="10"
+                    maxLength={10}
                     required
                   />
                   {errors.phone && <p className="text-xs text-red-400">{errors.phone}</p>}
@@ -527,7 +602,7 @@ const Perfil = () => {
                     onChange={handleInputChange}
                     disabled={!isEditing}
                     placeholder="18 caracteres"
-                    maxLength="18"
+                    maxLength={18}
                     required
                   />
                   {errors.curp && <p className="text-xs text-red-400">{errors.curp}</p>}
@@ -606,7 +681,6 @@ const Perfil = () => {
               </Button>
             </CardContent>
           </Card>
-          {/* Wallet card removida del Perfil: ahora solo se accede desde el Dashboard */}
         </div>
       </Layout>
     </>

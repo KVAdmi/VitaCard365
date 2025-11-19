@@ -1,7 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { supabase } from '../lib/supabaseClient';
-import { loadRememberMe } from '../lib/rememberMe';
-import { useNavigate, useLocation, Link } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Helmet } from 'react-helmet';
 import { Button } from '../components/ui/button';
@@ -11,136 +9,99 @@ import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../components/ui/use-toast';
 import { Eye, EyeOff, Mail, Lock, ArrowLeft } from 'lucide-react';
 import VitaCard365Logo from '../components/Vita365Logo';
+import { loadRememberMe } from '../lib/rememberMe';
 
 const Login = () => {
-  const [checkingSession, setCheckingSession] = useState(true);
-  useEffect(() => {
-    (async () => {
-      const data = await loadRememberMe();
-      if (data.rememberEmail && data.email) {
-        setFormData((prev) => ({ ...prev, email: data.email }));
-        setRememberEmail(true);
-      }
-      if (data.keepSession) {
-        setKeepSession(true);
-        console.log('[rememberMe] keepSession desde storage:', data.keepSession);
-        const { data: sessionData } = await supabase.auth.getSession();
-        console.log('[rememberMe] resultado getSession():', sessionData.session);
-        const session = sessionData.session;
-        if (session) {
-          // Consultar acceso y redirigir
-          const { data: perfil } = await supabase
-            .from('profiles_certificado_v2')
-            .select('acceso_activo')
-            .eq('user_id', session.user.id)
-            .maybeSingle();
-          const accesoActivo = !!perfil?.acceso_activo;
-          if (accesoActivo) {
-            navigate('/dashboard', { replace: true });
-          } else {
-            navigate('/mi-plan', { replace: true });
-          }
-          return; // No mostrar login
-        }
-      }
-      setCheckingSession(false);
-    })();
-  }, []);
   const navigate = useNavigate();
-  const location = useLocation();
-  const { login, isSupabaseConnected, session, access } = useAuth();
+  const { login, authLoading } = useAuth();
+  const { toast } = useToast();
+
+  // Estado de formulario
+  const [formData, setFormData] = useState({ email: '', password: '' });
   const [rememberEmail, setRememberEmail] = useState(false);
   const [keepSession, setKeepSession] = useState(false);
-  // Eliminado segundo useEffect de redirección para evitar saltos entre rutas
-  const { toast } = useToast();
-  const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [formData, setFormData] = useState({ email: '', password: '' });
-  // Debounce para auto-login
-  const debounceRef = useRef(null);
+  const [formError, setFormError] = useState(null);
 
-  // Validación de email
-  const isValidEmail = (email) => {
-    return /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email);
-  };
-
-  // Auto-submit cuando el usuario termina de escribir password
-  useEffect(() => {
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-    // Solo dispara si ambos campos tienen valor
-    if (!formData.email || !formData.password) return;
-    debounceRef.current = setTimeout(() => {
-      if (
-        isValidEmail(formData.email) &&
-        formData.password.length >= 8
-      ) {
-        // Simula un evento submit para handleSubmit
-        if (!loading) {
-          const fakeEvent = { preventDefault: () => {} };
-          handleSubmit(fakeEvent);
-        }
-      }
-    }, 500);
-    return () => {
-      if (debounceRef.current) clearTimeout(debounceRef.current);
-    };
-  }, [formData.email, formData.password]);
   const formRef = useRef(null);
   const emailRef = useRef(null);
   const passwordRef = useRef(null);
+
+  // Modal cambio de contraseña (lo dejamos como estaba)
   const [showChangePassword, setShowChangePassword] = useState(false);
   const [newPassword, setNewPassword] = useState('');
   const [newPasswordLoading, setNewPasswordLoading] = useState(false);
   const [newPasswordError, setNewPasswordError] = useState('');
 
+  // Cargar rememberMe (solo para rellenar email y flags, NO auto-login)
+  useEffect(() => {
+    (async () => {
+      try {
+        const data = await loadRememberMe();
+        if (data.rememberEmail && data.email) {
+          setFormData(prev => ({ ...prev, email: data.email }));
+          setRememberEmail(true);
+        }
+        if (data.keepSession) {
+          setKeepSession(true);
+        }
+      } catch (e) {
+        console.warn('[Login] Error cargando rememberMe', e);
+      }
+    })();
+  }, []);
+
+  useEffect(() => {
+    console.log('[Login] renderizado');
+  }, []);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
+    setFormError(null);
 
     try {
-      console.log('Intentando login con:', formData.email);
-      const result = await login(formData.email, formData.password);
-      // Verificar metadata must_change_password
-      const user = result?.data?.user;
-      if (user?.user_metadata?.must_change_password) {
-        setShowChangePassword(true);
-        return;
-      }
-      // Guardar flags locales si corresponde
+      console.log('[Login] intento de login con', formData.email);
+      await login(formData.email, formData.password);
+
+      // Guardar flags de rememberMe si corresponde
       if (rememberEmail || keepSession) {
-        // Importar dinámicamente el helper para evitar romper el build
         import('../lib/rememberMe').then(({ saveRememberMe }) => {
           saveRememberMe({
             email: rememberEmail ? formData.email : '',
             rememberEmail,
-            keepSession
+            keepSession,
           });
         });
       }
+
       toast({
         title: '¡Bienvenido!',
         description: 'Has iniciado sesión correctamente.',
       });
-      setTimeout(() => {
-        navigate('/dashboard');
-      }, 200);
+
+      // De aquí te mando siempre al dashboard.
+      // ProtectedRoute y AuthContext se encargan de mandarte a /mi-plan si tu acceso no está activo.
+      navigate('/dashboard');
     } catch (error) {
-      console.error('Error de login:', error);
+      console.error('[Login] error de login:', error);
       let errorMessage = 'Credenciales incorrectas. Inténtalo de nuevo.';
-      if (error.message?.includes('Invalid login credentials')) {
+
+      if (error?.message?.includes('Invalid login credentials')) {
         errorMessage = 'Email o contraseña incorrectos';
-      } else if (error.message?.includes('Email not confirmed')) {
+      } else if (error?.message?.includes('Email not confirmed')) {
         errorMessage = 'Por favor, confirma tu email antes de iniciar sesión';
       }
+
+      setFormError(errorMessage);
       toast({
         title: 'Error de inicio de sesión',
         description: errorMessage,
         variant: 'destructive',
       });
-    } finally {
-      setLoading(false);
     }
-  // Modal para cambio de contraseña obligatorio
+  };
+
+  // (Opcional) handler de cambio obligatorio de contraseña que ya tenías
   const handleChangePassword = async (e) => {
     e.preventDefault();
     setNewPasswordError('');
@@ -150,13 +111,15 @@ const Login = () => {
     }
     setNewPasswordLoading(true);
     try {
-      // Actualiza la contraseña y elimina el flag en metadata
       const { error } = await window.supabase.auth.updateUser({
         password: newPassword,
-        data: { must_change_password: false }
+        data: { must_change_password: false },
       });
       if (error) throw error;
-      toast({ title: 'Contraseña actualizada', description: 'Tu nueva contraseña ha sido guardada.' });
+      toast({
+        title: 'Contraseña actualizada',
+        description: 'Tu nueva contraseña ha sido guardada.',
+      });
       setShowChangePassword(false);
       setTimeout(() => navigate('/dashboard'), 300);
     } catch (err) {
@@ -165,55 +128,15 @@ const Login = () => {
       setNewPasswordLoading(false);
     }
   };
-  };
 
-  // Auto-submit si el gestor autollenó (Android/iOS pueden no disparar eventos clásicos)
-  // Eliminado auto-submit por autollenado para evitar múltiples intentos y rate limit
-
-  const { signInWithGoogle } = useAuth();
-  const handleGoogleSuccess = async (googleUser) => {
-    setLoading(true);
-    try {
-      const { sub: id, email, name, picture, accessToken } = googleUser;
-      await signInWithGoogle({ id, email, name, picture, accessToken });
-      // Consultar perfil certificado por email
-      const { data, error } = await window.supabase
-        .from('profiles_certificado_v2')
-        .select('*')
-        .eq('email', email)
-        .single();
-      if (error || !data) {
-        toast({ title: 'No registrado', description: 'No existe un perfil con ese correo. Completa tu registro.', variant: 'destructive' });
-        navigate('/register');
-        return;
-      }
-      if (data.acceso_activo) {
-        toast({ title: '¡Bienvenido!', description: 'Acceso activo. Ingresando...' });
-        navigate('/dashboard');
-      } else {
-        let msg = 'Tu acceso está restringido.';
-        if (data.estado_pago === 'vencido') msg = 'Tu membresía está vencida.';
-        else if (data.estado_pago === 'pendiente') msg = 'Tu pago está pendiente.';
-        else if (data.estado_pago === 'pagado') msg = 'Tu membresía está activa, pero el acceso está restringido.';
-        toast({ title: 'Acceso restringido', description: msg, variant: 'destructive' });
-        navigate('/payment-gateway');
-      }
-    } catch (error) {
-      toast({ title: 'Error de Google Login', description: error.message || 'No se pudo iniciar sesión con Google.', variant: 'destructive' });
-    }
-    setLoading(false);
-  };
-
-  useEffect(() => {
-    console.log("[Login] renderizado");
-  }, []);
-
-  if (checkingSession) return null;
   return (
     <>
       <Helmet>
         <title>Iniciar Sesión - VitaCard 365</title>
-        <meta name="description" content="Inicia sesión en VitaCard 365 para acceder a tu cobertura médica, monitoreo de salud y herramientas de bienestar." />
+        <meta
+          name="description"
+          content="Inicia sesión en VitaCard 365 para acceder a tu cobertura médica, monitoreo de salud y herramientas de bienestar."
+        />
       </Helmet>
 
       <div className="min-h-screen bg-deep-blue-gradient flex flex-col p-6 relative overflow-hidden">
@@ -241,9 +164,12 @@ const Login = () => {
                 <h2 className="text-3xl font-bold text-white">Iniciar Sesión</h2>
                 <p className="text-white/70 mt-2">Accede a tu cuenta VitaCard 365</p>
               </div>
+
               <form id="loginForm" ref={formRef} onSubmit={handleSubmit} className="space-y-6">
                 <div className="space-y-2">
-                  <Label htmlFor="email" className="text-white">Correo Electrónico</Label>
+                  <Label htmlFor="email" className="text-white">
+                    Correo Electrónico
+                  </Label>
                   <div className="relative">
                     <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-white/80" />
                     <Input
@@ -253,13 +179,16 @@ const Login = () => {
                       placeholder="tu@email.com"
                       className="pl-12"
                       value={formData.email}
-                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                      onChange={(e) =>
+                        setFormData({ ...formData, email: e.target.value })
+                      }
                       autoComplete="username email"
                       inputMode="email"
                       required
                     />
                   </div>
                 </div>
+
                 <div className="space-y-2">
                   <Label htmlFor="password">Contraseña</Label>
                   <div className="relative">
@@ -271,7 +200,9 @@ const Login = () => {
                       placeholder="Tu contraseña"
                       className="pl-12 pr-12"
                       value={formData.password}
-                      onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                      onChange={(e) =>
+                        setFormData({ ...formData, password: e.target.value })
+                      }
                       autoComplete="current-password"
                       required
                     />
@@ -282,17 +213,22 @@ const Login = () => {
                       className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 text-white/80 hover:text-white"
                       onClick={() => setShowPassword(!showPassword)}
                     >
-                      {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                      {showPassword ? (
+                        <EyeOff className="h-5 w-5" />
+                      ) : (
+                        <Eye className="h-5 w-5" />
+                      )}
                     </Button>
                   </div>
                 </div>
+
                 {/* Controles de recordar y mantener sesión */}
                 <div className="space-y-2 mt-4">
                   <label className="flex items-center gap-2 text-white">
                     <input
                       type="checkbox"
                       checked={keepSession}
-                      onChange={e => setKeepSession(e.target.checked)}
+                      onChange={(e) => setKeepSession(e.target.checked)}
                       style={{ accentColor: '#FF6B00' }}
                     />
                     Mantener sesión iniciada en este dispositivo
@@ -301,30 +237,38 @@ const Login = () => {
                     <input
                       type="checkbox"
                       checked={rememberEmail}
-                      onChange={e => setRememberEmail(e.target.checked)}
+                      onChange={(e) => setRememberEmail(e.target.checked)}
                       style={{ accentColor: '#FF6B00' }}
                     />
                     Recordar mi correo para la próxima vez
                   </label>
                 </div>
+
                 <div className="flex justify-end items-center text-sm">
-                    <Link
-                        to="/reset-password"
-                        className="font-semibold text-vita-orange hover:text-vita-orange/80"
-                    >
-                        ¿Olvidaste tu contraseña?
-                    </Link>
+                  <Link
+                    to="/reset-password"
+                    className="font-semibold text-vita-orange hover:text-vita-orange/80"
+                  >
+                    ¿Olvidaste tu contraseña?
+                  </Link>
                 </div>
+
                 <Button
                   type="submit"
                   size="lg"
                   className="w-full bg-vita-orange text-white font-bold text-base"
-                  disabled={loading}
+                  disabled={authLoading}
                 >
-                  {loading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
+                  {authLoading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
                 </Button>
+
+                {formError && (
+                  <div className="text-red-400 text-sm text-center mt-2">
+                    {formError}
+                  </div>
+                )}
               </form>
-              {/* Eliminado GoogleLoginButton */}
+
               <div className="text-center mt-6 text-sm">
                 <span className="text-white/70">¿No tienes cuenta? </span>
                 <Link
@@ -335,23 +279,33 @@ const Login = () => {
                 </Link>
               </div>
             </div>
+
             {/* Modal de cambio de contraseña obligatorio */}
             {showChangePassword && (
               <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
                 <div className="glass-card rounded-2xl p-8 shadow-2xl w-full max-w-md">
-                  <h3 className="text-xl font-bold text-white mb-4 text-center">Configura tu nueva contraseña</h3>
-                  <p className="text-white/70 mb-4 text-center">Por seguridad, debes establecer una nueva contraseña antes de continuar.</p>
+                  <h3 className="text-xl font-bold text-white mb-4 text-center">
+                    Configura tu nueva contraseña
+                  </h3>
+                  <p className="text-white/70 mb-4 text-center">
+                    Por seguridad, debes establecer una nueva contraseña antes de
+                    continuar.
+                  </p>
                   <form onSubmit={handleChangePassword} className="space-y-4">
                     <Input
                       type="password"
                       placeholder="Nueva contraseña (mínimo 6 caracteres)"
                       value={newPassword}
-                      onChange={e => setNewPassword(e.target.value)}
+                      onChange={(e) => setNewPassword(e.target.value)}
                       minLength={6}
                       required
                       className="bg-white/10 text-white"
                     />
-                    {newPasswordError && <div className="text-red-400 text-sm text-center">{newPasswordError}</div>}
+                    {newPasswordError && (
+                      <div className="text-red-400 text-sm text-center">
+                        {newPasswordError}
+                      </div>
+                    )}
                     <Button
                       type="submit"
                       size="lg"
@@ -373,7 +327,4 @@ const Login = () => {
 
 export default Login;
 
-// Auto-submit con autocompletar del sistema/gestores de contraseñas
-// Implementado dentro del componente usando refs y efectos
-// Sin romper el flujo existente
 Login.displayName = 'Login';
