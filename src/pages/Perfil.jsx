@@ -153,21 +153,6 @@ const Perfil = () => {
     };
   }, [ready, authLoading, user]);
 
-  console.log('[Perfil][render]', { ready, authLoading, hasUser: !!user, hasAccess: !!access, profileLoading });
-
-  if (!ready || authLoading || profileLoading) {
-    return <div>Cargando datos...</div>;
-  }
-
-  if (ready && !user) {
-    return (
-      <div>
-        Tu sesión ha expirado, entra de nuevo.
-        <button onClick={() => navigate('/login')}>Ir a Login</button>
-      </div>
-    );
-  }
-
   useEffect(() => {
     // Cargar estado real de membresía desde Supabase (profiles_certificado_v2)
     fetchMembership();
@@ -198,7 +183,7 @@ const Perfil = () => {
           }));
           setMembership(prev => ({
             ...prev,
-            codigo_vita: prev.codigo_vita ?? data.codigo_vita ?? prev.codigo_vita,
+            codigo_vita: data.codigo_vita ?? prev.codigo_vita,
           }));
         }
       } catch {
@@ -206,6 +191,21 @@ const Perfil = () => {
       }
     })();
   }, []);
+
+  console.log('[Perfil][render]', { ready, authLoading, hasUser: !!user, hasAccess: !!access, profileLoading });
+
+  if (!ready || authLoading || profileLoading) {
+    return <div>Cargando datos...</div>;
+  }
+
+  if (ready && !user) {
+    return (
+      <div>
+        Tu sesión ha expirado, entra de nuevo.
+        <button onClick={() => navigate('/login')}>Ir a Login</button>
+      </div>
+    );
+  }
 
   const validateField = (name, value) => {
     let error = '';
