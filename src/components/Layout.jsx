@@ -12,6 +12,7 @@ import {
   Bell
 } from 'lucide-react';
 import { Capacitor } from '@capacitor/core';
+const isIOS = Capacitor.getPlatform() === 'ios';
 import CrystalTopBar from '@/components/ios/CrystalTopBar';
 
 // Ícono de robot elegante SVG
@@ -214,10 +215,11 @@ const Layout = ({ children, title, showBackButton = false }) => {
 
   return (
     <div className="min-h-[100dvh] bg-vita-blue text-vita-white">
+      {/* Header clásico, solo ajusto espacio superior en iOS */}
       {!crystalActive && (
         <header
           className="flex items-center justify-center"
-          style={{marginTop: 'calc(env(safe-area-inset-top, 24px) + 16px)'}}
+          style={{ paddingTop: isIOS ? 48 : 0 }}
         >
           <div className="card w-full max-w-[820px] mx-auto px-4">
             <div className="glass-card flex items-center justify-between w-full px-4 py-3 border border-white/15 text-white rounded-xl shadow-lg backdrop-blur-md" style={{minHeight: '64px'}}>
@@ -290,6 +292,7 @@ const Layout = ({ children, title, showBackButton = false }) => {
           </div>
         </header>
       )}
+      {/* Si crystalActive, no se modifica aquí */}
       {crystalActive && (
         <div
           className="fixed z-[4000] pointer-events-auto header-ios-safe border border-white/15 text-white w-full max-w-[820px] left-1/2 -translate-x-1/2"
@@ -314,11 +317,24 @@ const Layout = ({ children, title, showBackButton = false }) => {
         {children}
       </main>
 
-  <nav className="fixed bottom-0 left-0 right-0 z-40 glass-card footer-menu app-tabbar-safe">
-        <div className="flex justify-around py-2">
+      {/* Menú inferior / Tab bar, solo ajusto paddingBottom e iconos en iOS */}
+      <nav
+        className="fixed bottom-0 left-0 right-0 z-40 glass-card footer-menu app-tabbar-safe"
+        style={{ paddingBottom: isIOS ? 24 : 4, height: isIOS ? 64 : 56 }}
+      >
+        <div
+          className="flex py-2"
+          style={{
+            justifyContent: 'space-evenly',
+            gap: isIOS ? 4 : 24,
+            paddingLeft: isIOS ? 16 : 0,
+            paddingRight: isIOS ? 16 : 0
+          }}
+        >
           {navigationItems.map((item) => {
             const Icon = item.icon;
             const isActive = location.pathname === item.path;
+            const iconSize = isIOS ? 16 : 20;
             // Si es el botón de chat, abre modal en vez de navegar
             if (item.isChat) {
               return (
@@ -328,42 +344,42 @@ const Layout = ({ children, title, showBackButton = false }) => {
                   className={`flex flex-col items-center space-y-1 h-auto py-2 px-3 rounded-lg transition-colors duration-300 text-vita-muted-foreground hover:text-vita-white hover:bg-white/5`}
                   onClick={() => setShowChat(true)}
                 >
-                  <item.icon className="h-5 w-5" />
+                  <item.icon className="" style={{ width: iconSize, height: iconSize }} />
                   <span className="text-xs font-medium">{item.label}</span>
                 </Button>
               );
             }
-              if (item.isExit) {
-                return (
-                  <Button
-                    key={item.path}
-                    variant="ghost"
-                    className={`flex flex-col items-center space-y-1 h-auto py-2 px-3 rounded-lg transition-colors duration-300 text-white hover:bg-white/10`}
-                    onClick={async () => {
-                      try {
-                        if (Capacitor.isNativePlatform()) {
-                          const { App } = await import('@capacitor/app');
-                          if (App.exitApp) {
-                            await App.exitApp();
-                          }
-                        } else {
-                          // En web: cerrar sesión y redirigir a login
-                          if (typeof supabase !== 'undefined') {
-                            await supabase.auth.signOut();
-                          }
-                          navigate('/login');
+            if (item.isExit) {
+              return (
+                <Button
+                  key={item.path}
+                  variant="ghost"
+                  className={`flex flex-col items-center space-y-1 h-auto py-2 px-3 rounded-lg transition-colors duration-300 text-white hover:bg-white/10`}
+                  onClick={async () => {
+                    try {
+                      if (Capacitor.isNativePlatform()) {
+                        const { App } = await import('@capacitor/app');
+                        if (App.exitApp) {
+                          await App.exitApp();
                         }
-                      } catch (err) {
-                        // fallback: redirigir a login
+                      } else {
+                        // En web: cerrar sesión y redirigir a login
+                        if (typeof supabase !== 'undefined') {
+                          await supabase.auth.signOut();
+                        }
                         navigate('/login');
                       }
-                    }}
-                  >
-                    <item.icon className="h-6 w-6" />
-                    <span className="text-xs font-bold text-white">{item.label}</span>
-                  </Button>
-                );
-              }
+                    } catch (err) {
+                      // fallback: redirigir a login
+                      navigate('/login');
+                    }
+                  }}
+                >
+                  <item.icon className="" style={{ width: iconSize, height: iconSize }} />
+                  <span className="text-xs font-bold text-white">{item.label}</span>
+                </Button>
+              );
+            }
             return (
               <Button
                 key={item.path}
@@ -375,7 +391,7 @@ const Layout = ({ children, title, showBackButton = false }) => {
                 }`}
                 onClick={() => navigate(item.path)}
               >
-                <item.icon className="h-5 w-5" />
+                <item.icon className="" style={{ width: iconSize, height: iconSize }} />
                 <span className="text-xs font-medium">{item.label}</span>
               </Button>
             );
