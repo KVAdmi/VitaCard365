@@ -46,6 +46,8 @@ import Terms from './pages/Terms';
 import Receipt from './pages/Receipt';
 import PaymentGateway from './pages/PaymentGateway';
 import FitCallback from './pages/FitCallback';
+import PaymentResult from './pages/PaymentResult.jsx';
+import PaymentStatus from './pages/PaymentStatus.jsx';
 import ResetPassword from './pages/ResetPassword';
 import AuthCallback from './pages/AuthCallback';
 import { initAuthDeepLinks } from '@/lib/deeplinks';
@@ -160,6 +162,9 @@ function App() {
                     <Route path="/payment-gateway" element={<ProtectedRoute><PaymentGatewayWrapper profile={{}} /></ProtectedRoute>} />
                     <Route path="/paymentgateway" element={<Navigate to="/payment-gateway" replace />} />
                     <Route path="/perfil" element={<ProtectedRoute><Perfil /></ProtectedRoute>} />
+                    {/* Ruta pública para resultado de pago Mercado Pago */}
+                    <Route path="/payment-result" element={<PaymentResult />} />
+                    <Route path="/payment/estado" element={<PaymentStatus />} />
                     <Route path="/perfil/wallet" element={<ProtectedRoute><Wallet /></ProtectedRoute>} />
                     <Route path="/recibo/:paymentId" element={<ProtectedRoute><Receipt /></ProtectedRoute>} />
                     <Route path="/fit-auth-callback" element={<FitCallback />} />

@@ -1,6 +1,7 @@
 // src/pages/PaymentGateway.jsx
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, Navigate } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import { supabase } from '@/lib/supabaseClient';
 import { usePayment } from "../hooks/usePayment";
 import { createPreference } from "../lib/api";
@@ -9,7 +10,30 @@ import Layout from "../components/Layout";
 // Nota: pantalla estabilizada sin lógica de códigos aplicada
 
 export default function PaymentGateway() {
+  const location = useLocation();
   const navigate = useNavigate();
+
+  // Lógica de retorno Mercado Pago (igual que PaymentResult)
+  useEffect(() => {
+    if (!location) return;
+    const params = new URLSearchParams(location.search);
+    if (params.get('status') || params.get('collection_id')) {
+      (async () => {
+        const { data } = await supabase.auth.getUser();
+        const user = data?.user;
+        const returnPath = localStorage.getItem('returnAfterPayment') || '/mi-plan';
+        console.log('[PaymentGateway] user', user);
+        console.log('[PaymentGateway] returnPath', returnPath);
+        if (user) {
+          navigate(returnPath);
+          localStorage.removeItem('returnAfterPayment');
+        } else {
+          navigate('/login', { state: { from: returnPath } });
+        }
+      })();
+      return;
+    }
+  }, [location, navigate]);
 
   console.log(">>> Estoy en PaymentGateway REAL");
 
@@ -142,8 +166,12 @@ export default function PaymentGateway() {
         throw new Error((res && res.error) || "Error al crear preferencia");
       }
 
+      // Guardar ruta actual antes de ir a Mercado Pago
+      try {
+        localStorage.setItem('returnAfterPayment', '/mi-plan'); // O la ruta deseada
+      } catch {}
       // Redirigimos directo al checkout
-  window.location.assign(res.init_point);
+      window.location.assign(res.init_point);
     } catch (err) {
       console.error("[Gateway] Error al generar preferencia:", err);
       setError("No se pudo procesar el pago. Intenta nuevamente en unos momentos.");

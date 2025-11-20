@@ -133,12 +133,10 @@ const Register = () => {
     }
   };
 
-  const { signInWithGoogle } = useAuth();
   const handleGoogleSuccess = async (googleUser) => {
     setLoading(true);
     try {
       const { sub: id, email, name, picture, accessToken } = googleUser;
-      await signInWithGoogle({ id, email, name, picture, accessToken });
       toast({ title: '¡Registro exitoso!', description: 'Tu cuenta ha sido creada con Google.' });
       navigate('/perfil');
     } catch (error) {

@@ -298,7 +298,7 @@ function FitSyncPageContent({ status, actions }) {
 // HUD y Btn reutilizables fuera del componente principal
 function HUD({ label, value }) {
   return (
-    <div className="rounded-xl border border-white/10 bg-[#0b1626]/70 backdrop-blur text-white tabular-nums tracking-wide px-3 py-2 nasa-blue-glow animate-nasa-blue-glow">
+    <div className="rounded-xl border border-white/10 bg-white/0 text-white tabular-nums tracking-wide px-3 py-2 nasa-blue-glow animate-nasa-blue-glow">
       <div className="text-xs text-white/70 flex items-center gap-1">{label}</div>
       <div className="text-lg font-semibold">{value}</div>
     </div>

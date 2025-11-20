@@ -16,17 +16,17 @@ import {
   Lock,
   Brain
 } from 'lucide-react';
-import { fetchAccess } from '@/lib/access';
+
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
-  const [access, setAccess] = useState(null);
+  const { user, access } = useAuth();
+
   const [logros, setLogros] = useState([]);
   const [rutinasCompletadas, setRutinasCompletadas] = useState(0);
     const [showPolicy, setShowPolicy] = useState(false);
 
-  useEffect(()=>{ (async()=>{ setAccess(await fetchAccess()); })(); },[]);
+
   useEffect(() => {
     // Simulación de logros y rutinas completadas
     setLogros(['Primera rutina completada', '5 días consecutivos']);
@@ -48,7 +48,7 @@ const Dashboard = () => {
     const ep = (access.estado_pago || '').toLowerCase();
     if (ep === 'cancelado') return { status: 'Cancelado', color: 'text-red-500', message: 'Tu plan ha sido cancelado.' };
     if (ep === 'vencido') return { status: 'Suspendido', color: 'text-orange-400', message: 'Tu pago está vencido.' };
-    if (access.acceso_activo) return { status: 'Activo', color: 'text-green-400', message: 'Todo en orden con tu plan.' };
+  if (access.activo) return { status: 'Activo', color: 'text-green-400', message: 'Todo en orden con tu plan.' };
     return { status: 'Pendiente', color: 'text-yellow-400', message: 'Activa tu plan para empezar.' };
   }, [access]);
 

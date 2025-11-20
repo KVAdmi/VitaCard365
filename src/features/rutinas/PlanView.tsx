@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import Layout from '@/components/Layout';
+import Layout from '../../components/Layout';
 import { supabase } from '@/lib/supabaseClient';
 import { ensureAccess } from '@/lib/access';
 import { dateKeyMX } from '@/lib/tz';
@@ -53,7 +53,9 @@ export default function PlanView() {
     try {
       const lastId = localStorage.getItem('vita-last-plan-id');
       if (lastId) {
-        const { data } = await supabase.from('planes').select('*').eq('id', lastId).single();
+        console.log('[supabase payload]', { table: 'planes', payload: { id: lastId } });
+        const { data, error } = await supabase.from('planes').select('*').eq('id', lastId).single();
+        if (error) console.error('[supabase error]', error);
         // Verificamos que pertenezca al usuario actual
         if (data && (!uid || data.user_id === uid)) {
           planRow = data;
@@ -62,37 +64,51 @@ export default function PlanView() {
     } catch {}
     // Si no hay local o no coincide, usar el más reciente del usuario
     if (!planRow) {
-      const { data } = await supabase
+      console.log('[supabase payload]', { table: 'planes', payload: { user_id: uid } });
+      const { data, error } = await supabase
         .from('planes')
         .select('*')
         .eq('user_id', uid)
         .order('created_at', { ascending: false })
         .limit(1)
         .single();
+      if (error) console.error('[supabase error]', error);
       planRow = data ?? null;
     }
     if (!planRow) { setPlan(null); setDias([]); setLoading(false); return; }
     setPlan(planRow);
 
-    const { data: rutinas } = await supabase
+    console.log('[supabase payload]', { table: 'rutinas', payload: { plan_id: planRow.id, semana: 1 } });
+    const { data: rutinas, error: rutinasError } = await supabase
       .from('rutinas')
       .select('id,dia_semana,foco,minutos')
       .eq('plan_id', planRow.id)
       .eq('semana', 1)
-      // Nota: filtramos por plan_id/semana; user_id puede faltar en algunos inserts
       .order('dia_semana', { ascending: true });
+    if (rutinasError) console.error('[supabase error]', rutinasError);
 
-    const ids = (rutinas ?? []).map((r:any)=>r.id);
-    const { data: detalle } = await supabase
-      .from('rutina_ejercicios')
-      .select('rutina_id,ejercicio_id,series,reps,tiempo_seg,descanso_seg')
-      .in('rutina_id', ids.length ? ids : ['__none__']);
+    const ids = (rutinas ?? []).map((r: any) => r.id);
 
-    const exIds = Array.from(new Set((detalle??[]).map(d=>d.ejercicio_id)));
+    let detalle: any[] = [];
+    let detalleError = null;
+    if (ids.length) {
+      console.log('[supabase payload]', { table: 'rutina_ejercicios', payload: { rutina_id: ids } });
+      const { data, error } = await supabase
+        .from('rutina_ejercicios')
+        .select('rutina_id,ejercicio_id,series,reps,tiempo_seg,descanso_seg')
+        .in('rutina_id', ids);
+      detalle = data ?? [];
+      detalleError = error;
+      if (detalleError) console.error('[supabase error]', detalleError);
+    }
+
+    const exIds = Array.from(new Set(detalle.map(d => d.ejercicio_id)));
     let nombres = new Map<string,string>();
     if (exIds.length) {
-      const { data: ex } = await supabase
+      console.log('[supabase payload]', { table: 'ejercicios', payload: { id: exIds } });
+      const { data: ex, error: exError } = await supabase
         .from('ejercicios').select('id,nombre').in('id', exIds);
+      if (exError) console.error('[supabase error]', exError);
       nombres = new Map((ex ?? []).map(e => [e.id, e.nombre]));
     }
 
@@ -138,14 +154,19 @@ export default function PlanView() {
       const kcal = Math.max(0, Math.round((d.minutos || 0) * 5));
       const minutos = Math.max(0, d.minutos || 0);
 
-      const { error } = await supabase.from('workouts').insert({
+      const payload = {
         user_id: uid,
         ts_inicio: tsInicio.toISOString(),
         ts_fin: tsFin.toISOString(),
         minutos,
         kcal,
-      } as any);
-      if (error) throw error;
+      };
+      console.log('[supabase payload]', { table: 'workouts', payload });
+      const { error } = await supabase.from('workouts').insert(payload);
+      if (error) {
+        console.error('[supabase error]', error);
+        throw error;
+      }
       // Guardar marca local para evitar duplicados del mismo día
       try { localStorage.setItem(localKey, '1'); } catch {}
       setDoneToday(prev => ({ ...prev, [d.id]: true }));

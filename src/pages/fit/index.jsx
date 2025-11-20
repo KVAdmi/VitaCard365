@@ -63,7 +63,7 @@ export default function FitPage() {
   return (
     <FitErrorBoundary>
       <Layout title="Fitness" showBackButton>
-  <div className="px-4 pb-24 min-h-screen bg-[#0a1a2f]">
+  <div className="px-4 pb-24 min-h-screen bg-white/0">
           {/* Logo VitaCard365 encabezado grande con fondo glow/blur azul */}
           <div className="w-full flex flex-col items-center justify-center mt-6 mb-4 relative z-20">
             <VitaCard365Logo className="w-[260px] sm:w-[340px] drop-shadow-[0_12px_48px_rgba(0,255,255,0.32)] brightness-110 contrast-125" />

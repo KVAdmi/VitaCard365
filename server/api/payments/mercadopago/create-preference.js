@@ -19,13 +19,13 @@ router.post('/preference', async (req, res) => {
         currency_id: 'MXN',
       }],
       back_urls: {
-        success: `${process.env.PUBLIC_URL}/payment/success`,
-        failure: `${process.env.PUBLIC_URL}/payment/failure`,
-        pending: `${process.env.PUBLIC_URL}/payment/pending`,
+        success: `${process.env.PUBLIC_URL}/payment-result`,
+        failure: `${process.env.PUBLIC_URL}/payment-result`,
+        pending: `${process.env.PUBLIC_URL}/payment-result`,
       },
       auto_return: 'approved',
-  notification_url: `${process.env.VITE_API_BASE_URL || 'http://localhost:3000'}/api/mercadopago/webhook`,
-  external_reference: user_id // <-- AGREGADO
+      notification_url: `${process.env.VITE_API_BASE_URL || 'http://localhost:3000'}/api/mercadopago/webhook`,
+      external_reference: user_id // <-- AGREGADO
     };
 
     const resp = await preference.create({ body });

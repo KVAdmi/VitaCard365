@@ -157,7 +157,7 @@ export default function GymProgreso() {
 
   return (
     <Layout title="Progreso (Gym)" showBackButton>
-  <div className="px-4 pb-24 min-h-screen bg-[#0a1a2f] relative overflow-hidden">
+  <div className="px-4 pb-24 min-h-screen bg-white/0">
         <div className="pt-4 pb-2">
           <button onClick={() => { try { history.back(); } catch {} }} className="text-violet-100/80 hover:text-white text-sm border border-violet-300/20 rounded-lg px-3 py-1 bg-violet-400/10">← Regresar</button>
         </div>
@@ -189,7 +189,7 @@ export default function GymProgreso() {
             <div className="text-white font-semibold">Avance semanal</div>
             <div className="mt-1 text-xs text-violet-100/80">Objetivo: {objetivoMin} min</div>
             <div className="relative flex items-center justify-center h-[220px]">
-              <div className="absolute inset-0 rounded-full blur-2xl opacity-40 bg-violet-400/30" />
+              {/* Overlay removed as requested */}
               <div className="w-[180px] h-[180px]"><Doughnut data={donutData} options={donutOptions} /></div>
               <div className="absolute text-center">
                 <div className="text-2xl font-extrabold text-white">{totalMin}</div>

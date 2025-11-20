@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { v4 as uuidv4 } from 'uuid';
@@ -18,74 +17,59 @@ export const useAuth = () => {
 export function AuthProvider({ children }) {
   const [session, setSession] = useState(null);
   const [access, setAccess] = useState(null);
-  const [isReturningFromOAuth, setIsReturningFromOAuth] = useState(false);
   const [ready, setReady] = useState(false);
 
+  // Inicialización simple de sesión, sin timeouts ni flags OAuth
   useEffect(() => {
-    let graceTimeout;
+    let isMounted = true;
+
     (async () => {
-      const oauthFlag = localStorage.getItem('oauth_ok');
-      const { data } = await supabase.auth.getSession();
-      console.log('[AuthContext][init] session:', data?.session?.user?.id || 'none');
-      setSession(data?.session ?? null);
-      
-      // Si hay sesión, consultar acceso inmediatamente
-      if (data?.session) {
-        await fetchAccess(data.session.user.id);
-      }
-      
-      if (oauthFlag === '1' && !data?.session) {
-        // Espera hasta 5s por la sesión
-        graceTimeout = setTimeout(() => {
+      try {
+        const { data, error } = await supabase.auth.getSession();
+        console.log(
+          '[AuthContext][init] session:',
+          data?.session?.user?.id || 'none'
+        );
+
+        if (!isMounted) return;
+
+        if (error) {
+          console.warn('[AuthContext] Error restaurando sesión:', error);
+          setSession(null);
+          setAccess(null);
+        } else {
+          setSession(data?.session ?? null);
+          if (data?.session) {
+            await fetchAccess(data.session.user.id);
+          } else {
+            setAccess(null);
+          }
+        }
+      } catch (err) {
+        if (!isMounted) return;
+        console.warn('[AuthContext] Error restaurando sesión (catch):', err);
+        setSession(null);
+        setAccess(null);
+      } finally {
+        if (isMounted) {
           setReady(true);
-          localStorage.removeItem('oauth_ok');
-        }, 5000);
-      } else {
-        setReady(true);
+        }
       }
     })();
 
-    let navigationDone = false;
-    const { data: sub } = supabase.auth.onAuthStateChange(async (_e, s) => {
+
+    const { data: sub } = supabase.auth.onAuthStateChange((_event, s) => {
+      if (!isMounted) return;
       setSession(s ?? null);
-      if (s) {
-        await fetchAccess(s.user.id);
-        setReady(true);
-        localStorage.removeItem('oauth_ok');
-        // Solo navegar una vez en nativo tras Google login/registro
-        if (window && window.Capacitor && window.Capacitor.isNativePlatform && !navigationDone) {
-          navigationDone = true;
-          // LOG: sesión recibida
-          console.log('[AuthContext][native][callback] sesión recibida, user:', s.user.id);
-          // Detectar contexto
-          const context = localStorage.getItem('oauth_context') || 'login';
-          console.log('[AuthContext][native][callback] contexto OAuth:', context);
-          localStorage.removeItem('oauth_context');
-          if (context === 'register') {
-            window.location.replace('#/payment-gateway');
-            return;
-          }
-          // login: navegar según acceso
-          const { data: perfil } = await supabase
-            .from('profiles_certificado_v2')
-            .select('acceso_activo')
-            .eq('user_id', s.user.id)
-            .maybeSingle();
-          const accesoActivo = !!perfil?.acceso_activo;
-          console.log('[AuthContext][native][callback] acceso_activo:', accesoActivo, 'ruta destino:', accesoActivo ? '#/dashboard' : '#/mi-plan');
-          if (accesoActivo) {
-            window.location.replace('#/dashboard');
-          } else {
-            window.location.replace('#/mi-plan');
-          }
-        }
-      } else {
+      // Si no hay sesión, limpiamos acceso.
+      if (!s) {
         setAccess(null);
       }
     });
+
     return () => {
+      isMounted = false;
       sub?.subscription?.unsubscribe?.();
-      if (graceTimeout) clearTimeout(graceTimeout);
     };
   }, []);
 
@@ -98,19 +82,23 @@ export function AuthProvider({ children }) {
         .select('acceso_activo, estado_pago, membresia')
         .eq('user_id', userId)
         .maybeSingle();
-      
+
       if (error) {
         console.error('[AuthContext][fetchAccess][error]', error);
         setAccess({ activo: false });
         return;
       }
-      
+
       const accesoActivo = !!perfil?.acceso_activo;
-      console.log('[AuthContext][fetchAccess][ok] acceso_activo:', accesoActivo);
-      setAccess({ 
+      console.log(
+        '[AuthContext][fetchAccess][ok] acceso_activo:',
+        accesoActivo
+      );
+
+      setAccess({
         activo: accesoActivo,
         estado_pago: perfil?.estado_pago,
-        membresia: perfil?.membresia
+        membresia: perfil?.membresia,
       });
     } catch (err) {
       console.error('[AuthContext][fetchAccess][catch]', err);
@@ -124,22 +112,21 @@ export function AuthProvider({ children }) {
       console.log('[AuthContext][login] email:', email);
       const { data, error } = await supabase.auth.signInWithPassword({
         email: email.trim(),
-        password: password
+        password: password,
       });
-      
+
       if (error) {
         console.error('[AuthContext][login][error]', error.message);
         throw error;
       }
-      
+
       console.log('[AuthContext][login][ok] user:', data.user?.id);
-      
-      // Actualizar sesión y consultar acceso
+
       setSession(data.session);
       if (data.user?.id) {
         await fetchAccess(data.user.id);
       }
-      
+
       return data;
     } catch (error) {
       console.error('[AuthContext][login][catch]', error);
@@ -155,25 +142,24 @@ export function AuthProvider({ children }) {
         email: email.trim(),
         password: password,
         options: {
-          data: metadata
-        }
+          data: metadata,
+        },
       });
-      
+
       if (error) {
         console.error('[AuthContext][register][error]', error.message);
         throw error;
       }
-      
+
       console.log('[AuthContext][register][ok] user:', data.user?.id);
-      
-      // Si hay sesión inmediata, actualizarla
+
       if (data.session) {
         setSession(data.session);
         if (data.user?.id) {
           await fetchAccess(data.user.id);
         }
       }
-      
+
       return data;
     } catch (error) {
       console.error('[AuthContext][register][catch]', error);
@@ -181,26 +167,36 @@ export function AuthProvider({ children }) {
     }
   };
 
-  // Función de login con Google OAuth
-  const signInWithGoogle = async (googleData) => {
+  // Reset explícito del estado de auth al entrar a /login (useCallback para referencia estable)
+  const resetAuthState = React.useCallback(async () => {
+    console.log('[AuthContext][resetAuthState] reset solicitado');
+    setReady(false);
+    setSession(null);
+    setAccess(null);
+
     try {
-      console.log('[AuthContext][signInWithGoogle] email:', googleData?.email);
-      
-      // En este caso, Supabase ya manejó el OAuth
-      // Solo necesitamos actualizar el perfil si es necesario
-      const { data: sessionData } = await supabase.auth.getSession();
-      
-      if (sessionData?.session) {
-        setSession(sessionData.session);
-        await fetchAccess(sessionData.session.user.id);
+      const { data, error } = await supabase.auth.getSession();
+
+      if (error) {
+        console.warn('[AuthContext] Error en resetAuthState:', error);
+        setSession(null);
+        setAccess(null);
+      } else {
+        setSession(data?.session ?? null);
+        if (data?.session) {
+          await fetchAccess(data.session.user.id);
+        } else {
+          setAccess(null);
+        }
       }
-      
-      return sessionData;
-    } catch (error) {
-      console.error('[AuthContext][signInWithGoogle][catch]', error);
-      throw error;
+    } catch (err) {
+      console.warn('[AuthContext] Error en resetAuthState (catch):', err);
+      setSession(null);
+      setAccess(null);
+    } finally {
+      setReady(true);
     }
-  };
+  }, [fetchAccess]);
 
   // Función de logout
   const logout = async () => {
@@ -210,7 +206,7 @@ export function AuthProvider({ children }) {
       if (error) throw error;
       setSession(null);
       setAccess(null);
-      localStorage.removeItem('oauth_ok');
+
       // Limpiar datos de RememberMe
       import('../lib/rememberMe').then(({ clearRememberMe }) => {
         clearRememberMe();
@@ -222,21 +218,21 @@ export function AuthProvider({ children }) {
   };
 
   return (
-    <AuthContext.Provider value={{
-      session, 
-      setSession,
-      user: session?.user || null,
-      access, 
-      setAccess,
-      isReturningFromOAuth, 
-      setIsReturningFromOAuth,
-      ready,
-      login,
-      register,
-      signInWithGoogle,
-      logout,
-      fetchAccess
-    }}>
+    <AuthContext.Provider
+      value={{
+        session,
+        setSession,
+        user: session?.user || null,
+        access,
+        setAccess,
+        ready,
+        login,
+        register,
+        logout,
+        fetchAccess,
+        resetAuthState,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

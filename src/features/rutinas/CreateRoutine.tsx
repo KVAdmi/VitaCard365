@@ -52,6 +52,24 @@ const equipoAlias: Record<string,string> = {
 };
 
 export default function CreateRoutine() {
+  // Normaliza el foco para cumplir el check constraint de Supabase
+  const normalizeFoco = (raw: string): 'full' | 'upper' | 'lower' | 'movilidad' | 'cardio' => {
+    switch ((raw || '').toLowerCase()) {
+      case 'upper':
+      case 'torso':
+        return 'upper';
+      case 'lower':
+      case 'piernas':
+        return 'lower';
+      case 'movilidad':
+      case 'mobility':
+        return 'movilidad';
+      case 'cardio':
+        return 'cardio';
+      default:
+        return 'full';
+    }
+  };
   const navigate = useNavigate();
   const { success, error: toastError } = useToast();
   const [paso, setPaso] = useState<'objetivo' | 'estructura' | 'dias' | 'ejercicios' | 'resumen'>('objetivo');
@@ -248,12 +266,29 @@ export default function CreateRoutine() {
       } catch {}
 
       // Rutinas semana 1 + detalle
+      const validFocos = ['full','upper','lower','movilidad','cardio','core'];
       for (const d of dias) {
-        const foco = focoPorDia[d] ?? 'full';
-        const rutina_id = await crearRutinaDia({ plan_id, user_id: user_id as any, semana: 1, dia_semana: d, foco, minutos });
+        let focoOriginal = focoPorDia[d];
+        const rutina_id = await crearRutinaDia({
+          plan_id,
+          user_id: user_id as any,
+          semana: 1,
+          dia_semana: d,
+          foco: normalizeFoco(focoOriginal),
+          minutos
+        });
         const items = (itemsPorDia[d] ?? []) as (RutinaItemLocal[]);
-        if (items.length) {
-          const cleanItems: RutinaItemInput[] = items.map(({ displayName: _omit, ...rest }) => ({
+        // Filtrar ejercicios con id inválido
+        const ejerciciosValidos = items.filter(
+          it => it.ejercicio_id && typeof it.ejercicio_id === 'string' &&
+            it.ejercicio_id !== '__none__' &&
+            it.ejercicio_id !== 'none' &&
+            it.ejercicio_id !== 'sin_id' &&
+            it.ejercicio_id !== '0' &&
+            it.ejercicio_id !== ''
+        );
+        if (ejerciciosValidos.length) {
+          const cleanItems: RutinaItemInput[] = ejerciciosValidos.map(({ displayName: _omit, ...rest }) => ({
             ejercicio_id: rest.ejercicio_id,
             series: rest.series ?? 3,
             reps: rest.tiempo_seg && rest.tiempo_seg > 0 ? null : (rest.reps ?? 10),
@@ -261,16 +296,17 @@ export default function CreateRoutine() {
             descanso_seg: rest.descanso_seg ?? 60,
             rpe: rest.rpe ?? 7,
           }));
+          console.log('[supabase payload][rutina_ejercicios]', { rutina_id, user_id, cleanItems });
           await agregarEjerciciosARutina(rutina_id, user_id as any, cleanItems);
         }
       }
 
-  success('Rutina creada ✔️');
-  setPaso('resumen');
-  // Redirigimos al viewer para validar que quedó guardada
-  navigate('/fit/plan', { replace: true });
+      success('Rutina creada ✔️');
+      setPaso('resumen');
+      // Redirigimos al viewer para validar que quedó guardada
+      navigate('/fit/plan', { replace: true });
     } catch (e:any) {
-      console.error(e);
+      console.error('[supabase error][rutinas]', e);
       toastError(`Error: ${e.message ?? e}`);
     } finally {
       setSaving(false);
@@ -335,10 +371,10 @@ export default function CreateRoutine() {
       {/* Logo superior */}
       <div className="w-full flex flex-col items-center mt-2">
         <img src="/branding/Logo 2 Vita.png" alt="VitaCard 365" className="h-20 sm:h-24 object-contain drop-shadow-[0_0_24px_rgba(240,99,64,0.55)]" />
-        {/* Título neon centrado */}
-        <div className="mt-2 text-xl sm:text-2xl font-extrabold text-cyan-200 drop-shadow-[0_0_12px_rgba(0,255,255,0.5)]" style={{ animation: 'neonPulseSoft 2.2s ease-in-out infinite' }}>
+        {/* Título neon centrado, SIN recuadro */}
+        <span className="mt-2 text-xl sm:text-2xl font-extrabold text-cyan-200 drop-shadow-[0_0_12px_rgba(0,255,255,0.5)]" style={{ animation: 'neonPulseSoft 2.2s ease-in-out infinite', background: 'none', border: 'none', boxShadow: 'none' }}>
           Diseña tu plan
-        </div>
+        </span>
       </div>
       {/* Acciones centradas */}
       <div className="sticky top-0 z-10 backdrop-blur-sm">

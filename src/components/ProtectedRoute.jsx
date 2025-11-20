@@ -6,21 +6,15 @@ import { AuthContext } from '../contexts/AuthContext';
 
 
 export default function ProtectedRoute({ children }) {
-  const { session, access, isReturningFromOAuth, ready } = useContext(AuthContext);
+  const { session, access, ready } = useContext(AuthContext);
   const location = useLocation();
   const path = location.pathname;
-  const oauthFlag = typeof window !== 'undefined' ? localStorage.getItem('oauth_ok') : null;
 
-  // Permitir callback siempre
-  if (path.startsWith('/auth/callback')) return children;
 
   // Espera a que el auth esté listo (evita rebotes)
-  if (!ready || (oauthFlag === '1' && (!session || access == null))) {
+  if (!ready) {
     return <div>Cargando…</div>;
   }
-
-  // Si vienes del OAuth, no regreses a /login aunque session tarde un ms
-  if (isReturningFromOAuth && path === '/login') return <Navigate to="/mi-plan" replace />;
 
   // Sin sesión -> solo /login
   if (!session) {

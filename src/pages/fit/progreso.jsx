@@ -190,29 +190,12 @@ export default function FitProgreso() {
 
   return (
     <Layout title="Progreso" showBackButton>
-  <div className="px-4 pb-24 min-h-screen bg-[#0a1a2f]">
+  <div className="px-4 pb-24 min-h-screen bg-white/0">
       {/* Fallback back button (por si un layout viejo no lo trae) */}
       <div className="pt-4 pb-2">
         <button onClick={() => { try { navigate(-1); } catch { navigate('/dashboard', { replace: true }); } }} className="text-cyan-100/80 hover:text-white text-sm border border-cyan-300/20 rounded-lg px-3 py-1 bg-cyan-400/10">
           ← Regresar
         </button>
-      </div>
-      {/* Líneas NASA de fondo */}
-      <div className="absolute inset-0 pointer-events-none z-0">
-        <svg width="100%" height="100%" className="w-full h-full" style={{ position: 'absolute', top: 0, left: 0 }}>
-          <defs>
-            <linearGradient id="gridline-prog" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#00ffe7" stopOpacity="0.08" />
-              <stop offset="100%" stopColor="#00ffe7" stopOpacity="0.01" />
-            </linearGradient>
-          </defs>
-          {[...Array(12)].map((_, i) => (
-            <line key={i} x1={(i + 1) * 90} y1="0" x2={(i + 1) * 90} y2="2000" stroke="url(#gridline-prog)" strokeWidth="1" />
-          ))}
-          {[...Array(8)].map((_, i) => (
-            <line key={i} y1={(i + 1) * 120} x1="0" y2={(i + 1) * 120} x2="2000" stroke="url(#gridline-prog)" strokeWidth="1" />
-          ))}
-        </svg>
       </div>
 
       {/* Encabezado */}
@@ -279,7 +262,7 @@ export default function FitProgreso() {
           </div>
           <div className="mt-1 text-xs text-cyan-100/80">Objetivo: {objetivoMin} min</div>
           <div className="relative flex items-center justify-center h-[220px]">
-            <div className="absolute inset-0 rounded-full blur-2xl opacity-50 bg-cyan-400/30" />
+            {/* Overlay removed as requested */}
             <div className="w-[180px] h-[180px]">
               <Doughnut data={donutData} options={donutOptions} />
             </div>
