@@ -786,7 +786,8 @@ export default function CreateRoutine() {
 
       {/* Catálogo de ejercicios */}
       <Modal open={showCatalog} onClose={()=>setShowCatalog(false)} title="Catálogo de ejercicios">
-        <div className="space-y-3 rounded-2xl border border-cyan-300/20 bg-[#0b1626]/85 backdrop-blur-md p-3">
+        <div className="space-y-3 rounded-2xl border border-cyan-300/20 bg-[#0b1626]/85 backdrop-blur-md p-3"
+          style={{ maxHeight: '80vh', overflowY: 'auto', WebkitOverflowScrolling: 'touch' }}>
           <div className="flex items-center justify-between">
             <div className="text-sm font-semibold text-white/90">Catálogo de ejercicios</div>
             <button onClick={()=>setShowCatalog(false)} className="text-sm px-3 py-1 rounded-lg border border-white/10 bg-white/5 hover:bg-white/10">Cerrar</button>
@@ -807,7 +808,7 @@ export default function CreateRoutine() {
               {catalogNotice}
             </div>
           )}
-          <div className="max-h-80 overflow-y-auto grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <div className="max-h-80 overflow-y-auto grid grid-cols-1 sm:grid-cols-2 gap-2" style={{ scrollbarWidth: 'thin', WebkitOverflowScrolling: 'touch' }}>
             {catalogLoading ? (
               <div className="text-sm opacity-70">Cargando…</div>
             ) : catalogRes.length===0 ? (
