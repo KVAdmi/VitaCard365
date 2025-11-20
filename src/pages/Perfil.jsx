@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Helmet } from 'react-helmet-async';
 import Layout from '../components/Layout';
@@ -13,10 +14,66 @@ import { useToast } from '../components/ui/use-toast';
 import { LogOut, Save, Copy, Info, Camera, Edit } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
+// Estado para mostrar la tarjeta de instrucciones tras compra familiar
+
 const Perfil = () => {
-  const navigate = useNavigate();
+  // Detectar si se perdió la sesión tras MercadoPago
+  const sessionLost = typeof window !== 'undefined' && window.history && window.history.state && window.history.state.sessionLost;
+
   const { user, logout, updateUser } = useAuth();
+  const navigate = useNavigate();
   const { toast } = useToast();
+  // Estado para familiares
+  const [familyForms, setFamilyForms] = useState([]); // [{name, apellidoPaterno, apellidoMaterno, birthDate, sexo, ...}]
+  const [savingFamilia, setSavingFamilia] = useState(false);
+  // Estado para mostrar formularios familiares tras pago
+  const [showFamiliaForm, setShowFamiliaForm] = useState(false);
+  const [showFamiliaInstr, setShowFamiliaInstr] = useState(false);
+
+  // Cargar cantidad de familiares desde user_metadata.familyMembersCount o similar
+  useEffect(() => {
+    if (showFamiliaForm && user && user.user_metadata && user.user_metadata.familyMembersCount) {
+      const count = user.user_metadata.familyMembersCount;
+      setFamilyForms(Array(count).fill().map(() => ({
+        name: '', apellidoPaterno: '', apellidoMaterno: '', birthDate: '', sexo: ''
+      })));
+    }
+  }, [showFamiliaForm, user]);
+
+  // Manejar cambios en formularios de familiares
+  const handleFamilyInputChange = (idx, e) => {
+    const { name, value } = e.target;
+    setFamilyForms(prev => prev.map((f, i) => i === idx ? { ...f, [name]: value } : f));
+  };
+
+  // Guardar todos los familiares en Supabase
+  const handleSaveFamiliares = async () => {
+    setSavingFamilia(true);
+    try {
+      const { data: u } = await supabase.auth.getUser();
+      const uid = u?.user?.id;
+      if (!uid) throw new Error('Usuario no autenticado');
+      // familyId para vincular familiares
+      const familyId = user && user.user_metadata ? user.user_metadata.familyId : null;
+      // Insertar cada familiar
+      for (let fam of familyForms) {
+        await supabase.from('family_members').upsert({
+          user_id: uid,
+          family_id: familyId,
+          name: fam.name,
+          apellido_paterno: fam.apellidoPaterno,
+          apellido_materno: fam.apellidoMaterno,
+          birthdate: fam.birthDate,
+          sexo: fam.sexo
+        }, { onConflict: 'user_id, name, apellido_paterno, apellido_materno' });
+      }
+      setShowFamiliaForm(false);
+      toast({ title: 'Familiares guardados', description: 'Todos los datos han sido registrados correctamente.' });
+    } catch (err) {
+      toast({ title: 'Error al guardar familiares', description: err.message || 'Intenta de nuevo', variant: 'destructive' });
+    }
+    setSavingFamilia(false);
+  };
   
   const [isEditing, setIsEditing] = useState(false);
   const [loadingAccess, setLoadingAccess] = useState(false);
@@ -286,6 +343,19 @@ const Perfil = () => {
     toast({ title: 'Copiado', description: 'El código ha sido copiado al portapapeles.' });
   };
 
+  if (sessionLost) {
+    return (
+      <Layout title="Mi Perfil" showBackButton>
+        <div className="p-8 flex flex-col items-center justify-center">
+          <Card className="max-w-md w-full p-6 text-center">
+            <CardTitle className="text-red-500 mb-2">¡Sesión perdida tras pago!</CardTitle>
+            <CardDescription className="mb-4">No pudimos restaurar tu sesión automáticamente después de regresar de MercadoPago. Por favor, inicia sesión nuevamente para ver tu perfil y confirmar tu pago.</CardDescription>
+            <Button variant="destructive" onClick={() => navigate('/login', { replace: true })}>Iniciar sesión</Button>
+          </Card>
+        </div>
+      </Layout>
+    );
+  }
   if (!user) return null;
 
   const Avatar = () => (
@@ -324,6 +394,82 @@ const Perfil = () => {
 
   return (
     <>
+      {showFamiliaInstr && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="glass-card rounded-2xl p-6 shadow-2xl max-w-md w-full relative border border-orange-400/30 backdrop-blur-lg">
+            <button
+              className="absolute top-3 right-3 bg-orange-500/80 hover:bg-orange-600 text-white rounded-full w-8 h-8 flex items-center justify-center"
+              onClick={() => { setShowFamiliaInstr(false); setShowFamiliaForm(true); }}
+              aria-label="Cerrar"
+            >
+              ×
+            </button>
+            <div className="flex flex-col items-center gap-3">
+              <div className="w-16 h-16 rounded-full bg-orange-100 flex items-center justify-center mb-2">
+                <Info className="h-8 w-8 text-orange-500" />
+              </div>
+              <h2 className="text-xl font-bold text-orange-500 mb-2">Completa los datos de tus familiares</h2>
+              <p className="text-base text-white/90 text-center mb-2">
+                Ingresa los datos completos de cada familiar que agregaste.<br />
+                Es importante que la información sea correcta para generar sus certificados y activar la cobertura.
+              </p>
+              <p className="text-xs text-white/60 text-center">Puedes cerrar esta ventana cuando termines.</p>
+            </div>
+          </div>
+        </div>
+      )}
+      {showFamiliaForm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="glass-card rounded-2xl p-6 shadow-2xl max-w-lg w-full relative border border-orange-400/30 backdrop-blur-lg">
+            <button
+              className="absolute top-3 right-3 bg-orange-500/80 hover:bg-orange-600 text-white rounded-full w-8 h-8 flex items-center justify-center"
+              onClick={() => setShowFamiliaForm(false)}
+              aria-label="Cerrar"
+            >
+              ×
+            </button>
+            <div className="flex flex-col items-center gap-3">
+              <h2 className="text-xl font-bold text-orange-500 mb-2">Datos de familiares</h2>
+              <p className="text-base text-white/90 text-center mb-2">Captura los datos completos de cada familiar.</p>
+              <div className="w-full mt-4">
+                {familyForms.length === 0 && (
+                  <p className="text-white/80 text-center">No hay familiares para capturar. Verifica tu plan familiar.</p>
+                )}
+                {familyForms.map((fam, idx) => (
+                  <Card className="mb-4" key={idx}>
+                    <CardHeader>
+                      <CardTitle>Familiar {idx + 1}</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-2">
+                        <Label htmlFor={`fam_name_${idx}`}>Nombre</Label>
+                        <Input id={`fam_name_${idx}`} name="name" value={fam.name} onChange={e => handleFamilyInputChange(idx, e)} placeholder="Nombre(s)" />
+                        <Label htmlFor={`fam_apellidoPaterno_${idx}`}>Apellido Paterno</Label>
+                        <Input id={`fam_apellidoPaterno_${idx}`} name="apellidoPaterno" value={fam.apellidoPaterno} onChange={e => handleFamilyInputChange(idx, e)} placeholder="Apellido Paterno" />
+                        <Label htmlFor={`fam_apellidoMaterno_${idx}`}>Apellido Materno</Label>
+                        <Input id={`fam_apellidoMaterno_${idx}`} name="apellidoMaterno" value={fam.apellidoMaterno} onChange={e => handleFamilyInputChange(idx, e)} placeholder="Apellido Materno" />
+                        <Label htmlFor={`fam_birthDate_${idx}`}>Fecha de Nacimiento</Label>
+                        <Input id={`fam_birthDate_${idx}`} name="birthDate" type="date" value={fam.birthDate} onChange={e => handleFamilyInputChange(idx, e)} />
+                        <Label htmlFor={`fam_sexo_${idx}`}>Sexo</Label>
+                        <select id={`fam_sexo_${idx}`} name="sexo" value={fam.sexo} onChange={e => handleFamilyInputChange(idx, e)} className="w-full rounded-xl px-4 py-2 bg-white/10 text-white shadow-inner focus:outline-none focus:ring-2 focus:ring-vita-orange border border-vita-orange/40">
+                          <option value="">Selecciona…</option>
+                          <option value="Masculino">Masculino</option>
+                          <option value="Femenino">Femenino</option>
+                        </select>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+                {familyForms.length > 0 && (
+                  <Button className="mt-4 w-full bg-vita-orange text-white" onClick={handleSaveFamiliares} disabled={savingFamilia}>
+                    {savingFamilia ? 'Guardando…' : 'Guardar Familiares'}
+                  </Button>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       <Helmet>
         <title>Perfil - VitaCard 365</title>
         <meta name="description" content="Gestiona tu perfil, miembros familiares y preferencias en Vita365." />

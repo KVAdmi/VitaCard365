@@ -6,7 +6,7 @@ import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { useAuth } from '../contexts/AuthContext';
-import { supabase } from '../lib/supabase';
+import { supabase } from '../lib/supabaseClient';
 import { useToast } from '../components/ui/use-toast';
 import { Eye, EyeOff, Mail, Lock, User, ArrowLeft, Ticket } from 'lucide-react';
 import { validateSellerCode, PromoStorage } from '@/lib/codes';

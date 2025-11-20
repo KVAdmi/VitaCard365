@@ -17,6 +17,19 @@ export default function AuthCallback() {
       const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
       if (sessionError || !sessionData?.session) {
         console.error('[AuthCallback][web] Error obteniendo sesión:', sessionError);
+        const context = localStorage.getItem('oauth_context');
+        localStorage.removeItem('oauth_context');
+        // Si el contexto es register, navega a /perfil y muestra aviso de sesión perdida
+        if (context === 'register') {
+          nav('/perfil', { replace: true, state: { sessionLost: true } });
+          return;
+        }
+        // Si el contexto es login, navega a /payment-gateway y muestra aviso de sesión perdida
+        if (context === 'login') {
+          nav('/payment-gateway', { replace: true, state: { sessionLost: true } });
+          return;
+        }
+        // Si no hay contexto, navega a login como fallback
         nav('/login', { replace: true });
         return;
       }
@@ -30,12 +43,30 @@ export default function AuthCallback() {
       const context = localStorage.getItem('oauth_context');
       console.log('[AuthCallback][web] Contexto leído:', context);
       localStorage.removeItem('oauth_context'); // Limpiar inmediatamente
-      // Si viene de REGISTER, ir directo a payment-gateway y NO redirigir luego a /mi-plan
+      // Si viene de REGISTER, ir a payment-gateway y tras pago registrar en profiles_certificado_v2 y redirigir a /perfil
       if (context === 'register') {
         console.log('[AuthCallback][web] Contexto: register → /payment-gateway');
         localStorage.removeItem('oauth_ok');
         setIsReturningFromOAuth(false);
-        nav('/payment-gateway', { replace: true });
+        // Verificar si el usuario ya está en profiles_certificado_v2
+        const userId = data.session.user.id;
+        try {
+          const { data: perfil, error: perfilErr } = await supabase
+            .from('profiles_certificado_v2')
+            .select('user_id')
+            .eq('user_id', userId)
+            .maybeSingle();
+          if (!perfilErr && !perfil) {
+            // Si no existe, crear registro mínimo
+            await supabase
+              .from('profiles_certificado_v2')
+              .upsert({ user_id: userId, acceso_activo: false });
+            console.log('[AuthCallback][web] Registro creado en profiles_certificado_v2');
+          }
+        } catch (e) {
+          console.warn('[AuthCallback][web] Error al registrar en profiles_certificado_v2:', e);
+        }
+        nav('/perfil', { replace: true });
         return;
       }
       // Si viene de LOGIN, consultar acceso

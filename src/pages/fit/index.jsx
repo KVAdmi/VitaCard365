@@ -63,21 +63,8 @@ export default function FitPage() {
   return (
     <FitErrorBoundary>
       <Layout title="Fitness" showBackButton>
-        <div className="px-4 pb-24 min-h-screen bg-gradient-to-br from-[#0E1A2B] via-[#101a2e] to-[#0a1120] relative overflow-hidden">
-          {/* NASA grid lines */}
-          <div className="absolute inset-0 pointer-events-none z-0">
-            <svg width="100%" height="100%" className="w-full h-full" style={{position:'absolute',top:0,left:0}}>
-              <defs>
-                <linearGradient id="gridline" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#00ffe7" stopOpacity="0.08" />
-                  <stop offset="100%" stopColor="#00ffe7" stopOpacity="0.01" />
-                </linearGradient>
-              </defs>
-              {[...Array(12)].map((_,i)=>(<line key={i} x1={(i+1)*90} y1="0" x2={(i+1)*90} y2="2000" stroke="url(#gridline)" strokeWidth="1" />))}
-              {[...Array(8)].map((_,i)=>(<line key={i} y1={(i+1)*120} x1="0" y2={(i+1)*120} x2="2000" stroke="url(#gridline)" strokeWidth="1" />))}
-            </svg>
-          </div>
-          {/* Logo VitaCard365 encabezado grande */}
+  <div className="px-4 pb-24 min-h-screen bg-[#0a1a2f]">
+          {/* Logo VitaCard365 encabezado grande con fondo glow/blur azul */}
           <div className="w-full flex flex-col items-center justify-center mt-6 mb-4 relative z-20">
             <VitaCard365Logo className="w-[260px] sm:w-[340px] drop-shadow-[0_12px_48px_rgba(0,255,255,0.32)] brightness-110 contrast-125" />
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[320px] h-[120px] rounded-full blur-2xl opacity-50 bg-cyan-400/40 z-[-1]" />
