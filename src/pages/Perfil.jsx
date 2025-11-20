@@ -20,7 +20,7 @@ const Perfil = () => {
   // Detectar si se perdió la sesión tras MercadoPago
   const sessionLost = typeof window !== 'undefined' && window.history && window.history.state && window.history.state.sessionLost;
 
-  const { user, logout, updateUser } = useAuth();
+  // Eliminar redeclaración duplicada de 'user', 'logout', 'updateUser' si ya existe arriba
   const navigate = useNavigate();
   const { toast } = useToast();
   // Estado para familiares
