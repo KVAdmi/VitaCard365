@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { Capacitor } from '@capacitor/core';
+const isIOS = Capacitor.getPlatform() === 'ios';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Helmet } from 'react-helmet';
@@ -153,7 +155,7 @@ const Register = () => {
       </Helmet>
 
       <div className="min-h-screen bg-deep-blue-gradient flex flex-col p-6 relative overflow-hidden">
-        <header className="w-full max-w-7xl mx-auto z-10">
+  <header className={`w-full ${isIOS ? 'pt-6' : 'pt-2'} pb-2 z-50 max-w-7xl mx-auto z-10`}>
           <Button
             variant="ghost"
             size="icon"

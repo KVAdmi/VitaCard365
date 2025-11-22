@@ -1,4 +1,5 @@
 import React from 'react';
+import { Capacitor } from '@capacitor/core';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Bell } from 'lucide-react';
@@ -9,8 +10,7 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
-  DropdownMenuTrigger,
-  DropdownMenuPortal,
+  DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
 
 type NotificationItem = { title: string; description?: string; time?: string };
@@ -26,12 +26,13 @@ type CrystalTopBarProps = {
 // Barra iOS-only: translúcida, segura en notch, sin blur real (solo color rgba + borde/sombra)
 export const CrystalTopBar: React.FC<CrystalTopBarProps> = ({ showBackButton = false, avatarSrc, hasNotifications, notifications = [], onMarkAllRead }) => {
   const navigate = useNavigate();
-  const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+  const isIOS = Capacitor.getPlatform() === 'ios';
 
   return (
     <div
       className="fixed z-[4000] pointer-events-auto header-ios-safe border border-white/15 text-white"
       style={{
+        paddingTop: isIOS ? 56 : 8,
         top: 'calc(var(--sat, env(safe-area-inset-top, 0px)) + 48px)',
         left: 0,
         right: 0,
@@ -93,27 +94,25 @@ export const CrystalTopBar: React.FC<CrystalTopBarProps> = ({ showBackButton = f
               )}
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuPortal>
-            <DropdownMenuContent className="w-80 mr-2 bg-white/10 backdrop-blur-md border border-white/15 text-white z-[5000] rounded-xl overflow-hidden" align="end" style={{zIndex:5000}}>
-              <DropdownMenuLabel className="font-semibold">Notificaciones</DropdownMenuLabel>
-              <DropdownMenuSeparator className="bg-white/15" />
-              {notifications.length === 0 ? (
-                <div className="p-3 text-sm text-white/80">Sin notificaciones recientes</div>
-              ) : notifications.map((n, i) => (
-                <DropdownMenuItem key={i} className="flex flex-col items-start gap-1 p-3 focus:bg-white/15">
-                  <div className="flex justify-between w-full">
-                    <p className="font-semibold">{n.title}</p>
-                    <p className="text-xs text-white/70">{n.time}</p>
-                  </div>
-                  {n.description && <p className="text-sm text-white/80 w-full">{n.description}</p>}
-                </DropdownMenuItem>
-              ))}
-              <DropdownMenuSeparator className="bg-white/15" />
-              <DropdownMenuItem className="justify-center p-2 focus:bg-white/15" onSelect={() => onMarkAllRead && onMarkAllRead()}>
-                <p className="text-sm font-semibold">Marcar todas como leídas</p>
+          <DropdownMenuContent className="w-80 mr-2 bg-white/10 backdrop-blur-md border border-white/15 text-white z-[5000] rounded-xl overflow-hidden" align="end" style={{zIndex:5000}}>
+            <DropdownMenuLabel className="font-semibold">Notificaciones</DropdownMenuLabel>
+            <DropdownMenuSeparator className="bg-white/15" />
+            {notifications.length === 0 ? (
+              <div className="p-3 text-sm text-white/80">Sin notificaciones recientes</div>
+            ) : notifications.map((n, i) => (
+              <DropdownMenuItem key={i} className="flex flex-col items-start gap-1 p-3 focus:bg-white/15">
+                <div className="flex justify-between w-full">
+                  <p className="font-semibold">{n.title}</p>
+                  <p className="text-xs text-white/70">{n.time}</p>
+                </div>
+                {n.description && <p className="text-sm text-white/80 w-full">{n.description}</p>}
               </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenuPortal>
+            ))}
+            <DropdownMenuSeparator className="bg-white/15" />
+            <DropdownMenuItem className="justify-center p-2 focus:bg-white/15" onSelect={() => onMarkAllRead && onMarkAllRead()}>
+              <p className="text-sm font-semibold">Marcar todas como leídas</p>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
         </DropdownMenu>
         <div
           className="w-8 h-8 rounded-full cursor-pointer"

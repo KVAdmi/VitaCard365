@@ -1,3 +1,5 @@
+import { Capacitor } from '@capacitor/core';
+const isIOS = Capacitor.getPlatform() === 'ios';
 import React, { useEffect, useMemo, useState } from 'react';
 import AnimatedStats from '../components/dashboard/AnimatedStats';
 import { useNavigate } from 'react-router-dom';
@@ -65,7 +67,7 @@ const Dashboard = () => {
         <div className="p-4 space-y-6">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
             <Card className="border border-cyan-300/20 bg-white/10 text-white" style={{boxShadow:'0 0 0 1px rgba(0,255,231,0.28)'}}>
-              <CardContent className="p-6 pt-6">
+              <CardContent className="p-6 pt-6" style={{ paddingTop: isIOS ? 24 : 8 }}>
                 <h2 className="text-2xl font-bold drop-shadow-[0_0_8px_rgba(0,255,231,0.3)]">¡Hola, {alias}!</h2>
                 <p className="text-white/80">Bienvenido a tu panel de control.</p>
               </CardContent>
